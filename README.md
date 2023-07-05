@@ -326,7 +326,7 @@
 	</tr>
 </table>
 
-<h1>glyph_E0 - Letter</h1>
+<h1>glyph_E0 - Unicode</h1>
 
 <table>
 	<tr>
