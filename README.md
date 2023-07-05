@@ -1,4 +1,4 @@
-<h1>glyph_** - &lt;row&gt&lt;column&gt</h1>
+<h1>glyph_** - Coordinate</h1>
 
 <table>
 	<tr>
