@@ -1,3 +1,4 @@
+/* Base styles */
 body {
 	background-color: #f8f9fa;
 }
@@ -6,6 +7,7 @@ body {
 	max-width: 1200px;
 }
 
+/* Card styles */
 .card {
 	border: none;
 	border-radius: 15px;
@@ -22,6 +24,7 @@ body {
 	border-bottom: none;
 }
 
+/* Button styles */
 .btn-primary {
 	background-color: #4a89dc;
 	border-color: #4a89dc;
@@ -42,6 +45,11 @@ body {
 	color: white;
 }
 
+#conversionModeButton {
+	transition: all 0.3s ease;
+}
+
+/* Glyph output styles */
 #glyph-output {
 	display: grid;
 	grid-template-columns: repeat(16, minmax(30px, 1fr));
@@ -72,6 +80,7 @@ body {
 	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
+/* Tooltip styles */
 .tooltip {
 	position: absolute;
 	bottom: 100%;
@@ -93,6 +102,7 @@ body {
 	transform: translateX(-50%) translateY(-5px);
 }
 
+/* Copy notification styles */
 .copy-notification {
 	position: absolute;
 	background-color: rgba(0, 0, 0, 0.7);
@@ -121,27 +131,36 @@ body {
 	}
 }
 
-#conversionModeButton {
-	transition: all 0.3s ease;
+/* Description styles */
+.glyph-description {
+	text-align: justify;
+	color: #6c757d;
+	font-size: 0.9em;
 }
 
-@media (max-width: 767.98px) {
-	#glyph-output {
-		font-size: 0.8em;
-	}
-
-	#convertButton {
-		width: 100%;
-		margin-top: 10px;
-	}
+.glyph-input-label {
+	font-weight: bold;
 }
 
-@media (min-width: 768px) {
-	#glyph-output {
-		overflow-x: visible;
-	}
+.conversion-mode-text {
+	font-weight: bold;
 }
 
+/* Footer styles */
+footer {
+	border-top: 1px solid #dee2e6;
+	padding-top: 20px;
+}
+
+footer a {
+	transition: color 0.3s ease;
+}
+
+footer a:hover {
+	color: #007bff !important;
+}
+
+/* Media queries */
 @media (max-width: 767.98px) {
 	#glyph-output {
 		font-size: 0.8em;
@@ -151,15 +170,25 @@ body {
 		flex-wrap: wrap;
 	}
 
-	#convertButton {
+	#convertButton,
+	#generate-glyph {
 		width: 100%;
 		margin-top: 10px;
-		border-top-left-radius: 0.25rem !important;
-		border-top-right-radius: 0.25rem !important;
+		border-radius: 0.25rem !important;
 	}
 
-	#converterInput {
-		border-bottom-right-radius: 0.25rem !important;
+	#converterInput,
+	#glyph-input {
+		border-radius: 0.25rem !important;
+	}
+
+	#copyButton {
+		border-top-left-radius: 0 !important;
+		border-bottom-left-radius: 0 !important;
+	}
+
+	.input-group> :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(.invalid-feedback) {
+		margin-left: 0;
 	}
 }
 
@@ -167,22 +196,7 @@ body {
 	#glyph-output {
 		overflow-x: visible;
 	}
-}
 
-@media (max-width: 767.98px) {
-	#generate-glyph {
-		width: 100%;
-		margin-top: 10px;
-		border-top-left-radius: 0.25rem !important;
-		border-top-right-radius: 0.25rem !important;
-	}
-
-	#glyph-input {
-		border-bottom-right-radius: 0.25rem !important;
-	}
-}
-
-@media (min-width: 768px) {
 	.converter-input-group {
 		display: flex;
 	}
@@ -198,19 +212,7 @@ body {
 	#inputPrefix {
 		width: auto;
 	}
-}
 
-.glyph-description {
-	text-align: justify;
-	color: #6c757d;
-	font-size: 0.9em;
-}
-
-.glyph-input-label {
-	font-weight: bold;
-}
-
-@media (min-width: 768px) {
 	.glyph-description {
 		padding-right: 1rem;
 		padding-left: 1rem;

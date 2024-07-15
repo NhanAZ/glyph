@@ -1,5 +1,22 @@
 const GRID = 16;
+let isHexToEmoji = true;
 
+// Utility functions
+function showCopyNotification(element) {
+	const notification = element.querySelector('.copy-notification');
+	notification.style.opacity = '1';
+	setTimeout(() => {
+		notification.style.opacity = '0';
+	}, 1000);
+}
+
+function updateCopyButtonState() {
+	const output = document.getElementById('converterOutput');
+	const copyButton = document.getElementById('copyButton');
+	copyButton.disabled = output.value.trim() === '';
+}
+
+// Glyph-related functions
 function Glyph(glyph = "E0") {
 	const filename = `glyph_${glyph}`;
 	const startChar = parseInt(filename.split("_").pop() + "00", 16);
@@ -30,14 +47,6 @@ function Glyph(glyph = "E0") {
 	});
 }
 
-function showCopyNotification(element) {
-	const notification = element.querySelector('.copy-notification');
-	notification.style.opacity = '1';
-	setTimeout(() => {
-		notification.style.opacity = '0';
-	}, 1000);
-}
-
 function initializeGlyph() {
 	const glyphOutput = document.getElementById('glyph-output');
 	if (glyphOutput.innerHTML.trim() === '') {
@@ -45,55 +54,7 @@ function initializeGlyph() {
 	}
 }
 
-window.onload = () => {
-	initializeGlyph();
-};
-
-document.getElementById('glyph-input').addEventListener('input', function () {
-    const glyphInput = this.value.trim();
-    const glyphSuccessMsg = document.getElementById('glyphSuccessMsg');
-    const glyphErrorMsg = document.getElementById('glyphErrorMsg');
-
-    if (/^[A-Fa-f0-9]{1,2}$/.test(glyphInput)) {
-        Glyph(glyphInput || "E0");
-        glyphSuccessMsg.textContent = 'Glyph generated successfully!';
-        glyphSuccessMsg.classList.remove('d-none');
-        glyphErrorMsg.classList.add('d-none');
-    } else {
-        glyphErrorMsg.textContent = 'Please enter a valid hex value (1-2 hex digits).';
-        glyphErrorMsg.classList.remove('d-none');
-        glyphSuccessMsg.classList.add('d-none');
-    }
-});
-
-let isHexToEmoji = true;
-
-document.getElementById('conversionModeButton').addEventListener('click', function () {
-	isHexToEmoji = !isHexToEmoji;
-	this.textContent = isHexToEmoji ? "Hex to Emoji" : "Emoji to Hex";
-	document.getElementById('inputPrefix').style.display = isHexToEmoji ? "inline-block" : "none";
-	document.getElementById('converterInput').placeholder = isHexToEmoji ? "Enter hex value" : "Enter emoji/symbol";
-	document.getElementById('converterOutput').value = '';
-	updateCopyButtonState();
-});
-
-function convert() {
-	const input = document.getElementById('converterInput').value.trim();
-	const errorMsg = document.getElementById('errorMsg');
-	const successMsg = document.getElementById('successMsg');
-	const output = document.getElementById('converterOutput');
-	errorMsg.classList.add('d-none');
-	successMsg.classList.add('d-none');
-	output.value = '';
-
-	if (isHexToEmoji) {
-		convertHexToEmoji(input);
-	} else {
-		convertEmojiToHex(input);
-	}
-	updateCopyButtonState();
-}
-
+// Converter functions
 function convertHexToEmoji(input) {
 	if (/^[0-9A-Fa-f]{1,6}$/.test(input)) {
 		try {
@@ -123,6 +84,23 @@ function convertEmojiToHex(input) {
 	}
 }
 
+function convert() {
+	const input = document.getElementById('converterInput').value.trim();
+	const errorMsg = document.getElementById('errorMsg');
+	const successMsg = document.getElementById('successMsg');
+	const output = document.getElementById('converterOutput');
+	errorMsg.classList.add('d-none');
+	successMsg.classList.add('d-none');
+	output.value = '';
+
+	if (isHexToEmoji) {
+		convertHexToEmoji(input);
+	} else {
+		convertEmojiToHex(input);
+	}
+	updateCopyButtonState();
+}
+
 function copyOutput() {
 	const output = document.getElementById('converterOutput');
 	const copyButton = document.getElementById('copyButton');
@@ -143,11 +121,36 @@ function copyOutput() {
 	});
 }
 
-function updateCopyButtonState() {
-	const output = document.getElementById('converterOutput');
-	const copyButton = document.getElementById('copyButton');
-	copyButton.disabled = output.value.trim() === '';
-}
+// Event listeners
+window.onload = () => {
+	initializeGlyph();
+};
+
+document.getElementById('glyph-input').addEventListener('input', function () {
+	const glyphInput = this.value.trim();
+	const glyphSuccessMsg = document.getElementById('glyphSuccessMsg');
+	const glyphErrorMsg = document.getElementById('glyphErrorMsg');
+
+	if (/^[A-Fa-f0-9]{1,2}$/.test(glyphInput)) {
+		Glyph(glyphInput || "E0");
+		glyphSuccessMsg.textContent = 'Glyph generated successfully!';
+		glyphSuccessMsg.classList.remove('d-none');
+		glyphErrorMsg.classList.add('d-none');
+	} else {
+		glyphErrorMsg.textContent = 'Please enter a valid hex value (1-2 hex digits).';
+		glyphErrorMsg.classList.remove('d-none');
+		glyphSuccessMsg.classList.add('d-none');
+	}
+});
+
+document.getElementById('conversionModeButton').addEventListener('click', function () {
+	isHexToEmoji = !isHexToEmoji;
+	this.textContent = isHexToEmoji ? "Hex to Emoji" : "Emoji to Hex";
+	document.getElementById('inputPrefix').style.display = isHexToEmoji ? "inline-block" : "none";
+	document.getElementById('converterInput').placeholder = isHexToEmoji ? "Enter hex value" : "Enter emoji/symbol";
+	document.getElementById('converterOutput').value = '';
+	updateCopyButtonState();
+});
 
 document.getElementById('convertButton').addEventListener('click', convert);
 document.getElementById('copyButton').addEventListener('click', copyOutput);
