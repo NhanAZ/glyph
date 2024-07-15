@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glyph Tools</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            padding-top: 50px;
+            max-width: 1200px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+        }
+
+        #glyph-output {
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            gap: 5px;
+            font-size: 1.2em;
+            text-align: center;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        #glyph-output div {
+            width: 100%;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            transition: all 0.2s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        #glyph-output div:hover {
+            background-color: #e9ecef;
+            transform: scale(1.1);
+            z-index: 1;
+        }
+
+        .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: #fff;
+            padding: 5px;
+            border-radius: 3px;
+            white-space: nowrap;
+            font-size: 0.75em;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+
+        #glyph-output div:hover .tooltip {
+            opacity: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #764ba2, #667eea);
+        }
+
+        .copy-notification {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .success-msg {
+            color: #28a745;
+        }
+
+        .input-group .btn {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        #copyButton,
+        #convertButton {
+            width: 80px;
+        }
+
+        #conversionModeButton {
+            transition: all 0.3s ease;
+            color: #667eea;
+            border-color: #667eea;
+        }
+
+        #conversionModeButton:hover {
+            background-color: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-center mb-0">Glyph Generator</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group mb-3">
+                            <label for="glyph-input" class="form-label">Enter Glyph:</label>
+                            <input type="text" class="form-control" id="glyph-input" placeholder="E0 used by default">
+                        </div>
+                        <button class="btn btn-primary w-100 mb-3" id="generate-glyph">Generate</button>
+                        <div id="glyphSuccessMsg" class="success-msg"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-center mb-0">Hex <-> Emoji Converter</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted text-center">Convert between hexadecimal values and emojis/symbols.</p>
+                        <div class="mb-3">
+                            <button id="conversionModeButton" class="btn btn-outline-primary w-100">Hex to
+                                Emoji</button>
+                        </div>
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="inputPrefix">0x</span>
+                            <input type="text" id="converterInput" class="form-control" placeholder="Enter value">
+                            <button class="btn btn-primary" id="convertButton" onclick="convert()">Convert</button>
+                        </div>
+                        <div class="input-group mb-3">
+                            <input type="text" id="converterOutput" class="form-control" placeholder="Result" readonly>
+                            <button class="btn btn-primary" id="copyButton" onclick="copyOutput()"
+                                disabled>Copy</button>
+                        </div>
+                        <div id="errorMsg" class="text-danger"></div>
+                        <div id="successMsg" class="success-msg"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="text-center mb-0">Generated Glyph</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="glyph-output"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GRID = 16;
+
+        function Glyph(glyph = "E0") {
+            const filename = `glyph_${glyph}`;
+            const startChar = parseInt(filename.split("_").pop() + "00", 16);
+            let markdownContent = ``;
+
+            for (let i = 0; i < GRID * GRID; i++) {
+                const row = Math.floor(i / GRID) + 1;
+                const col = (i % GRID) + 1;
+                const charCode = startChar + i;
+                const char = String.fromCodePoint(charCode);
+                const hexCode = charCode.toString(16).toUpperCase().padStart(4, '0');
+                markdownContent += `<div data-hex="0x${hexCode}" data-char="${char}">
+                    <span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>${char}
+                    <span class="copy-notification">Copied</span>
+                </div>`;
+            }
+
+            document.getElementById('glyph-output').innerHTML = markdownContent;
+
+            // Add click event listeners
+            document.querySelectorAll('#glyph-output div').forEach(div => {
+                div.addEventListener('click', function () {
+                    const hexCode = this.getAttribute('data-hex');
+                    const char = this.getAttribute('data-char');
+                    navigator.clipboard.writeText(char).then(() => {
+                        showCopyNotification(this);
+                    });
+                });
+            });
+        }
+
+        function showCopyNotification(element) {
+            const notification = element.querySelector('.copy-notification');
+            notification.style.opacity = '1';
+            setTimeout(() => {
+                notification.style.opacity = '0';
+            }, 1000);
+        }
+
+        function initializeGlyph() {
+            const glyphOutput = document.getElementById('glyph-output');
+            if (glyphOutput.innerHTML.trim() === '') {
+                Glyph("E0");
+            }
+        }
+
+        window.onload = () => {
+            initializeGlyph();
+        };
+
+        document.getElementById('generate-glyph').addEventListener('click', () => {
+            const glyphInput = document.getElementById('glyph-input').value || "E0";
+            Glyph(glyphInput);
+
+            // Display success message
+            const glyphSuccessMsg = document.getElementById('glyphSuccessMsg');
+            glyphSuccessMsg.textContent = 'Glyph generated successfully!';
+            setTimeout(() => {
+                glyphSuccessMsg.textContent = '';
+            }, 3000);
+        });
+
+        let isHexToEmoji = true;
+
+        document.getElementById('conversionModeButton').addEventListener('click', function () {
+            isHexToEmoji = !isHexToEmoji;
+            this.textContent = isHexToEmoji ? "Hex to Emoji" : "Emoji to Hex";
+            document.getElementById('inputPrefix').style.display = isHexToEmoji ? "inline-block" : "none";
+            document.getElementById('converterInput').placeholder = isHexToEmoji ? "Enter hex value" : "Enter emoji/symbol";
+            document.getElementById('converterOutput').value = '';
+            updateCopyButtonState();
+        });
+
+        function convert() {
+            const input = document.getElementById('converterInput').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            const successMsg = document.getElementById('successMsg');
+            const output = document.getElementById('converterOutput');
+            errorMsg.textContent = '';
+            successMsg.textContent = '';
+            output.value = '';
+
+            if (isHexToEmoji) {
+                convertHexToEmoji(input);
+            } else {
+                convertEmojiToHex(input);
+            }
+            updateCopyButtonState();
+        }
+
+        function convertHexToEmoji(input) {
+            if (/^[0-9A-Fa-f]{1,6}$/.test(input)) {
+                try {
+                    const codePoint = parseInt(input, 16);
+                    document.getElementById('converterOutput').value = String.fromCodePoint(codePoint);
+                    document.getElementById('successMsg').textContent = 'Converted successfully!';
+                } catch (error) {
+                    document.getElementById('errorMsg').textContent = 'Invalid Unicode code point.';
+                }
+            } else {
+                document.getElementById('errorMsg').textContent = 'Please enter a valid hex value (1-6 hex digits).';
+            }
+        }
+
+        function convertEmojiToHex(input) {
+            if (input.length === 1) {
+                const hexValue = input.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
+                document.getElementById('converterOutput').value = `0x${hexValue}`;
+                document.getElementById('successMsg').textContent = 'Converted successfully!';
+            } else {
+                document.getElementById('errorMsg').textContent = 'Please enter a single emoji or symbol.';
+            }
+        }
+
+        function copyOutput() {
+            const output = document.getElementById('converterOutput');
+            const copyButton = document.getElementById('copyButton');
+
+            if (output.value.trim() === '') {
+                return;
+            }
+
+            navigator.clipboard.writeText(output.value).then(() => {
+                copyButton.textContent = 'Copied';
+                copyButton.disabled = true;
+
+                setTimeout(() => {
+                    copyButton.textContent = 'Copy';
+                    copyButton.disabled = false;
+                }, 500);
+            });
+        }
+
+        function updateCopyButtonState() {
+            const output = document.getElementById('converterOutput');
+            const copyButton = document.getElementById('copyButton');
+            copyButton.disabled = output.value.trim() === '';
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
