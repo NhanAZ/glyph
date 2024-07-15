@@ -4,3 +4,6 @@
 
 [?] How to chat with you on Discord server?  
 [>] https://discord.gg/j2X83ujT6c
+
+[?] Where does the site live?  
+[>] https://nhanaz.github.io/glyph/
