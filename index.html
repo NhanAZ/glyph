@@ -130,11 +130,68 @@
             background-color: #667eea;
             color: white;
         }
+
+        #responsiveAlert {
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 193, 7, 0.5);
+            background-color: rgba(255, 243, 205, 0.9);
+            color: #856404;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        #responsiveAlert .alert-link {
+            color: #533f03;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        #responsiveAlert .alert-link:hover {
+            color: #533f03;
+            text-decoration: underline;
+        }
+
+        #responsiveAlert .btn-close {
+            transition: transform 0.3s ease;
+        }
+
+        #responsiveAlert .btn-close:hover {
+            transform: rotate(90deg);
+        }
+
+        #responsiveAlert .btn-close:focus {
+            box-shadow: none;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #responsiveAlert {
+            animation: fadeIn 0.5s ease-out;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
+        <div id="responsiveAlert" class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong>Note:</strong> This website is optimized for larger screens. Mobile experience may be limited.
+            <a href="https://github.com/NhanAZ/glyph" target="_blank" class="alert-link">Click here to contribute to the
+                project on Github</a>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
         <div class="row mb-4">
             <div class="col-md-6 mb-4">
                 <div class="card">
