@@ -183,19 +183,36 @@ body {
 }
 
 @media (min-width: 768px) {
-    .converter-input-group {
-        display: flex;
-    }
+	.converter-input-group {
+		display: flex;
+	}
 
-    .converter-input-group .form-control {
-        flex: 1;
-    }
+	.converter-input-group .form-control {
+		flex: 1;
+	}
 
-    .converter-input-group .btn {
-        width: 120px; /* Điều chỉnh chiều rộng này nếu cần */
-    }
+	.converter-input-group .btn {
+		width: 120px;
+	}
 
-    #inputPrefix {
-        width: auto;
-    }
+	#inputPrefix {
+		width: auto;
+	}
+}
+
+.glyph-description {
+	text-align: justify;
+	color: #6c757d;
+	font-size: 0.9em;
+}
+
+.glyph-input-label {
+	font-weight: bold;
+}
+
+@media (min-width: 768px) {
+	.glyph-description {
+		padding-right: 1rem;
+		padding-left: 1rem;
+	}
 }
