@@ -425,3 +425,20 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Mobile Alert functionality
+document.addEventListener('DOMContentLoaded', function () {
+	const mobileAlert = document.getElementById('mobileAlert');
+
+	function checkScreenSize() {
+		if (window.innerWidth < 768) {
+			mobileAlert.style.display = 'block';
+		} else {
+			mobileAlert.style.display = 'none';
+		}
+	}
+
+	checkScreenSize();
+
+	window.addEventListener('resize', checkScreenSize);
+});

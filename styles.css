@@ -241,3 +241,19 @@ footer a:hover {
 		padding-left: 1rem;
 	}
 }
+
+/* Mobile Alert Styles */
+#mobileAlert {
+	background-color: rgba(255, 243, 205, 0.9);
+	border: none;
+	border-radius: 10px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	margin-bottom: 20px;
+}
+
+#mobileAlert .btn-close {
+	position: absolute;
+	right: 10px;
+	top: 50%;
+	transform: translateY(-50%);
+}
