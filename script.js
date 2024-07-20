@@ -188,6 +188,7 @@ document.getElementById('glyphUpload').addEventListener('change', function (e) {
 // Thêm biến để theo dõi khung zoom
 let zoomWindow = null;
 let updateTimer = null;
+let zoomEnabled = false;
 
 function processGlyph(img, hexValue) {
 	const canvas = document.createElement('canvas');
@@ -229,38 +230,67 @@ function processGlyph(img, hexValue) {
 	document.getElementById('glyph-output').innerHTML = markdownContent;
 	addClickEventToGlyphs();
 
-	// Chỉ thêm sự kiện zoom cho glyph size lớn hơn 512x512
-	if (img.width > 512 || img.height > 512) {
+	// Reset zoom state and remove old event listeners
+	removeZoomEvents();
+	zoomEnabled = false;
+
+	// Chỉ thêm sự kiện zoom cho glyph size lớn hơn hoặc bằng 256x256
+	if (img.width > 256 || img.height > 256) {
+		zoomEnabled = true;
 		addZoomEvents(unicodeSize);
+	} else {
+		hideZoomWindow();
+	}
+
+}
+
+function removeZoomEvents() {
+	const glyphOutput = document.getElementById('glyph-output');
+	if (glyphOutput.zoomHandlers) {
+		glyphOutput.removeEventListener('mouseover', glyphOutput.zoomHandlers.mouseover);
+		glyphOutput.removeEventListener('mousemove', glyphOutput.zoomHandlers.mousemove);
+		glyphOutput.removeEventListener('mouseout', glyphOutput.zoomHandlers.mouseout);
+		delete glyphOutput.zoomHandlers;
 	}
 }
 
 function addZoomEvents(unicodeSize) {
 	const glyphOutput = document.getElementById('glyph-output');
 
-	glyphOutput.addEventListener('mouseover', function (e) {
+	glyphOutput.addEventListener('mouseover', zoomMouseoverHandler);
+	glyphOutput.addEventListener('mousemove', zoomMousemoveHandler);
+	glyphOutput.addEventListener('mouseout', zoomMouseoutHandler);
+
+	function zoomMouseoverHandler(e) {
 		const target = e.target.closest('div[data-hex]');
-		if (target) {
+		if (target && zoomEnabled) {
 			showZoomWindow(unicodeSize);
 			updateZoomWindowContent(target, unicodeSize);
 		}
-	});
+	}
 
-	glyphOutput.addEventListener('mousemove', function (e) {
+	function zoomMousemoveHandler(e) {
 		const target = e.target.closest('div[data-hex]');
-		if (target && zoomWindow) {
+		if (target && zoomWindow && zoomEnabled) {
 			clearTimeout(updateTimer);
 			updateTimer = setTimeout(() => {
 				updateZoomWindowContent(target, unicodeSize);
 			}, 50);
 		}
-	});
+	}
 
-	glyphOutput.addEventListener('mouseout', function (e) {
+	function zoomMouseoutHandler(e) {
 		if (!e.relatedTarget || !e.relatedTarget.closest('#glyph-output')) {
 			hideZoomWindow();
 		}
-	});
+	}
+
+	// Store the handlers on the element for later removal
+	glyphOutput.zoomHandlers = {
+		mouseover: zoomMouseoverHandler,
+		mousemove: zoomMousemoveHandler,
+		mouseout: zoomMouseoutHandler
+	};
 }
 
 function updateZoomWindowPosition(e) {
@@ -298,14 +328,20 @@ function updateZoomWindowContent(target, unicodeSize) {
 	if (backgroundImage) {
 		const img = new Image();
 		img.onload = function () {
-			const centerY = unicodeSize / 2;
-			const displayHeight = Math.min(50, unicodeSize / 2);
-			const startY = Math.max(0, centerY - displayHeight / 2);
+			// Tính toán tỷ lệ scale
+			const scale = Math.min(zoomCanvas.width / unicodeSize, zoomCanvas.height / unicodeSize);
 
-			// Vẽ phần ảnh được cắt lên canvas
-			zoomCtx.drawImage(img,
-				0, startY, unicodeSize, displayHeight,
-				0, 0, zoomCanvas.width, zoomCanvas.height);
+			// Tính toán kích thước mới của unicode sau khi scale
+			const scaledWidth = unicodeSize * scale;
+			const scaledHeight = unicodeSize * scale;
+
+			// Tính toán vị trí để căn giữa unicode trong canvas
+			const offsetX = (zoomCanvas.width - scaledWidth) / 2;
+			const offsetY = (zoomCanvas.height - scaledHeight) / 2;
+
+			// Vẽ unicode được scale lên trong canvas
+			zoomCtx.drawImage(img, 0, 0, unicodeSize, unicodeSize,
+				offsetX, offsetY, scaledWidth, scaledHeight);
 		};
 		img.src = backgroundImage.slice(5, -2); // Remove url() wrapper
 	}
@@ -313,6 +349,7 @@ function updateZoomWindowContent(target, unicodeSize) {
 	const info = zoomWindow.querySelector('.zoom-info');
 	info.textContent = `Hex: ${hexCode} - Position: ${position}`;
 }
+
 
 // Thêm sự kiện scroll để ẩn khung zoom khi cuộn trang
 window.addEventListener('scroll', function () {
@@ -326,6 +363,7 @@ function showZoomWindow(unicodeSize) {
 	}
 	zoomWindow.style.display = 'block';
 }
+
 
 function hideZoomWindow() {
 	if (zoomWindow) {
@@ -348,8 +386,8 @@ function createZoomWindow(unicodeSize) {
 	zoomWindow.style.display = 'none';
 
 	const zoomCanvas = document.createElement('canvas');
-	zoomCanvas.width = unicodeSize;
-	zoomCanvas.height = Math.min(50, unicodeSize / 2);
+	zoomCanvas.width = 200;  // Cố định chiều rộng của canvas
+	zoomCanvas.height = 200; // Cố định chiều cao của canvas
 	zoomWindow.appendChild(zoomCanvas);
 
 	const info = document.createElement('div');
@@ -365,3 +403,33 @@ window.addEventListener('scroll', function () {
 		zoomWindow.style.bottom = '20px';
 	}
 });
+
+// Cập nhật CSS
+const style = document.createElement('style');
+style.textContent = `
+    .zoom-window {
+        border-radius: 5px;
+        background: white;
+        padding: 10px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+
+    .zoom-window canvas {
+        display: block;
+        image-rendering: pixelated;
+        width: 200px;
+        height: 200px;
+    }
+
+    .zoom-window .zoom-info {
+        margin-top: 5px;
+        font-size: 12px;
+        text-align: center;
+    }
+
+    #glyph-output div {
+        background-repeat: no-repeat;
+        image-rendering: pixelated;
+    }
+`;
+document.head.appendChild(style);
