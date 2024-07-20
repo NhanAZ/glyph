@@ -65,32 +65,22 @@ function addClickEventToGlyphs() {
 
 // Conversion functions
 function convertHexToEmoji(input) {
-	if (/^[0-9A-Fa-f]{1,6}$/.test(input)) {
-		try {
-			const codePoint = parseInt(input, 16);
-			document.getElementById('converterOutput').value = String.fromCodePoint(codePoint);
-			document.getElementById('successMsg').textContent = 'Converted successfully!';
-			document.getElementById('successMsg').classList.remove('d-none');
-		} catch (error) {
-			document.getElementById('errorMsg').textContent = 'Invalid Unicode code point.';
-			document.getElementById('errorMsg').classList.remove('d-none');
-		}
-	} else {
-		document.getElementById('errorMsg').textContent = 'Please enter a valid hex value (1-6 hex digits).';
+	try {
+		const codePoint = parseInt(input, 16);
+		document.getElementById('converterOutput').value = String.fromCodePoint(codePoint);
+		document.getElementById('successMsg').textContent = 'Converted successfully!';
+		document.getElementById('successMsg').classList.remove('d-none');
+	} catch (error) {
+		document.getElementById('errorMsg').textContent = 'Invalid Unicode code point.';
 		document.getElementById('errorMsg').classList.remove('d-none');
 	}
 }
 
 function convertEmojiToHex(input) {
-	if (input.length === 1) {
-		const hexValue = input.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
-		document.getElementById('converterOutput').value = `0x${hexValue}`;
-		document.getElementById('successMsg').textContent = 'Converted successfully!';
-		document.getElementById('successMsg').classList.remove('d-none');
-	} else {
-		document.getElementById('errorMsg').textContent = 'Please enter a single emoji or symbol.';
-		document.getElementById('errorMsg').classList.remove('d-none');
-	}
+	const hexValue = input.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
+	document.getElementById('converterOutput').value = `0x${hexValue}`;
+	document.getElementById('successMsg').textContent = 'Converted successfully!';
+	document.getElementById('successMsg').classList.remove('d-none');
 }
 
 function convert() {
@@ -102,10 +92,13 @@ function convert() {
 	successMsg.classList.add('d-none');
 	output.value = '';
 
-	if (isHexToEmoji) {
+	if (/^[0-9A-Fa-f]{1,6}$/.test(input)) {
 		convertHexToEmoji(input);
-	} else {
+	} else if (input.length === 1) {
 		convertEmojiToHex(input);
+	} else {
+		errorMsg.textContent = 'Invalid input. Please enter a hex value or a single emoji/symbol.';
+		errorMsg.classList.remove('d-none');
 	}
 	updateCopyButtonState();
 }
@@ -353,7 +346,7 @@ document.getElementById('conversionModeButton').addEventListener('click', functi
 	isHexToEmoji = !isHexToEmoji;
 	this.textContent = isHexToEmoji ? "Hex to Emoji" : "Emoji to Hex";
 	document.getElementById('inputPrefix').style.display = isHexToEmoji ? "inline-block" : "none";
-	document.getElementById('converterInput').placeholder = isHexToEmoji ? "Enter hex value" : "Enter emoji/symbol";
+	document.getElementById('converterInput').placeholder = "Enter hex value or emoji/symbol";
 	document.getElementById('converterOutput').value = '';
 	updateCopyButtonState();
 });
