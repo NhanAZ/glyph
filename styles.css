@@ -290,3 +290,25 @@ footer a:hover {
 	top: 50%;
 	transform: translateY(-50%);
 }
+
+#converterInput {
+	border-top-left-radius: 0.25rem !important;
+	border-bottom-left-radius: 0.25rem !important;
+}
+
+#inputPrefix {
+	border-top-right-radius: 0 !important;
+	border-bottom-right-radius: 0 !important;
+}
+
+@media (max-width: 767.98px) {
+	#converterInput {
+		border-radius: 0.25rem !important;
+	}
+
+	#inputPrefix {
+		border-radius: 0.25rem !important;
+		margin-bottom: 10px;
+	}
+}
+
