@@ -1,7 +1,6 @@
 const GRID = 16;
 let isHexToEmoji = true;
 
-// Utility functions
 function showCopyNotification(element) {
 	const notification = element.querySelector('.copy-notification');
 	notification.style.opacity = '1';
@@ -27,7 +26,6 @@ function addClickEventToGlyphs() {
 	});
 }
 
-// Glyph-related functions
 function Glyph(glyph = "E0") {
 	const filename = `glyph_${glyph}`;
 	const startChar = parseInt(filename.split("_").pop() + "00", 16);
@@ -57,7 +55,6 @@ function initializeGlyph() {
 	}
 }
 
-// Converter functions
 function convertHexToEmoji(input) {
 	if (/^[0-9A-Fa-f]{1,6}$/.test(input)) {
 		try {
@@ -124,7 +121,6 @@ function copyOutput() {
 	});
 }
 
-// Event listeners
 window.onload = () => {
 	initializeGlyph();
 };
@@ -163,7 +159,6 @@ document.getElementById('glyphUpload').addEventListener('change', function (e) {
 	const file = e.target.files[0];
 	if (!file) return;
 
-	// Kiểm tra tên file
 	const fileNameRegex = /^glyph_([0-9A-F]{2})\.png$/i;
 	const match = file.name.match(fileNameRegex);
 	if (!match) {
@@ -173,7 +168,6 @@ document.getElementById('glyphUpload').addEventListener('change', function (e) {
 
 	const hexValue = match[1].toUpperCase();
 
-	// Đọc và xử lý file
 	const reader = new FileReader();
 	reader.onload = function (event) {
 		const img = new Image();
@@ -185,7 +179,6 @@ document.getElementById('glyphUpload').addEventListener('change', function (e) {
 	reader.readAsDataURL(file);
 });
 
-// Thêm biến để theo dõi khung zoom
 let zoomWindow = null;
 let updateTimer = null;
 let zoomEnabled = false;
@@ -216,10 +209,15 @@ function processGlyph(img, hexValue) {
 		unicodeCanvas.width = unicodeSize;
 		unicodeCanvas.height = unicodeSize;
 		const unicodeCtx = unicodeCanvas.getContext('2d');
-		unicodeCtx.imageSmoothingEnabled = false;  // Disable anti-aliasing
+		unicodeCtx.imageSmoothingEnabled = false;
 		unicodeCtx.drawImage(canvas, x, y, unicodeSize, unicodeSize, 0, 0, unicodeSize, unicodeSize);
 
-		markdownContent += `<div data-hex="0x${hexCode}" data-char="${char}" 
+		const imageData = unicodeCtx.getImageData(0, 0, unicodeSize, unicodeSize);
+		const isTransparent = imageData.data.every((value, index) => (index + 1) % 4 === 0 || value === 0);
+
+		const transparentClass = isTransparent ? 'transparent' : '';
+
+		markdownContent += `<div class="${transparentClass}" data-hex="0x${hexCode}" data-char="${char}" 
             data-position="(${col};${row})" 
             style="background-image: url(${unicodeCanvas.toDataURL()}); background-size: 100% 100%;">
             <span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>
@@ -230,11 +228,9 @@ function processGlyph(img, hexValue) {
 	document.getElementById('glyph-output').innerHTML = markdownContent;
 	addClickEventToGlyphs();
 
-	// Reset zoom state and remove old event listeners
 	removeZoomEvents();
 	zoomEnabled = false;
 
-	// Chỉ thêm sự kiện zoom cho glyph size lớn hơn hoặc bằng 256x256
 	if (img.width > 256 || img.height > 256) {
 		zoomEnabled = true;
 		addZoomEvents(unicodeSize);
@@ -285,7 +281,6 @@ function addZoomEvents(unicodeSize) {
 		}
 	}
 
-	// Store the handlers on the element for later removal
 	glyphOutput.zoomHandlers = {
 		mouseover: zoomMouseoverHandler,
 		mousemove: zoomMousemoveHandler,
@@ -298,7 +293,6 @@ function updateZoomWindowPosition(e) {
 	let left = e.pageX + padding;
 	let top = e.pageY + padding;
 
-	// Đảm bảo khung zoom không vượt ra ngoài màn hình
 	const windowWidth = window.innerWidth;
 	const windowHeight = window.innerHeight;
 	if (left + zoomWindow.offsetWidth > windowWidth) {
@@ -321,29 +315,25 @@ function updateZoomWindowContent(target, unicodeSize) {
 
 	const zoomCanvas = zoomWindow.querySelector('canvas');
 	const zoomCtx = zoomCanvas.getContext('2d');
-	zoomCtx.imageSmoothingEnabled = false;  // Disable anti-aliasing
+	zoomCtx.imageSmoothingEnabled = false;
 
 	zoomCtx.clearRect(0, 0, zoomCanvas.width, zoomCanvas.height);
 
 	if (backgroundImage) {
 		const img = new Image();
 		img.onload = function () {
-			// Tính toán tỷ lệ scale
 			const scale = Math.min(zoomCanvas.width / unicodeSize, zoomCanvas.height / unicodeSize);
 
-			// Tính toán kích thước mới của unicode sau khi scale
 			const scaledWidth = unicodeSize * scale;
 			const scaledHeight = unicodeSize * scale;
 
-			// Tính toán vị trí để căn giữa unicode trong canvas
 			const offsetX = (zoomCanvas.width - scaledWidth) / 2;
 			const offsetY = (zoomCanvas.height - scaledHeight) / 2;
 
-			// Vẽ unicode được scale lên trong canvas
 			zoomCtx.drawImage(img, 0, 0, unicodeSize, unicodeSize,
 				offsetX, offsetY, scaledWidth, scaledHeight);
 		};
-		img.src = backgroundImage.slice(5, -2); // Remove url() wrapper
+		img.src = backgroundImage.slice(5, -2);
 	}
 
 	const info = zoomWindow.querySelector('.zoom-info');
@@ -351,7 +341,6 @@ function updateZoomWindowContent(target, unicodeSize) {
 }
 
 
-// Thêm sự kiện scroll để ẩn khung zoom khi cuộn trang
 window.addEventListener('scroll', function () {
 	hideZoomWindow();
 });
@@ -386,8 +375,8 @@ function createZoomWindow(unicodeSize) {
 	zoomWindow.style.display = 'none';
 
 	const zoomCanvas = document.createElement('canvas');
-	zoomCanvas.width = 200;  // Cố định chiều rộng của canvas
-	zoomCanvas.height = 200; // Cố định chiều cao của canvas
+	zoomCanvas.width = 256;
+	zoomCanvas.height = 256;
 	zoomWindow.appendChild(zoomCanvas);
 
 	const info = document.createElement('div');
@@ -397,14 +386,12 @@ function createZoomWindow(unicodeSize) {
 	return zoomWindow;
 }
 
-// Thêm sự kiện scroll để di chuyển khung zoom khi cuộn trang
 window.addEventListener('scroll', function () {
 	if (zoomWindow) {
 		zoomWindow.style.bottom = '20px';
 	}
 });
 
-// Cập nhật CSS
 const style = document.createElement('style');
 style.textContent = `
     .zoom-window {
