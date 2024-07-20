@@ -185,6 +185,10 @@ document.getElementById('glyphUpload').addEventListener('change', function (e) {
 	reader.readAsDataURL(file);
 });
 
+// Thêm biến để theo dõi khung zoom
+let zoomWindow = null;
+let updateTimer = null;
+
 function processGlyph(img, hexValue) {
 	const canvas = document.createElement('canvas');
 	const ctx = canvas.getContext('2d');
@@ -211,17 +215,153 @@ function processGlyph(img, hexValue) {
 		unicodeCanvas.width = unicodeSize;
 		unicodeCanvas.height = unicodeSize;
 		const unicodeCtx = unicodeCanvas.getContext('2d');
+		unicodeCtx.imageSmoothingEnabled = false;  // Disable anti-aliasing
 		unicodeCtx.drawImage(canvas, x, y, unicodeSize, unicodeSize, 0, 0, unicodeSize, unicodeSize);
 
-		const imageData = unicodeCtx.getImageData(0, 0, unicodeSize, unicodeSize);
-		const hasContent = imageData.data.some(channel => channel !== 0);
-
-		markdownContent += `<div data-hex="0x${hexCode}" data-char="${char}" style="${hasContent ? `background-image: url(${unicodeCanvas.toDataURL()}); background-size: cover;` : 'background-color: white;'}">
-			<span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>
-			<span class="copy-notification">Copied</span>
-		</div>`;
+		markdownContent += `<div data-hex="0x${hexCode}" data-char="${char}" 
+            data-position="(${col};${row})" 
+            style="background-image: url(${unicodeCanvas.toDataURL()}); background-size: 100% 100%;">
+            <span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>
+            <span class="copy-notification">Copied</span>
+        </div>`;
 	}
 
 	document.getElementById('glyph-output').innerHTML = markdownContent;
 	addClickEventToGlyphs();
+
+	// Chỉ thêm sự kiện zoom cho glyph size lớn hơn 512x512
+	if (img.width > 512 || img.height > 512) {
+		addZoomEvents(unicodeSize);
+	}
 }
+
+function addZoomEvents(unicodeSize) {
+	const glyphOutput = document.getElementById('glyph-output');
+
+	glyphOutput.addEventListener('mouseover', function (e) {
+		const target = e.target.closest('div[data-hex]');
+		if (target) {
+			showZoomWindow(unicodeSize);
+			updateZoomWindowContent(target, unicodeSize);
+		}
+	});
+
+	glyphOutput.addEventListener('mousemove', function (e) {
+		const target = e.target.closest('div[data-hex]');
+		if (target && zoomWindow) {
+			clearTimeout(updateTimer);
+			updateTimer = setTimeout(() => {
+				updateZoomWindowContent(target, unicodeSize);
+			}, 50);
+		}
+	});
+
+	glyphOutput.addEventListener('mouseout', function (e) {
+		if (!e.relatedTarget || !e.relatedTarget.closest('#glyph-output')) {
+			hideZoomWindow();
+		}
+	});
+}
+
+function updateZoomWindowPosition(e) {
+	const padding = 20;
+	let left = e.pageX + padding;
+	let top = e.pageY + padding;
+
+	// Đảm bảo khung zoom không vượt ra ngoài màn hình
+	const windowWidth = window.innerWidth;
+	const windowHeight = window.innerHeight;
+	if (left + zoomWindow.offsetWidth > windowWidth) {
+		left = e.pageX - zoomWindow.offsetWidth - padding;
+	}
+	if (top + zoomWindow.offsetHeight > windowHeight) {
+		top = e.pageY - zoomWindow.offsetHeight - padding;
+	}
+
+	zoomWindow.style.left = `${left}px`;
+	zoomWindow.style.top = `${top}px`;
+}
+
+function updateZoomWindowContent(target, unicodeSize) {
+	if (!target || !zoomWindow) return;
+
+	const hexCode = target.getAttribute('data-hex');
+	const position = target.getAttribute('data-position');
+	const backgroundImage = target.style.backgroundImage;
+
+	const zoomCanvas = zoomWindow.querySelector('canvas');
+	const zoomCtx = zoomCanvas.getContext('2d');
+	zoomCtx.imageSmoothingEnabled = false;  // Disable anti-aliasing
+
+	zoomCtx.clearRect(0, 0, zoomCanvas.width, zoomCanvas.height);
+
+	if (backgroundImage) {
+		const img = new Image();
+		img.onload = function () {
+			const centerY = unicodeSize / 2;
+			const displayHeight = Math.min(50, unicodeSize / 2);
+			const startY = Math.max(0, centerY - displayHeight / 2);
+
+			// Vẽ phần ảnh được cắt lên canvas
+			zoomCtx.drawImage(img,
+				0, startY, unicodeSize, displayHeight,
+				0, 0, zoomCanvas.width, zoomCanvas.height);
+		};
+		img.src = backgroundImage.slice(5, -2); // Remove url() wrapper
+	}
+
+	const info = zoomWindow.querySelector('.zoom-info');
+	info.textContent = `Hex: ${hexCode} - Position: ${position}`;
+}
+
+// Thêm sự kiện scroll để ẩn khung zoom khi cuộn trang
+window.addEventListener('scroll', function () {
+	hideZoomWindow();
+});
+
+function showZoomWindow(unicodeSize) {
+	if (!zoomWindow) {
+		zoomWindow = createZoomWindow(unicodeSize);
+		document.body.appendChild(zoomWindow);
+	}
+	zoomWindow.style.display = 'block';
+}
+
+function hideZoomWindow() {
+	if (zoomWindow) {
+		zoomWindow.style.display = 'none';
+	}
+}
+
+
+function createZoomWindow(unicodeSize) {
+	const zoomWindow = document.createElement('div');
+	zoomWindow.className = 'zoom-window';
+	zoomWindow.style.position = 'fixed';
+	zoomWindow.style.right = '20px';
+	zoomWindow.style.bottom = '20px';
+	zoomWindow.style.zIndex = '1000';
+	zoomWindow.style.background = 'white';
+	zoomWindow.style.border = '1px solid #ccc';
+	zoomWindow.style.boxShadow = '0 0 10px rgba(0,0,0,0.3)';
+	zoomWindow.style.padding = '5px';
+	zoomWindow.style.display = 'none';
+
+	const zoomCanvas = document.createElement('canvas');
+	zoomCanvas.width = unicodeSize;
+	zoomCanvas.height = Math.min(50, unicodeSize / 2);
+	zoomWindow.appendChild(zoomCanvas);
+
+	const info = document.createElement('div');
+	info.className = 'zoom-info';
+	zoomWindow.appendChild(info);
+
+	return zoomWindow;
+}
+
+// Thêm sự kiện scroll để di chuyển khung zoom khi cuộn trang
+window.addEventListener('scroll', function () {
+	if (zoomWindow) {
+		zoomWindow.style.bottom = '20px';
+	}
+});

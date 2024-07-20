@@ -217,3 +217,26 @@ footer a:hover {
 		padding-left: 1rem;
 	}
 }
+
+.zoom-window {
+	border-radius: 5px;
+	background: white;
+	padding: 10px;
+	box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+.zoom-window canvas {
+	display: block;
+	image-rendering: pixelated;
+}
+
+.zoom-window .zoom-info {
+	margin-top: 5px;
+	font-size: 12px;
+	text-align: center;
+}
+
+#glyph-output div {
+	background-repeat: no-repeat;
+	image-rendering: pixelated;
+}
