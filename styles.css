@@ -1,17 +1,42 @@
+/* Variables */
+:root {
+	--primary-color: #4a89dc;
+	--primary-hover-color: #3b78cc;
+	--background-color: #f8f9fa;
+	--card-border-radius: 15px;
+	--transition-speed: 0.3s;
+}
+
 /* Global Styles */
 body {
-	background-color: #f8f9fa;
+	background-color: var(--background-color);
 }
 
 .container {
 	max-width: 1200px;
 }
 
+/* Typography */
+.text-muted {
+	font-size: 0.9em;
+}
+
+.glyph-description {
+	text-align: justify;
+	color: #6c757d;
+	font-size: 0.9em;
+}
+
+.glyph-input-label,
+.conversion-mode-text {
+	font-weight: bold;
+}
+
 /* Card Styles */
 .card {
 	border: none;
-	border-radius: 15px;
-	transition: all 0.3s ease;
+	border-radius: var(--card-border-radius);
+	transition: all var(--transition-speed) ease;
 }
 
 .card:hover {
@@ -20,42 +45,38 @@ body {
 }
 
 .card-header {
-	border-radius: 15px 15px 0 0 !important;
+	border-radius: var(--card-border-radius) var(--card-border-radius) 0 0 !important;
 	border-bottom: none;
+}
+
+/* Button Styles */
+.btn-primary {
+	background-color: var(--primary-color);
+	border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+	background-color: var(--primary-hover-color);
+	border-color: var(--primary-hover-color);
+}
+
+.btn-outline-primary {
+	color: var(--primary-color);
+	border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+	background-color: var(--primary-color);
+	color: white;
+}
+
+#conversionModeButton {
+	transition: all var(--transition-speed) ease;
 }
 
 /* File Upload Styles */
 #glyphUpload {
 	margin-top: 5px;
-}
-
-.text-muted {
-	font-size: 0.9em;
-}
-
-/* Button Styles */
-.btn-primary {
-	background-color: #4a89dc;
-	border-color: #4a89dc;
-}
-
-.btn-primary:hover {
-	background-color: #3b78cc;
-	border-color: #3b78cc;
-}
-
-.btn-outline-primary {
-	color: #4a89dc;
-	border-color: #4a89dc;
-}
-
-.btn-outline-primary:hover {
-	background-color: #4a89dc;
-	color: white;
-}
-
-#conversionModeButton {
-	transition: all 0.3s ease;
 }
 
 /* Glyph Output Styles */
@@ -146,21 +167,6 @@ body {
 	}
 }
 
-/* Text Styles */
-.glyph-description {
-	text-align: justify;
-	color: #6c757d;
-	font-size: 0.9em;
-}
-
-.glyph-input-label {
-	font-weight: bold;
-}
-
-.conversion-mode-text {
-	font-weight: bold;
-}
-
 /* Footer Styles */
 footer {
 	border-top: 1px solid #dee2e6;
@@ -194,7 +200,23 @@ footer a:hover {
 	text-align: center;
 }
 
-/* Media query for mobile devices */
+/* Mobile Alert Styles */
+#mobileAlert {
+	background-color: rgba(255, 243, 205, 0.9);
+	border: none;
+	border-radius: 10px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	margin-bottom: 20px;
+}
+
+#mobileAlert .btn-close {
+	position: absolute;
+	right: 10px;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+/* Media Queries */
 @media (max-width: 767.98px) {
 	#glyph-output {
 		grid-template-columns: repeat(16, 50px);
@@ -224,7 +246,6 @@ footer a:hover {
 		border-radius: 0.25rem !important;
 	}
 
-	/* Improve scrollbar appearance for webkit browsers */
 	#glyph-output::-webkit-scrollbar {
 		height: 8px;
 	}
@@ -245,6 +266,15 @@ footer a:hover {
 
 	.input-group> :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(.invalid-feedback) {
 		margin-left: 0;
+	}
+
+	#converterInput {
+		border-radius: 0.25rem !important;
+	}
+
+	#inputPrefix {
+		border-radius: 0.25rem !important;
+		margin-bottom: 10px;
 	}
 }
 
@@ -273,42 +303,14 @@ footer a:hover {
 		padding-right: 1rem;
 		padding-left: 1rem;
 	}
-}
 
-/* Mobile Alert Styles */
-#mobileAlert {
-	background-color: rgba(255, 243, 205, 0.9);
-	border: none;
-	border-radius: 10px;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-	margin-bottom: 20px;
-}
-
-#mobileAlert .btn-close {
-	position: absolute;
-	right: 10px;
-	top: 50%;
-	transform: translateY(-50%);
-}
-
-#converterInput {
-	border-top-left-radius: 0.25rem !important;
-	border-bottom-left-radius: 0.25rem !important;
-}
-
-#inputPrefix {
-	border-top-right-radius: 0 !important;
-	border-bottom-right-radius: 0 !important;
-}
-
-@media (max-width: 767.98px) {
 	#converterInput {
-		border-radius: 0.25rem !important;
+		border-top-left-radius: 0.25rem !important;
+		border-bottom-left-radius: 0.25rem !important;
 	}
 
 	#inputPrefix {
-		border-radius: 0.25rem !important;
-		margin-bottom: 10px;
+		border-top-right-radius: 0 !important;
+		border-bottom-right-radius: 0 !important;
 	}
 }
-
