@@ -1,6 +1,13 @@
+// Constants
 const GRID = 16;
-let isHexToEmoji = true;
 
+// Global variables
+let isHexToEmoji = true;
+let zoomWindow = null;
+let updateTimer = null;
+let zoomEnabled = false;
+
+// Utility functions
 function showCopyNotification(element) {
 	const notification = element.querySelector('.copy-notification');
 	notification.style.opacity = '1';
@@ -15,17 +22,7 @@ function updateCopyButtonState() {
 	copyButton.disabled = output.value.trim() === '';
 }
 
-function addClickEventToGlyphs() {
-	document.querySelectorAll('#glyph-output div').forEach(div => {
-		div.addEventListener('click', function () {
-			const char = this.getAttribute('data-char');
-			navigator.clipboard.writeText(char).then(() => {
-				showCopyNotification(this);
-			});
-		});
-	});
-}
-
+// Glyph related functions
 function Glyph(glyph = "E0") {
 	const filename = `glyph_${glyph}`;
 	const startChar = parseInt(filename.split("_").pop() + "00", 16);
@@ -38,10 +35,10 @@ function Glyph(glyph = "E0") {
 		const char = String.fromCodePoint(charCode);
 		const hexCode = charCode.toString(16).toUpperCase().padStart(4, '0');
 		markdownContent += `<div data-hex="0x${hexCode}" data-char="${char}">
-			${char}
-			<span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>
-			<span class="copy-notification">Copied</span>
-		</div>`;
+            ${char}
+            <span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>
+            <span class="copy-notification">Copied</span>
+        </div>`;
 	}
 
 	document.getElementById('glyph-output').innerHTML = markdownContent;
@@ -55,6 +52,18 @@ function initializeGlyph() {
 	}
 }
 
+function addClickEventToGlyphs() {
+	document.querySelectorAll('#glyph-output div').forEach(div => {
+		div.addEventListener('click', function () {
+			const char = this.getAttribute('data-char');
+			navigator.clipboard.writeText(char).then(() => {
+				showCopyNotification(this);
+			});
+		});
+	});
+}
+
+// Conversion functions
 function convertHexToEmoji(input) {
 	if (/^[0-9A-Fa-f]{1,6}$/.test(input)) {
 		try {
@@ -121,68 +130,7 @@ function copyOutput() {
 	});
 }
 
-window.onload = () => {
-	initializeGlyph();
-};
-
-document.getElementById('glyph-input').addEventListener('input', function () {
-	const glyphInput = this.value.trim();
-	const glyphSuccessMsg = document.getElementById('glyphSuccessMsg');
-	const glyphErrorMsg = document.getElementById('glyphErrorMsg');
-
-	if (/^[A-Fa-f0-9]{1,2}$/.test(glyphInput)) {
-		Glyph(glyphInput || "E0");
-		glyphSuccessMsg.textContent = 'Glyph generated successfully!';
-		glyphSuccessMsg.classList.remove('d-none');
-		glyphErrorMsg.classList.add('d-none');
-	} else {
-		glyphErrorMsg.textContent = 'Please enter a valid hex value (1-2 hex digits).';
-		glyphErrorMsg.classList.remove('d-none');
-		glyphSuccessMsg.classList.add('d-none');
-	}
-});
-
-document.getElementById('conversionModeButton').addEventListener('click', function () {
-	isHexToEmoji = !isHexToEmoji;
-	this.textContent = isHexToEmoji ? "Hex to Emoji" : "Emoji to Hex";
-	document.getElementById('inputPrefix').style.display = isHexToEmoji ? "inline-block" : "none";
-	document.getElementById('converterInput').placeholder = isHexToEmoji ? "Enter hex value" : "Enter emoji/symbol";
-	document.getElementById('converterOutput').value = '';
-	updateCopyButtonState();
-});
-
-document.getElementById('convertButton').addEventListener('click', convert);
-document.getElementById('copyButton').addEventListener('click', copyOutput);
-document.getElementById('converterInput').addEventListener('input', convert);
-
-document.getElementById('glyphUpload').addEventListener('change', function (e) {
-	const file = e.target.files[0];
-	if (!file) return;
-
-	const fileNameRegex = /^glyph_([0-9A-F]{2})\.png$/i;
-	const match = file.name.match(fileNameRegex);
-	if (!match) {
-		alert('Invalid file name. Please use the format glyph_XX.png where XX is a hex value from 00 to FF.');
-		return;
-	}
-
-	const hexValue = match[1].toUpperCase();
-
-	const reader = new FileReader();
-	reader.onload = function (event) {
-		const img = new Image();
-		img.onload = function () {
-			processGlyph(img, hexValue);
-		};
-		img.src = event.target.result;
-	};
-	reader.readAsDataURL(file);
-});
-
-let zoomWindow = null;
-let updateTimer = null;
-let zoomEnabled = false;
-
+// Glyph upload and processing
 function processGlyph(img, hexValue) {
 	const canvas = document.createElement('canvas');
 	const ctx = canvas.getContext('2d');
@@ -237,9 +185,9 @@ function processGlyph(img, hexValue) {
 	} else {
 		hideZoomWindow();
 	}
-
 }
 
+// Zoom related functions
 function removeZoomEvents() {
 	const glyphOutput = document.getElementById('glyph-output');
 	if (glyphOutput.zoomHandlers) {
@@ -252,10 +200,6 @@ function removeZoomEvents() {
 
 function addZoomEvents(unicodeSize) {
 	const glyphOutput = document.getElementById('glyph-output');
-
-	glyphOutput.addEventListener('mouseover', zoomMouseoverHandler);
-	glyphOutput.addEventListener('mousemove', zoomMousemoveHandler);
-	glyphOutput.addEventListener('mouseout', zoomMouseoutHandler);
 
 	function zoomMouseoverHandler(e) {
 		const target = e.target.closest('div[data-hex]');
@@ -280,6 +224,10 @@ function addZoomEvents(unicodeSize) {
 			hideZoomWindow();
 		}
 	}
+
+	glyphOutput.addEventListener('mouseover', zoomMouseoverHandler);
+	glyphOutput.addEventListener('mousemove', zoomMousemoveHandler);
+	glyphOutput.addEventListener('mouseout', zoomMouseoutHandler);
 
 	glyphOutput.zoomHandlers = {
 		mouseover: zoomMouseoverHandler,
@@ -340,11 +288,6 @@ function updateZoomWindowContent(target, unicodeSize) {
 	info.textContent = `Hex: ${hexCode} - Position: ${position}`;
 }
 
-
-window.addEventListener('scroll', function () {
-	hideZoomWindow();
-});
-
 function showZoomWindow(unicodeSize) {
 	if (!zoomWindow) {
 		zoomWindow = createZoomWindow(unicodeSize);
@@ -353,13 +296,11 @@ function showZoomWindow(unicodeSize) {
 	zoomWindow.style.display = 'block';
 }
 
-
 function hideZoomWindow() {
 	if (zoomWindow) {
 		zoomWindow.style.display = 'none';
 	}
 }
-
 
 function createZoomWindow(unicodeSize) {
 	const zoomWindow = document.createElement('div');
@@ -386,12 +327,76 @@ function createZoomWindow(unicodeSize) {
 	return zoomWindow;
 }
 
+// Event listeners
+window.onload = () => {
+	initializeGlyph();
+};
+
+document.getElementById('glyph-input').addEventListener('input', function () {
+	const glyphInput = this.value.trim();
+	const glyphSuccessMsg = document.getElementById('glyphSuccessMsg');
+	const glyphErrorMsg = document.getElementById('glyphErrorMsg');
+
+	if (/^[A-Fa-f0-9]{1,2}$/.test(glyphInput)) {
+		Glyph(glyphInput || "E0");
+		glyphSuccessMsg.textContent = 'Glyph generated successfully!';
+		glyphSuccessMsg.classList.remove('d-none');
+		glyphErrorMsg.classList.add('d-none');
+	} else {
+		glyphErrorMsg.textContent = 'Please enter a valid hex value (1-2 hex digits).';
+		glyphErrorMsg.classList.remove('d-none');
+		glyphSuccessMsg.classList.add('d-none');
+	}
+});
+
+document.getElementById('conversionModeButton').addEventListener('click', function () {
+	isHexToEmoji = !isHexToEmoji;
+	this.textContent = isHexToEmoji ? "Hex to Emoji" : "Emoji to Hex";
+	document.getElementById('inputPrefix').style.display = isHexToEmoji ? "inline-block" : "none";
+	document.getElementById('converterInput').placeholder = isHexToEmoji ? "Enter hex value" : "Enter emoji/symbol";
+	document.getElementById('converterOutput').value = '';
+	updateCopyButtonState();
+});
+
+document.getElementById('convertButton').addEventListener('click', convert);
+document.getElementById('copyButton').addEventListener('click', copyOutput);
+document.getElementById('converterInput').addEventListener('input', convert);
+
+document.getElementById('glyphUpload').addEventListener('change', function (e) {
+	const file = e.target.files[0];
+	if (!file) return;
+
+	const fileNameRegex = /^glyph_([0-9A-F]{2})\.png$/i;
+	const match = file.name.match(fileNameRegex);
+	if (!match) {
+		alert('Invalid file name. Please use the format glyph_XX.png where XX is a hex value from 00 to FF.');
+		return;
+	}
+
+	const hexValue = match[1].toUpperCase();
+
+	const reader = new FileReader();
+	reader.onload = function (event) {
+		const img = new Image();
+		img.onload = function () {
+			processGlyph(img, hexValue);
+		};
+		img.src = event.target.result;
+	};
+	reader.readAsDataURL(file);
+});
+
+window.addEventListener('scroll', function () {
+	hideZoomWindow();
+});
+
 window.addEventListener('scroll', function () {
 	if (zoomWindow) {
 		zoomWindow.style.bottom = '20px';
 	}
 });
 
+// Add CSS for zoom window
 const style = document.createElement('style');
 style.textContent = `
     .zoom-window {

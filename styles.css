@@ -1,3 +1,4 @@
+/* Global Styles */
 body {
 	background-color: #f8f9fa;
 }
@@ -6,6 +7,7 @@ body {
 	max-width: 1200px;
 }
 
+/* Card Styles */
 .card {
 	border: none;
 	border-radius: 15px;
@@ -22,6 +24,7 @@ body {
 	border-bottom: none;
 }
 
+/* Button Styles */
 .btn-primary {
 	background-color: #4a89dc;
 	border-color: #4a89dc;
@@ -46,6 +49,7 @@ body {
 	transition: all 0.3s ease;
 }
 
+/* Glyph Output Styles */
 #glyph-output {
 	display: grid;
 	grid-template-columns: repeat(16, 1fr);
@@ -66,6 +70,8 @@ body {
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 	position: relative;
 	font-size: 16px;
+	background-repeat: no-repeat;
+	image-rendering: pixelated;
 }
 
 #glyph-output div:hover {
@@ -74,6 +80,11 @@ body {
 	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
+#glyph-output div.transparent {
+	background-color: rgba(200, 200, 200, 0.25);
+}
+
+/* Tooltip Styles */
 .tooltip {
 	position: absolute;
 	bottom: 100%;
@@ -95,6 +106,7 @@ body {
 	transform: translateX(-50%) translateY(-5px);
 }
 
+/* Copy Notification Styles */
 .copy-notification {
 	position: absolute;
 	background-color: rgba(0, 0, 0, 0.7);
@@ -123,6 +135,7 @@ body {
 	}
 }
 
+/* Text Styles */
 .glyph-description {
 	text-align: justify;
 	color: #6c757d;
@@ -137,6 +150,7 @@ body {
 	font-weight: bold;
 }
 
+/* Footer Styles */
 footer {
 	border-top: 1px solid #dee2e6;
 	padding-top: 20px;
@@ -150,6 +164,26 @@ footer a:hover {
 	color: #007bff !important;
 }
 
+/* Zoom Window Styles */
+.zoom-window {
+	border-radius: 5px;
+	background: white;
+	padding: 10px;
+	box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+.zoom-window canvas {
+	display: block;
+	image-rendering: pixelated;
+}
+
+.zoom-window .zoom-info {
+	margin-top: 5px;
+	font-size: 12px;
+	text-align: center;
+}
+
+/* Media Queries */
 @media (max-width: 767.98px) {
 	#glyph-output {
 		grid-template-columns: repeat(16, minmax(20px, 1fr));
@@ -206,31 +240,4 @@ footer a:hover {
 		padding-right: 1rem;
 		padding-left: 1rem;
 	}
-}
-
-.zoom-window {
-	border-radius: 5px;
-	background: white;
-	padding: 10px;
-	box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-}
-
-.zoom-window canvas {
-	display: block;
-	image-rendering: pixelated;
-}
-
-.zoom-window .zoom-info {
-	margin-top: 5px;
-	font-size: 12px;
-	text-align: center;
-}
-
-#glyph-output div {
-	background-repeat: no-repeat;
-	image-rendering: pixelated;
-}
-
-#glyph-output div.transparent {
-	background-color: rgba(200, 200, 200, 0.25);
 }
