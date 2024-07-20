@@ -16,6 +16,17 @@ function updateCopyButtonState() {
 	copyButton.disabled = output.value.trim() === '';
 }
 
+function addClickEventToGlyphs() {
+	document.querySelectorAll('#glyph-output div').forEach(div => {
+		div.addEventListener('click', function () {
+			const char = this.getAttribute('data-char');
+			navigator.clipboard.writeText(char).then(() => {
+				showCopyNotification(this);
+			});
+		});
+	});
+}
+
 // Glyph-related functions
 function Glyph(glyph = "E0") {
 	const filename = `glyph_${glyph}`;
@@ -29,22 +40,14 @@ function Glyph(glyph = "E0") {
 		const char = String.fromCodePoint(charCode);
 		const hexCode = charCode.toString(16).toUpperCase().padStart(4, '0');
 		markdownContent += `<div data-hex="0x${hexCode}" data-char="${char}">
-                <span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>${char}
-                <span class="copy-notification">Copied</span>
-            </div>`;
+			${char}
+			<span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>
+			<span class="copy-notification">Copied</span>
+		</div>`;
 	}
 
 	document.getElementById('glyph-output').innerHTML = markdownContent;
-
-	document.querySelectorAll('#glyph-output div').forEach(div => {
-		div.addEventListener('click', function () {
-			const hexCode = this.getAttribute('data-hex');
-			const char = this.getAttribute('data-char');
-			navigator.clipboard.writeText(char).then(() => {
-				showCopyNotification(this);
-			});
-		});
-	});
+	addClickEventToGlyphs();
 }
 
 function initializeGlyph() {
@@ -155,3 +158,70 @@ document.getElementById('conversionModeButton').addEventListener('click', functi
 document.getElementById('convertButton').addEventListener('click', convert);
 document.getElementById('copyButton').addEventListener('click', copyOutput);
 document.getElementById('converterInput').addEventListener('input', convert);
+
+document.getElementById('glyphUpload').addEventListener('change', function (e) {
+	const file = e.target.files[0];
+	if (!file) return;
+
+	// Kiểm tra tên file
+	const fileNameRegex = /^glyph_([0-9A-F]{2})\.png$/i;
+	const match = file.name.match(fileNameRegex);
+	if (!match) {
+		alert('Invalid file name. Please use the format glyph_XX.png where XX is a hex value from 00 to FF.');
+		return;
+	}
+
+	const hexValue = match[1].toUpperCase();
+
+	// Đọc và xử lý file
+	const reader = new FileReader();
+	reader.onload = function (event) {
+		const img = new Image();
+		img.onload = function () {
+			processGlyph(img, hexValue);
+		};
+		img.src = event.target.result;
+	};
+	reader.readAsDataURL(file);
+});
+
+function processGlyph(img, hexValue) {
+	const canvas = document.createElement('canvas');
+	const ctx = canvas.getContext('2d');
+
+	const unicodeSize = Math.floor(Math.min(img.width, img.height) / 16);
+	canvas.width = unicodeSize * 16;
+	canvas.height = unicodeSize * 16;
+
+	ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+	let markdownContent = '';
+	const startChar = parseInt(hexValue + "00", 16);
+
+	for (let i = 0; i < 256; i++) {
+		const row = Math.floor(i / 16) + 1;
+		const col = (i % 16) + 1;
+		const charCode = startChar + i;
+		const char = String.fromCodePoint(charCode);
+		const hexCode = charCode.toString(16).toUpperCase().padStart(4, '0');
+
+		const x = (i % 16) * unicodeSize;
+		const y = Math.floor(i / 16) * unicodeSize;
+		const unicodeCanvas = document.createElement('canvas');
+		unicodeCanvas.width = unicodeSize;
+		unicodeCanvas.height = unicodeSize;
+		const unicodeCtx = unicodeCanvas.getContext('2d');
+		unicodeCtx.drawImage(canvas, x, y, unicodeSize, unicodeSize, 0, 0, unicodeSize, unicodeSize);
+
+		const imageData = unicodeCtx.getImageData(0, 0, unicodeSize, unicodeSize);
+		const hasContent = imageData.data.some(channel => channel !== 0);
+
+		markdownContent += `<div data-hex="0x${hexCode}" data-char="${char}" style="${hasContent ? `background-image: url(${unicodeCanvas.toDataURL()}); background-size: cover;` : 'background-color: white;'}">
+			<span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>
+			<span class="copy-notification">Copied</span>
+		</div>`;
+	}
+
+	document.getElementById('glyph-output').innerHTML = markdownContent;
+	addClickEventToGlyphs();
+}

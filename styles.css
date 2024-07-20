@@ -52,10 +52,8 @@ body {
 /* Glyph output styles */
 #glyph-output {
 	display: grid;
-	grid-template-columns: repeat(16, minmax(30px, 1fr));
-	grid-template-rows: repeat(16, 1fr);
+	grid-template-columns: repeat(16, 1fr);
 	gap: 2px;
-	font-size: 1.2em;
 	overflow-x: auto;
 	padding-bottom: 10px;
 }
@@ -71,10 +69,11 @@ body {
 	cursor: pointer;
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 	position: relative;
+	font-size: 16px;
+	/* Đảm bảo kích thước font đủ lớn để nhìn thấy */
 }
 
 #glyph-output div:hover {
-	background-color: #f1f3f5;
 	transform: scale(1.1);
 	z-index: 1;
 	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
@@ -163,7 +162,7 @@ footer a:hover {
 /* Media queries */
 @media (max-width: 767.98px) {
 	#glyph-output {
-		font-size: 0.8em;
+		grid-template-columns: repeat(16, minmax(20px, 1fr));
 	}
 
 	.input-group {
