@@ -52,10 +52,10 @@ function Glyph(glyph = "E0") {
 		const char = String.fromCodePoint(charCode);
 		const hexCode = charCode.toString(16).toUpperCase().padStart(4, '0');
 		markdownContent += `<div data-hex="0x${hexCode}" data-char="${char}" data-position="(${col};${row})" style="color: ${isDarkMode ? '#ffffff' : '#000000'}">
-            ${char}
-            <span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>
-            <span class="copy-notification">Copied</span>
-        </div>`;
+			${char}
+			<span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>
+			<span class="copy-notification">Copied</span>
+		</div>`;
 	}
 
 	document.getElementById('glyph-output').innerHTML = markdownContent;
@@ -165,12 +165,12 @@ function renderGlyphs() {
 				for (let i = 0; i < data.length; i += 4) {
 					if (data[i + 3] === 0) { // If pixel is transparent
 						if (isDarkMode) {
-							data[i] = 50;     // R
+							data[i] = 50;	 // R
 							data[i + 1] = 50; // G
 							data[i + 2] = 50; // B
 							data[i + 3] = 128; // A (semi-transparent)
 						} else {
-							data[i] = 200;    // R
+							data[i] = 200;	// R
 							data[i + 1] = 200; // G
 							data[i + 2] = 200; // B
 							data[i + 3] = 64;  // A (semi-transparent)
@@ -238,11 +238,11 @@ function processGlyph(img, hexValue) {
 		const transparentClass = isTransparent ? 'transparent' : '';
 
 		markdownContent += `<div class="${transparentClass}" data-hex="0x${hexCode}" data-char="${char}" 
-            data-position="(${col};${row})" 
-            style="background-image: url(${unicodeCanvas.toDataURL()}); background-size: 100% 100%;">
-            <span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>
-            <span class="copy-notification">Copied</span>
-        </div>`;
+			data-position="(${col};${row})" 
+			style="background-image: url(${unicodeCanvas.toDataURL()}); background-size: 100% 100%;">
+			<span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>
+			<span class="copy-notification">Copied</span>
+		</div>`;
 	}
 
 	document.getElementById('glyph-output').innerHTML = markdownContent;
@@ -477,30 +477,30 @@ window.addEventListener('scroll', function () {
 // Add CSS for zoom window
 const style = document.createElement('style');
 style.textContent = `
-    .zoom-window {
-        border-radius: 5px;
-        background: white;
-        padding: 10px;
-        box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    }
+	.zoom-window {
+		border-radius: 5px;
+		background: white;
+		padding: 10px;
+		box-shadow: 0 0 15px rgba(0,0,0,0.2);
+	}
 
-    .zoom-window canvas {
-        display: block;
-        image-rendering: pixelated;
-        width: 200px;
-        height: 200px;
-    }
+	.zoom-window canvas {
+		display: block;
+		image-rendering: pixelated;
+		width: 200px;
+		height: 200px;
+	}
 
-    .zoom-window .zoom-info {
-        margin-top: 5px;
-        font-size: 12px;
-        text-align: center;
-    }
+	.zoom-window .zoom-info {
+		margin-top: 5px;
+		font-size: 12px;
+		text-align: center;
+	}
 
-    #glyph-output div {
-        background-repeat: no-repeat;
-        image-rendering: pixelated;
-    }
+	#glyph-output div {
+		background-repeat: no-repeat;
+		image-rendering: pixelated;
+	}
 `;
 document.head.appendChild(style);
 
