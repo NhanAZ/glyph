@@ -7,3 +7,6 @@
 
 [?] Where does the site live?  
 [>] https://nhanaz.github.io/glyph/
+
+[!] Acknowledgements!  
+[>] It is undeniable that [Claude AI](https://claude.ai/) has truly been a great help for this project!
