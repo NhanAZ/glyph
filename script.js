@@ -6,6 +6,7 @@ let isHexToEmoji = true;
 let zoomWindow = null;
 let updateTimer = null;
 let zoomEnabled = false;
+let isDarkMode = false;
 
 // Utility functions
 function showCopyNotification(element) {
@@ -20,6 +21,22 @@ function updateCopyButtonState() {
 	const output = document.getElementById('converterOutput');
 	const copyButton = document.getElementById('copyButton');
 	copyButton.disabled = output.value.trim() === '';
+}
+
+function toggleDarkMode() {
+	isDarkMode = !isDarkMode;
+	const glyphCard = document.querySelector('.card:has(#glyph-output)');
+	const glyphCardHeader = glyphCard.querySelector('.card-header');
+
+	glyphCard.classList.toggle('dark-mode', isDarkMode);
+	glyphCardHeader.classList.toggle('dark-mode', isDarkMode);
+
+	const darkModeToggle = document.getElementById('darkModeToggle');
+	darkModeToggle.innerHTML = isDarkMode
+		? '<i class="fas fa-sun"></i> Toggle Light Mode'
+		: '<i class="fas fa-moon"></i> Toggle Dark Mode';
+
+	renderGlyphs();
 }
 
 // Glyph related functions
@@ -124,6 +141,54 @@ function copyOutput() {
 }
 
 // Glyph upload and processing
+function renderGlyphs() {
+	const glyphOutput = document.getElementById('glyph-output');
+	const glyphs = glyphOutput.querySelectorAll('div');
+
+	glyphs.forEach(glyph => {
+		const backgroundImage = glyph.style.backgroundImage;
+		if (backgroundImage) {
+			const img = new Image();
+			img.onload = function () {
+				const canvas = document.createElement('canvas');
+				const ctx = canvas.getContext('2d');
+				canvas.width = img.width;
+				canvas.height = img.height;
+
+				ctx.drawImage(img, 0, 0);
+				const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+				const data = imageData.data;
+
+				for (let i = 0; i < data.length; i += 4) {
+					if (data[i + 3] === 0) { // If pixel is transparent
+						if (isDarkMode) {
+							data[i] = 50;     // R
+							data[i + 1] = 50; // G
+							data[i + 2] = 50; // B
+							data[i + 3] = 128; // A (semi-transparent)
+						} else {
+							data[i] = 200;    // R
+							data[i + 1] = 200; // G
+							data[i + 2] = 200; // B
+							data[i + 3] = 64;  // A (semi-transparent)
+						}
+					}
+				}
+
+				ctx.putImageData(imageData, 0, 0);
+				glyph.style.backgroundImage = `url(${canvas.toDataURL()})`;
+			};
+			img.src = backgroundImage.slice(5, -2); // Remove 'url("")' from backgroundImage
+		}
+
+		// Update glyph background color
+		glyph.style.backgroundColor = isDarkMode ? '#2a2a2a' : '#ffffff';
+		if (glyph.classList.contains('transparent')) {
+			glyph.style.backgroundColor = isDarkMode ? 'rgba(50, 50, 50, 0.5)' : 'rgba(200, 200, 200, 0.25)';
+		}
+	});
+}
+
 function processGlyph(img, hexValue) {
 	const canvas = document.createElement('canvas');
 	const ctx = canvas.getContext('2d');
@@ -178,6 +243,10 @@ function processGlyph(img, hexValue) {
 	} else {
 		hideZoomWindow();
 	}
+
+	document.getElementById('glyph-output').innerHTML = markdownContent;
+	addClickEventToGlyphs();
+	renderGlyphs();
 }
 
 // Zoom related functions
@@ -354,6 +423,7 @@ document.getElementById('conversionModeButton').addEventListener('click', functi
 document.getElementById('convertButton').addEventListener('click', convert);
 document.getElementById('copyButton').addEventListener('click', copyOutput);
 document.getElementById('converterInput').addEventListener('input', convert);
+document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
 
 document.getElementById('glyphUpload').addEventListener('change', function (e) {
 	const file = e.target.files[0];
