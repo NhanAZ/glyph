@@ -51,7 +51,7 @@ function Glyph(glyph = "E0") {
 		const charCode = startChar + i;
 		const char = String.fromCodePoint(charCode);
 		const hexCode = charCode.toString(16).toUpperCase().padStart(4, '0');
-		markdownContent += `<div data-hex="0x${hexCode}" data-char="${char}">
+		markdownContent += `<div data-hex="0x${hexCode}" data-char="${char}" data-position="(${col};${row})">
             ${char}
             <span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>
             <span class="copy-notification">Copied</span>
