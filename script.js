@@ -172,7 +172,7 @@ function processGlyph(img, hexValue) {
 	removeZoomEvents();
 	zoomEnabled = false;
 
-	if (img.width > 256 || img.height > 256) {
+	if (img.width > 0 || img.height > 0) {
 		zoomEnabled = true;
 		addZoomEvents(unicodeSize);
 	} else {
