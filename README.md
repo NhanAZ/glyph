@@ -8,5 +8,7 @@
 [?] Where does the site live?  
 [>] https://nhanaz.github.io/glyph/
 
+[!] Please do not separate files such as HTML, CSS, JavaScript into many different files!
+
 [!] Acknowledgements!  
 [>] It is undeniable that [Claude AI](https://claude.ai/) has truly been a great help for this project!
