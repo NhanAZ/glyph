@@ -51,7 +51,7 @@ function Glyph(glyph = "E0") {
 		const charCode = startChar + i;
 		const char = String.fromCodePoint(charCode);
 		const hexCode = charCode.toString(16).toUpperCase().padStart(4, '0');
-		markdownContent += `<div data-hex="0x${hexCode}" data-char="${char}" data-position="(${col};${row})">
+		markdownContent += `<div data-hex="0x${hexCode}" data-char="${char}" data-position="(${col};${row})" style="color: ${isDarkMode ? '#ffffff' : '#000000'}">
             ${char}
             <span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>
             <span class="copy-notification">Copied</span>
@@ -146,6 +146,9 @@ function renderGlyphs() {
 	const glyphs = glyphOutput.querySelectorAll('div');
 
 	glyphs.forEach(glyph => {
+		glyph.style.backgroundColor = isDarkMode ? '#2a2a2a' : '#ffffff';
+		glyph.style.color = isDarkMode ? '#ffffff' : '#000000';
+
 		const backgroundImage = glyph.style.backgroundImage;
 		if (backgroundImage) {
 			const img = new Image();
@@ -182,9 +185,20 @@ function renderGlyphs() {
 		}
 
 		// Update glyph background color
-		glyph.style.backgroundColor = isDarkMode ? '#2a2a2a' : '#ffffff';
 		if (glyph.classList.contains('transparent')) {
 			glyph.style.backgroundColor = isDarkMode ? 'rgba(50, 50, 50, 0.5)' : 'rgba(200, 200, 200, 0.25)';
+		}
+
+		const tooltip = glyph.querySelector('.tooltip');
+		if (tooltip) {
+			tooltip.style.backgroundColor = isDarkMode ? '#4a4a4a' : '#333';
+			tooltip.style.color = isDarkMode ? '#ffffff' : '#ffffff';
+		}
+
+		const copyNotification = glyph.querySelector('.copy-notification');
+		if (copyNotification) {
+			copyNotification.style.backgroundColor = isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)';
+			copyNotification.style.color = isDarkMode ? '#000000' : '#ffffff';
 		}
 	});
 }
@@ -404,6 +418,7 @@ document.getElementById('glyph-input').addEventListener('input', function () {
 		glyphSuccessMsg.textContent = 'Glyph generated successfully!';
 		glyphSuccessMsg.classList.remove('d-none');
 		glyphErrorMsg.classList.add('d-none');
+		renderGlyphs();
 	} else {
 		glyphErrorMsg.textContent = 'Please enter a valid hex value (1-2 hex digits).';
 		glyphErrorMsg.classList.remove('d-none');
