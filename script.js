@@ -1,7 +1,5 @@
-// Constants
 const GRID = 16;
 
-// Global variables
 let isHexToEmoji = true;
 let zoomWindow = null;
 let updateTimer = null;
@@ -12,7 +10,6 @@ let pressTimer;
 let longPressTimer;
 const LONG_PRESS_DURATION = 500;
 
-// Utility functions
 function showCopyNotification(element) {
 	const notification = element.querySelector('.copy-notification');
 	notification.style.opacity = '1';
@@ -43,7 +40,6 @@ function toggleDarkMode() {
 	renderGlyphs();
 }
 
-// Glyph related functions
 function Glyph(glyph = "E0") {
 	const filename = `glyph_${glyph}`;
 	const startChar = parseInt(filename.split("_").pop() + "00", 16);
@@ -74,196 +70,174 @@ function initializeGlyph() {
 }
 
 function addClickEventToGlyphs() {
-    document.querySelectorAll('#glyph-output div').forEach(div => {
-        let pressStart;
-        let isLongPress = false;
+	document.querySelectorAll('#glyph-output div').forEach(div => {
+		let pressStart;
+		let isLongPress = false;
 
-        // Prevent context menu
-        div.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-        });
+		div.addEventListener('contextmenu', function (e) {
+			e.preventDefault();
+		});
 
-        // Touch start event
-        div.addEventListener('touchstart', function(e) {
-            e.preventDefault(); // Add this line to prevent text selection
-            pressStart = Date.now();
-            const element = this;
-            
-            pressTimer = setTimeout(function() {
-                isLongPress = true;
-                // Vibrate if supported
-                if (navigator.vibrate) {
-                    navigator.vibrate(50);
-                }
-                
-                const rect = element.getBoundingClientRect();
-                showMobileMenu(element, rect);
-            }, LONG_PRESS_DURATION);
-        }, { passive: false });  // Add { passive: false } here
+		div.addEventListener('touchstart', function (e) {
+			e.preventDefault();
+			pressStart = Date.now();
+			const element = this;
 
-        // Touch end event
-        div.addEventListener('touchend', function(e) {
-            clearTimeout(pressTimer);
-            const pressDuration = Date.now() - pressStart;
-            
-            // Only copy if it was a short tap
-            if (pressDuration < LONG_PRESS_DURATION && !isLongPress) {
-                const char = this.getAttribute('data-char');
-                navigator.clipboard.writeText(char).then(() => {
-                    showCopyNotification(this);
-                });
-            }
-            isLongPress = false;
-        });
+			pressTimer = setTimeout(function () {
+				isLongPress = true;
+				if (navigator.vibrate) {
+					navigator.vibrate(50);
+				}
 
-        // Prevent default touch behaviors
-        div.addEventListener('touchmove', function(e) {
-            clearTimeout(pressTimer);
-            isLongPress = false;
-        });
+				const rect = element.getBoundingClientRect();
+				showMobileMenu(element, rect);
+			}, LONG_PRESS_DURATION);
+		}, { passive: false });
 
-        // Keep regular click for non-touch devices
-        div.addEventListener('click', function(e) {
-            if (!e.touches) {  // Only handle non-touch clicks
-                const char = this.getAttribute('data-char');
-                navigator.clipboard.writeText(char).then(() => {
-                    showCopyNotification(this);
-                });
-            }
-        });
+		div.addEventListener('touchend', function (e) {
+			clearTimeout(pressTimer);
+			const pressDuration = Date.now() - pressStart;
 
-        // Prevent selection
-        div.addEventListener('selectstart', function(e) {
-            e.preventDefault();
-        });
-    });
+			if (pressDuration < LONG_PRESS_DURATION && !isLongPress) {
+				const char = this.getAttribute('data-char');
+				navigator.clipboard.writeText(char).then(() => {
+					showCopyNotification(this);
+				});
+			}
+			isLongPress = false;
+		});
+
+		div.addEventListener('touchmove', function (e) {
+			clearTimeout(pressTimer);
+			isLongPress = false;
+		});
+
+		div.addEventListener('click', function (e) {
+			if (!e.touches) {
+				const char = this.getAttribute('data-char');
+				navigator.clipboard.writeText(char).then(() => {
+					showCopyNotification(this);
+				});
+			}
+		});
+
+		div.addEventListener('selectstart', function (e) {
+			e.preventDefault();
+		});
+	});
 }
 
-// Function to show the glyph menu
 function showGlyphMenu(e, glyphDiv) {
-    e.preventDefault();
-    
-    // Remove any existing menus
-    const existingMenu = document.querySelector('.glyph-context-menu');
-    if (existingMenu) {
-        existingMenu.remove();
-    }
+	e.preventDefault();
 
-    const contextMenu = document.createElement('div');
-    contextMenu.className = 'glyph-context-menu';
-    contextMenu.innerHTML = `
-        <div class="menu-item copy">
-            <i class="far fa-copy me-2"></i>Copy Character
-        </div>
-        <div class="menu-item download">
-            <i class="fas fa-download me-2"></i>Download Glyph
-        </div>
-    `;
+	const existingMenu = document.querySelector('.glyph-context-menu');
+	if (existingMenu) {
+		existingMenu.remove();
+	}
 
-    // Position the menu
-    if (e.type.includes('touch')) {
-        // For touch events, center the menu over the glyph
-        const rect = glyphDiv.getBoundingClientRect();
-        contextMenu.style.left = rect.left + (rect.width / 2) - 75 + 'px'; // 75px is half the menu width
-        contextMenu.style.top = rect.top - 60 + 'px'; // Position above the glyph
-    } else {
-        // For mouse events, position at cursor
-        contextMenu.style.left = e.pageX + 'px';
-        contextMenu.style.top = e.pageY + 'px';
-    }
+	const contextMenu = document.createElement('div');
+	contextMenu.className = 'glyph-context-menu';
+	contextMenu.innerHTML = `
+		<div class="menu-item copy">
+			<i class="far fa-copy me-2"></i>Copy Character
+		</div>
+		<div class="menu-item download">
+			<i class="fas fa-download me-2"></i>Download Glyph
+		</div>
+	`;
 
-    document.body.appendChild(contextMenu);
+	if (e.type.includes('touch')) {
+		const rect = glyphDiv.getBoundingClientRect();
+		contextMenu.style.left = rect.left + (rect.width / 2) - 75 + 'px';
+		contextMenu.style.top = rect.top - 60 + 'px';
+	} else {
+		contextMenu.style.left = e.pageX + 'px';
+		contextMenu.style.top = e.pageY + 'px';
+	}
 
-    // Handle menu item clicks
-    contextMenu.querySelector('.copy').addEventListener('click', () => {
-        const char = glyphDiv.getAttribute('data-char');
-        navigator.clipboard.writeText(char).then(() => {
-            showCopyNotification(glyphDiv);
-        });
-        contextMenu.remove();
-    });
+	document.body.appendChild(contextMenu);
 
-    contextMenu.querySelector('.download').addEventListener('click', () => {
-        downloadGlyph(glyphDiv);
-        contextMenu.remove();
-    });
+	contextMenu.querySelector('.copy').addEventListener('click', () => {
+		const char = glyphDiv.getAttribute('data-char');
+		navigator.clipboard.writeText(char).then(() => {
+			showCopyNotification(glyphDiv);
+		});
+		contextMenu.remove();
+	});
 
-        // Remove menu when clicking/touching elsewhere
-    function closeMenu(e) {
-        if (!contextMenu.contains(e.target)) {
-            contextMenu.remove();
-            document.removeEventListener('click', closeMenu);
-            document.removeEventListener('touchstart', closeMenu);
-        }
-    }
+	contextMenu.querySelector('.download').addEventListener('click', () => {
+		downloadGlyph(glyphDiv);
+		contextMenu.remove();
+	});
 
-    document.addEventListener('click', closeMenu);
-    document.addEventListener('touchstart', closeMenu);
+	function closeMenu(e) {
+		if (!contextMenu.contains(e.target)) {
+			contextMenu.remove();
+			document.removeEventListener('click', closeMenu);
+			document.removeEventListener('touchstart', closeMenu);
+		}
+	}
+
+	document.addEventListener('click', closeMenu);
+	document.addEventListener('touchstart', closeMenu);
 }
 
-// New function for showing mobile-specific menu
 function showMobileMenu(glyphDiv, rect) {
-    // Remove any existing menus
-    const existingMenu = document.querySelector('.glyph-mobile-menu');
-    if (existingMenu) {
-        existingMenu.remove();
-    }
+	const existingMenu = document.querySelector('.glyph-mobile-menu');
+	if (existingMenu) {
+		existingMenu.remove();
+	}
 
-    const char = glyphDiv.getAttribute('data-char');
-    const hexCode = glyphDiv.getAttribute('data-hex');
-    
-    const menu = document.createElement('div');
-    menu.className = 'glyph-mobile-menu';
-    
-    menu.innerHTML = `
-        <div class="glyph-preview-section">
-            <div class="glyph-preview">${char}</div>
-        </div>
-        <div class="mobile-menu-content">
-            <div class="mobile-menu-item copy">
-                <i class="far fa-copy"></i>
-                <span>Copy Character</span>
-            </div>
-            <div class="mobile-menu-item download">
-                <i class="fas fa-download"></i>
-                <span>Download Glyph</span>
-            </div>
-        </div>
-        <div class="glyph-hex-code">
-            Hex: ${hexCode}
-        </div>
-    `;
+	const char = glyphDiv.getAttribute('data-char');
+	const hexCode = glyphDiv.getAttribute('data-hex');
 
-    // Position the menu
-    document.body.appendChild(menu);
-    
-    // Center the menu on screen
-    const menuRect = menu.getBoundingClientRect();
-    menu.style.left = `${(window.innerWidth - menuRect.width) / 2}px`;
+	const menu = document.createElement('div');
+	menu.className = 'glyph-mobile-menu';
 
-    // Handle menu item clicks
-    menu.querySelector('.copy').addEventListener('click', () => {
-        navigator.clipboard.writeText(char).then(() => {
-            showCopyNotification(glyphDiv);
-        });
-        menu.remove();
-    });
+	menu.innerHTML = `
+		<div class="glyph-preview-section">
+			<div class="glyph-preview">${char}</div>
+		</div>
+		<div class="mobile-menu-content">
+			<div class="mobile-menu-item copy">
+				<i class="far fa-copy"></i>
+				<span>Copy Character</span>
+			</div>
+			<div class="mobile-menu-item download">
+				<i class="fas fa-download"></i>
+				<span>Download Glyph</span>
+			</div>
+		</div>
+		<div class="glyph-hex-code">
+			Hex: ${hexCode}
+		</div>
+	`;
 
-    menu.querySelector('.download').addEventListener('click', () => {
-        downloadGlyph(glyphDiv);
-        menu.remove();
-    });
+	document.body.appendChild(menu);
 
-    // Close menu when clicking outside
-    document.addEventListener('click', function closeMenu(e) {
-        if (!menu.contains(e.target) && !glyphDiv.contains(e.target)) {
-            menu.remove();
-            document.removeEventListener('click', closeMenu);
-        }
-    });
+	const menuRect = menu.getBoundingClientRect();
+	menu.style.left = `${(window.innerWidth - menuRect.width) / 2}px`;
+
+	menu.querySelector('.copy').addEventListener('click', () => {
+		navigator.clipboard.writeText(char).then(() => {
+			showCopyNotification(glyphDiv);
+		});
+		menu.remove();
+	});
+
+	menu.querySelector('.download').addEventListener('click', () => {
+		downloadGlyph(glyphDiv);
+		menu.remove();
+	});
+
+	document.addEventListener('click', function closeMenu(e) {
+		if (!menu.contains(e.target) && !glyphDiv.contains(e.target)) {
+			menu.remove();
+			document.removeEventListener('click', closeMenu);
+		}
+	});
 }
 
-// Conversion functions
 function convertHexToEmoji(input) {
 	try {
 		const codePoint = parseInt(input, 16);
@@ -323,7 +297,6 @@ function copyOutput() {
 	});
 }
 
-// Glyph upload and processing
 function renderGlyphs() {
 	const glyphOutput = document.getElementById('glyph-output');
 	const glyphs = glyphOutput.querySelectorAll('div');
@@ -346,17 +319,17 @@ function renderGlyphs() {
 				const data = imageData.data;
 
 				for (let i = 0; i < data.length; i += 4) {
-					if (data[i + 3] === 0) { // If pixel is transparent
+					if (data[i + 3] === 0) {
 						if (isDarkMode) {
-							data[i] = 50;	 // R
-							data[i + 1] = 50; // G
-							data[i + 2] = 50; // B
-							data[i + 3] = 128; // A (semi-transparent)
+							data[i] = 50;
+							data[i + 1] = 50;
+							data[i + 2] = 50;
+							data[i + 3] = 128;
 						} else {
-							data[i] = 200;	// R
-							data[i + 1] = 200; // G
-							data[i + 2] = 200; // B
-							data[i + 3] = 64;  // A (semi-transparent)
+							data[i] = 200;
+							data[i + 1] = 200;
+							data[i + 2] = 200;
+							data[i + 3] = 64;
 						}
 					}
 				}
@@ -364,10 +337,9 @@ function renderGlyphs() {
 				ctx.putImageData(imageData, 0, 0);
 				glyph.style.backgroundImage = `url(${canvas.toDataURL()})`;
 			};
-			img.src = backgroundImage.slice(5, -2); // Remove 'url("")' from backgroundImage
+			img.src = backgroundImage.slice(5, -2);
 		}
 
-		// Update glyph background color
 		if (glyph.classList.contains('transparent')) {
 			glyph.style.backgroundColor = isDarkMode ? 'rgba(50, 50, 50, 0.5)' : 'rgba(200, 200, 200, 0.25)';
 		}
@@ -446,7 +418,6 @@ function processGlyph(img, hexValue) {
 	renderGlyphs();
 }
 
-// Zoom related functions
 function removeZoomEvents() {
 	const glyphOutput = document.getElementById('glyph-output');
 	if (glyphOutput.zoomHandlers) {
@@ -586,41 +557,39 @@ function createZoomWindow(unicodeSize) {
 	return zoomWindow;
 }
 
-// Modified downloadGlyph function (unchanged but included for completeness)
 function downloadGlyph(glyphDiv) {
-    const backgroundImage = glyphDiv.style.backgroundImage;
-    const char = glyphDiv.getAttribute('data-char');
-    const hexCode = glyphDiv.getAttribute('data-hex');
-    
-    if (backgroundImage && backgroundImage !== 'none') {
-        const imgUrl = backgroundImage.slice(5, -2);
-        const link = document.createElement('a');
-        link.href = imgUrl;
-        link.download = `glyph_${hexCode.slice(2)}.png`;
-        link.click();
-    } else {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = 32;
-        canvas.height = 32;
-        
-        ctx.fillStyle = isDarkMode ? '#2a2a2a' : '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        ctx.fillStyle = isDarkMode ? '#ffffff' : '#000000';
-        ctx.font = '24px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(char, canvas.width/2, canvas.height/2);
-        
-        const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png');
-        link.download = `glyph_${hexCode.slice(2)}.png`;
-        link.click();
-    }
+	const backgroundImage = glyphDiv.style.backgroundImage;
+	const char = glyphDiv.getAttribute('data-char');
+	const hexCode = glyphDiv.getAttribute('data-hex');
+
+	if (backgroundImage && backgroundImage !== 'none') {
+		const imgUrl = backgroundImage.slice(5, -2);
+		const link = document.createElement('a');
+		link.href = imgUrl;
+		link.download = `glyph_${hexCode.slice(2)}.png`;
+		link.click();
+	} else {
+		const canvas = document.createElement('canvas');
+		const ctx = canvas.getContext('2d');
+		canvas.width = 32;
+		canvas.height = 32;
+
+		ctx.fillStyle = isDarkMode ? '#2a2a2a' : '#ffffff';
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+		ctx.fillStyle = isDarkMode ? '#ffffff' : '#000000';
+		ctx.font = '24px Arial';
+		ctx.textAlign = 'center';
+		ctx.textBaseline = 'middle';
+		ctx.fillText(char, canvas.width / 2, canvas.height / 2);
+
+		const link = document.createElement('a');
+		link.href = canvas.toDataURL('image/png');
+		link.download = `glyph_${hexCode.slice(2)}.png`;
+		link.click();
+	}
 }
 
-// Event listeners
 window.onload = () => {
 	initializeGlyph();
 };
@@ -691,7 +660,6 @@ window.addEventListener('scroll', function () {
 	}
 });
 
-// Add CSS for zoom window
 const style = document.createElement('style');
 style.textContent = `
 	.zoom-window {
@@ -721,7 +689,6 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Mobile Alert functionality
 document.addEventListener('DOMContentLoaded', function () {
 	const mobileAlert = document.getElementById('mobileAlert');
 
