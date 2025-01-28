@@ -27,6 +27,40 @@ body {
 	font-size: 0.9em;
 }
 
+.glyph-context-menu {
+    position: fixed;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    padding: 4px 0;
+    z-index: 1000;
+}
+
+.glyph-context-menu .menu-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.glyph-context-menu .menu-item:hover {
+    background-color: #f0f0f0;
+}
+
+/* Dark mode support */
+.dark-mode .glyph-context-menu {
+    background: #2a2a2a;
+    border-color: #444;
+}
+
+.dark-mode .glyph-context-menu .menu-item {
+    color: white;
+}
+
+.dark-mode .glyph-context-menu .menu-item:hover {
+    background-color: #444;
+}
+
 .glyph-input-label,
 .conversion-mode-text {
 	font-weight: bold;
