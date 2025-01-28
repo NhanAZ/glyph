@@ -98,6 +98,10 @@ body {
 	overflow-x: auto;
 	padding-bottom: 10px;
 	width: 100%;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
 }
 
 #glyph-output div {
@@ -115,6 +119,11 @@ body {
 	background-repeat: no-repeat;
 	image-rendering: pixelated;
 	overflow: visible;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	-webkit-touch-callout: none;
 }
 
 #glyph-output div:hover {
