@@ -73,14 +73,15 @@ function addClickEventToGlyphs() {
 	document.querySelectorAll('#glyph-output div').forEach(div => {
 		let pressStart;
 		let isLongPress = false;
+		let touchStartY;
 
 		div.addEventListener('contextmenu', function (e) {
 			e.preventDefault();
 		});
 
 		div.addEventListener('touchstart', function (e) {
-			e.preventDefault();
 			pressStart = Date.now();
+			touchStartY = e.touches[0].clientY;
 			const element = this;
 
 			pressTimer = setTimeout(function () {
@@ -92,7 +93,7 @@ function addClickEventToGlyphs() {
 				const rect = element.getBoundingClientRect();
 				showMobileMenu(element, rect);
 			}, LONG_PRESS_DURATION);
-		}, { passive: false });
+		}, { passive: true });
 
 		div.addEventListener('touchend', function (e) {
 			clearTimeout(pressTimer);
@@ -108,9 +109,14 @@ function addClickEventToGlyphs() {
 		});
 
 		div.addEventListener('touchmove', function (e) {
-			clearTimeout(pressTimer);
-			isLongPress = false;
-		});
+			const touchMoveY = e.touches[0].clientY;
+			const deltaY = Math.abs(touchMoveY - touchStartY);
+
+			if (deltaY > 10) {
+				clearTimeout(pressTimer);
+				isLongPress = false;
+			}
+		}, { passive: true });
 
 		div.addEventListener('click', function (e) {
 			if (!e.touches) {
@@ -190,13 +196,18 @@ function showMobileMenu(glyphDiv, rect) {
 
 	const char = glyphDiv.getAttribute('data-char');
 	const hexCode = glyphDiv.getAttribute('data-hex');
+	const backgroundImage = glyphDiv.style.backgroundImage;
 
 	const menu = document.createElement('div');
 	menu.className = 'glyph-mobile-menu';
 
+	const previewStyle = backgroundImage ?
+		`background-image: ${backgroundImage}; background-size: contain;` :
+		'';
+
 	menu.innerHTML = `
 		<div class="glyph-preview-section">
-			<div class="glyph-preview">${char}</div>
+			<div class="glyph-preview" style="${previewStyle}">${char}</div>
 		</div>
 		<div class="mobile-menu-content">
 			<div class="mobile-menu-item copy">
@@ -212,30 +223,6 @@ function showMobileMenu(glyphDiv, rect) {
 			Hex: ${hexCode}
 		</div>
 	`;
-
-	document.body.appendChild(menu);
-
-	const menuRect = menu.getBoundingClientRect();
-	menu.style.left = `${(window.innerWidth - menuRect.width) / 2}px`;
-
-	menu.querySelector('.copy').addEventListener('click', () => {
-		navigator.clipboard.writeText(char).then(() => {
-			showCopyNotification(glyphDiv);
-		});
-		menu.remove();
-	});
-
-	menu.querySelector('.download').addEventListener('click', () => {
-		downloadGlyph(glyphDiv);
-		menu.remove();
-	});
-
-	document.addEventListener('click', function closeMenu(e) {
-		if (!menu.contains(e.target) && !glyphDiv.contains(e.target)) {
-			menu.remove();
-			document.removeEventListener('click', closeMenu);
-		}
-	});
 }
 
 function convertHexToEmoji(input) {
