@@ -78,8 +78,14 @@ function addClickEventToGlyphs() {
         let pressStart;
         let isLongPress = false;
 
+        // Prevent context menu
+        div.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
         // Touch start event
         div.addEventListener('touchstart', function(e) {
+            e.preventDefault(); // Add this line to prevent text selection
             pressStart = Date.now();
             const element = this;
             
@@ -93,7 +99,7 @@ function addClickEventToGlyphs() {
                 const rect = element.getBoundingClientRect();
                 showMobileMenu(element, rect);
             }, LONG_PRESS_DURATION);
-        }, { passive: false });
+        }, { passive: false });  // Add { passive: false } here
 
         // Touch end event
         div.addEventListener('touchend', function(e) {
@@ -124,6 +130,11 @@ function addClickEventToGlyphs() {
                     showCopyNotification(this);
                 });
             }
+        });
+
+        // Prevent selection
+        div.addEventListener('selectstart', function(e) {
+            e.preventDefault();
         });
     });
 }
