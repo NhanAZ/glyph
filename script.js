@@ -7,6 +7,8 @@ let zoomWindow = null;
 let updateTimer = null;
 let zoomEnabled = false;
 let isDarkMode = false;
+let longPressTimer;
+const LONG_PRESS_DURATION = 500;
 
 // Utility functions
 function showCopyNotification(element) {
@@ -70,14 +72,106 @@ function initializeGlyph() {
 }
 
 function addClickEventToGlyphs() {
-	document.querySelectorAll('#glyph-output div').forEach(div => {
-		div.addEventListener('click', function () {
-			const char = this.getAttribute('data-char');
-			navigator.clipboard.writeText(char).then(() => {
-				showCopyNotification(this);
-			});
-		});
-	});
+    document.querySelectorAll('#glyph-output div').forEach(div => {
+        let isDragging = false;
+        
+        // Handle touch events for mobile
+        div.addEventListener('touchstart', function(e) {
+            longPressTimer = setTimeout(() => {
+                showGlyphMenu(e, this);
+            }, LONG_PRESS_DURATION);
+        }, { passive: true });
+
+        div.addEventListener('touchend', function(e) {
+            clearTimeout(longPressTimer);
+            if (!isDragging) {
+                const char = this.getAttribute('data-char');
+                navigator.clipboard.writeText(char).then(() => {
+                    showCopyNotification(this);
+                });
+            }
+        });
+
+        div.addEventListener('touchmove', function() {
+            isDragging = true;
+            clearTimeout(longPressTimer);
+        });
+
+        // Handle mouse events for desktop
+        div.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            showGlyphMenu(e, this);
+        });
+
+        div.addEventListener('click', function() {
+            const char = this.getAttribute('data-char');
+            navigator.clipboard.writeText(char).then(() => {
+                showCopyNotification(this);
+            });
+        });
+    });
+}
+
+// Function to show the glyph menu
+function showGlyphMenu(e, glyphDiv) {
+    e.preventDefault();
+    
+    // Remove any existing menus
+    const existingMenu = document.querySelector('.glyph-context-menu');
+    if (existingMenu) {
+        existingMenu.remove();
+    }
+
+    const contextMenu = document.createElement('div');
+    contextMenu.className = 'glyph-context-menu';
+    contextMenu.innerHTML = `
+        <div class="menu-item copy">
+            <i class="far fa-copy me-2"></i>Copy Character
+        </div>
+        <div class="menu-item download">
+            <i class="fas fa-download me-2"></i>Download Glyph
+        </div>
+    `;
+
+    // Position the menu
+    if (e.type.includes('touch')) {
+        // For touch events, center the menu over the glyph
+        const rect = glyphDiv.getBoundingClientRect();
+        contextMenu.style.left = rect.left + (rect.width / 2) - 75 + 'px'; // 75px is half the menu width
+        contextMenu.style.top = rect.top - 60 + 'px'; // Position above the glyph
+    } else {
+        // For mouse events, position at cursor
+        contextMenu.style.left = e.pageX + 'px';
+        contextMenu.style.top = e.pageY + 'px';
+    }
+
+    document.body.appendChild(contextMenu);
+
+    // Handle menu item clicks
+    contextMenu.querySelector('.copy').addEventListener('click', () => {
+        const char = glyphDiv.getAttribute('data-char');
+        navigator.clipboard.writeText(char).then(() => {
+            showCopyNotification(glyphDiv);
+        });
+        contextMenu.remove();
+    });
+
+    contextMenu.querySelector('.download').addEventListener('click', () => {
+        downloadGlyph(glyphDiv);
+        contextMenu.remove();
+    });
+
+        // Remove menu when clicking/touching elsewhere
+    function closeMenu(e) {
+        if (!contextMenu.contains(e.target)) {
+            contextMenu.remove();
+            document.removeEventListener('click', closeMenu);
+            document.removeEventListener('touchstart', closeMenu);
+        }
+    }
+
+    document.addEventListener('click', closeMenu);
+    document.addEventListener('touchstart', closeMenu);
 }
 
 // Conversion functions
@@ -403,38 +497,33 @@ function createZoomWindow(unicodeSize) {
 	return zoomWindow;
 }
 
+// Modified downloadGlyph function (unchanged but included for completeness)
 function downloadGlyph(glyphDiv) {
-    // Get the background image URL or create canvas from character
     const backgroundImage = glyphDiv.style.backgroundImage;
     const char = glyphDiv.getAttribute('data-char');
     const hexCode = glyphDiv.getAttribute('data-hex');
     
     if (backgroundImage && backgroundImage !== 'none') {
-        // For uploaded glyphs with background image
-        const imgUrl = backgroundImage.slice(5, -2); // Remove 'url("")'
+        const imgUrl = backgroundImage.slice(5, -2);
         const link = document.createElement('a');
         link.href = imgUrl;
         link.download = `glyph_${hexCode.slice(2)}.png`;
         link.click();
     } else {
-        // For default glyphs without background image
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         canvas.width = 32;
         canvas.height = 32;
         
-        // Set background
         ctx.fillStyle = isDarkMode ? '#2a2a2a' : '#ffffff';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Draw the character
         ctx.fillStyle = isDarkMode ? '#ffffff' : '#000000';
         ctx.font = '24px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(char, canvas.width/2, canvas.height/2);
         
-        // Create download link
         const link = document.createElement('a');
         link.href = canvas.toDataURL('image/png');
         link.download = `glyph_${hexCode.slice(2)}.png`;
