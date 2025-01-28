@@ -173,15 +173,26 @@ function showMobileMenu(glyphDiv) {
 	}
 
 	const char = glyphDiv.getAttribute('data-char');
-	const backgroundStyle = glyphDiv.style.backgroundImage;
+	const backgroundStyle = window.getComputedStyle(glyphDiv).backgroundImage;
+	const backgroundSize = window.getComputedStyle(glyphDiv).backgroundSize;
+	const backgroundPosition = window.getComputedStyle(glyphDiv).backgroundPosition;
+	const backgroundRepeat = window.getComputedStyle(glyphDiv).backgroundRepeat;
 
 	const menu = document.createElement('div');
 	menu.className = 'glyph-mobile-menu';
 
 	menu.innerHTML = `
 		<div class="glyph-preview-section">
-			<div class="glyph-preview" style="${backgroundStyle ? `background-image: ${backgroundStyle}; background-size: contain; background-position: center; background-repeat: no-repeat;` : ''}">
-				${!backgroundStyle ? char : ''}
+			<div class="glyph-preview" style="
+				background-image: ${backgroundStyle};
+				background-size: ${backgroundSize};
+				background-position: ${backgroundPosition};
+				background-repeat: ${backgroundRepeat};
+				width: 48px;
+				height: 48px;
+				${!backgroundStyle || backgroundStyle === 'none' ? '' : 'color: transparent;'}
+			">
+				${!backgroundStyle || backgroundStyle === 'none' ? char : ''}
 			</div>
 		</div>
 		<div class="mobile-menu-content">
