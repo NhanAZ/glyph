@@ -89,13 +89,10 @@ function addClickEventToGlyphs() {
 
 			pressTimer = setTimeout(function () {
 				if (!isScrolling) {
-					isLongPress = true;
 					if (navigator.vibrate) {
 						navigator.vibrate(50);
 					}
-					if (window.innerWidth < 768) {
-						showMobileMenu(element);
-					}
+					showMobileMenu(element);
 				}
 			}, LONG_PRESS_DURATION);
 		}, { passive: true });
@@ -115,14 +112,7 @@ function addClickEventToGlyphs() {
 			clearTimeout(pressTimer);
 			if (isScrolling) return;
 
-			const pressDuration = Date.now() - pressStart;
-			if (pressDuration < LONG_PRESS_DURATION && !isLongPress) {
-				const char = this.getAttribute('data-char');
-				navigator.clipboard.writeText(char).then(() => {
-					showCopyNotification(this);
-				});
-			}
-			isLongPress = false;
+			showMobileMenu(this);
 		});
 	});
 }
@@ -138,13 +128,13 @@ function showGlyphMenu(e, glyphDiv) {
 	const contextMenu = document.createElement('div');
 	contextMenu.className = 'glyph-context-menu';
 	contextMenu.innerHTML = `
-        <div class="menu-item copy">
-            <i class="far fa-copy me-2"></i>Copy Character
-        </div>
-        <div class="menu-item download">
-            <i class="fas fa-download me-2"></i>Download Glyph
-        </div>
-    `;
+		<div class="menu-item copy">
+			<i class="far fa-copy me-2"></i>Copy Character
+		</div>
+		<div class="menu-item download">
+			<i class="fas fa-download me-2"></i>Download Glyph
+		</div>
+	`;
 
 	contextMenu.style.left = e.pageX + 'px';
 	contextMenu.style.top = e.pageY + 'px';
@@ -183,33 +173,32 @@ function showMobileMenu(glyphDiv) {
 	}
 
 	const char = glyphDiv.getAttribute('data-char');
-	const backgroundImage = glyphDiv.style.backgroundImage;
+	const backgroundStyle = glyphDiv.style.backgroundImage;
 
 	const menu = document.createElement('div');
 	menu.className = 'glyph-mobile-menu';
 
-	const previewStyle = backgroundImage ?
-		`background-image: ${backgroundImage}; background-size: contain; background-position: center; background-repeat: no-repeat;` : '';
-
 	menu.innerHTML = `
-        <div class="glyph-preview-section">
-            <div class="glyph-preview" style="${previewStyle}">
-                ${!backgroundImage ? char : ''}
-            </div>
-        </div>
-        <div class="mobile-menu-content">
-            <div class="mobile-menu-item copy">
-                <i class="far fa-copy"></i>
-                <span>Copy Unicode</span>
-            </div>
-            <div class="mobile-menu-item download">
-                <i class="fas fa-download"></i>
-                <span>Download Image</span>
-            </div>
-        </div>
-    `;
+		<div class="glyph-preview-section">
+			<div class="glyph-preview" style="${backgroundStyle ? `background-image: ${backgroundStyle}; background-size: contain; background-position: center; background-repeat: no-repeat;` : ''}">
+				${!backgroundStyle ? char : ''}
+			</div>
+		</div>
+		<div class="mobile-menu-content">
+			<div class="mobile-menu-item copy">
+				<i class="far fa-copy"></i>
+				<span>Copy Unicode</span>
+			</div>
+			<div class="mobile-menu-item download">
+				<i class="fas fa-download"></i>
+				<span>Download Image</span>
+			</div>
+		</div>
+	`;
 
 	document.body.appendChild(menu);
+	menu.style.left = '50%';
+	menu.style.transform = 'translateX(-50%)';
 
 	menu.querySelector('.copy').addEventListener('click', () => {
 		navigator.clipboard.writeText(char).then(() => {
