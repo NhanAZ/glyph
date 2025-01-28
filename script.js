@@ -209,10 +209,16 @@ function showMobileMenu(glyphDiv, rect) {
         existingMenu.remove();
     }
 
+    const char = glyphDiv.getAttribute('data-char');
+    const hexCode = glyphDiv.getAttribute('data-hex');
+    
     const menu = document.createElement('div');
     menu.className = 'glyph-mobile-menu';
     
     menu.innerHTML = `
+        <div class="glyph-preview-section">
+            <div class="glyph-preview">${char}</div>
+        </div>
         <div class="mobile-menu-content">
             <div class="mobile-menu-item copy">
                 <i class="far fa-copy"></i>
@@ -223,6 +229,9 @@ function showMobileMenu(glyphDiv, rect) {
                 <span>Download Glyph</span>
             </div>
         </div>
+        <div class="glyph-hex-code">
+            Hex: ${hexCode}
+        </div>
     `;
 
     // Position the menu
@@ -231,11 +240,9 @@ function showMobileMenu(glyphDiv, rect) {
     // Center the menu on screen
     const menuRect = menu.getBoundingClientRect();
     menu.style.left = `${(window.innerWidth - menuRect.width) / 2}px`;
-    menu.style.bottom = '20px';
 
     // Handle menu item clicks
     menu.querySelector('.copy').addEventListener('click', () => {
-        const char = glyphDiv.getAttribute('data-char');
         navigator.clipboard.writeText(char).then(() => {
             showCopyNotification(glyphDiv);
         });
