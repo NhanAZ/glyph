@@ -1,3 +1,4 @@
+/* Variables */
 :root {
 	--primary-color: #4a89dc;
 	--primary-hover-color: #3b78cc;
@@ -6,6 +7,7 @@
 	--transition-speed: 0.3s;
 }
 
+/* Global Styles */
 body {
 	background-color: var(--background-color);
 }
@@ -14,6 +16,7 @@ body {
 	max-width: 1200px;
 }
 
+/* Typography */
 .text-muted {
 	font-size: 0.9em;
 }
@@ -24,167 +27,12 @@ body {
 	font-size: 0.9em;
 }
 
-.glyph-context-menu {
-	position: fixed;
-	background: white;
-	border: 1px solid #ccc;
-	border-radius: 8px;
-	box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-	padding: 8px 0;
-	z-index: 1000;
-	min-width: 150px;
-}
-
-.glyph-context-menu .menu-item {
-	padding: 10px 16px;
-	cursor: pointer;
-	transition: background-color 0.2s;
-	display: flex;
-	align-items: center;
-	font-size: 14px;
-}
-
-.glyph-context-menu .menu-item i {
-	width: 20px;
-	text-align: center;
-	margin-right: 8px;
-}
-
-.glyph-context-menu .menu-item:hover {
-	background-color: #f0f0f0;
-}
-
-.dark-mode .glyph-context-menu {
-	background: #2a2a2a;
-	border-color: #444;
-}
-
-.dark-mode .glyph-context-menu .menu-item {
-	color: white;
-}
-
-.dark-mode .glyph-context-menu .menu-item:hover {
-	background-color: #444;
-}
-
-@media (max-width: 768px) {
-	.glyph-context-menu {
-		position: fixed;
-		left: 50% !important;
-		transform: translateX(-50%);
-		width: 200px;
-		background: rgba(255, 255, 255, 0.95);
-		backdrop-filter: blur(5px);
-	}
-
-	.dark-mode .glyph-context-menu {
-		background: rgba(42, 42, 42, 0.95);
-	}
-}
-
 .glyph-input-label,
 .conversion-mode-text {
 	font-weight: bold;
 }
 
-.glyph-mobile-menu {
-	position: fixed;
-	bottom: 20px;
-	z-index: 1000;
-	width: 90%;
-	max-width: 300px;
-	background: rgba(255, 255, 255, 0.95);
-	border-radius: 12px;
-	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-	backdrop-filter: blur(10px);
-}
-
-.glyph-preview-section {
-	padding: 16px;
-	display: flex;
-	justify-content: center;
-}
-
-.glyph-preview {
-	width: 48px;
-	height: 48px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 24px;
-	background: rgba(0, 0, 0, 0.05);
-	border-radius: 8px;
-}
-
-.dark-mode .glyph-mobile-menu {
-	background: rgba(42, 42, 42, 0.95);
-}
-
-.dark-mode .glyph-preview {
-	background: rgba(255, 255, 255, 0.1);
-}
-
-.mobile-menu-content {
-	padding: 8px;
-}
-
-.mobile-menu-item {
-	padding: 12px 16px;
-	display: flex;
-	align-items: center;
-	gap: 12px;
-}
-
-.dark-mode .mobile-menu-item {
-	color: #fff;
-}
-
-.dark-mode .glyph-hex-code {
-	color: #999;
-}
-
-.dark-mode .glyph-preview-section {
-	border-bottom-color: rgba(255, 255, 255, 0.1);
-}
-
-.mobile-menu-item:active {
-	background: rgba(0, 0, 0, 0.1);
-}
-
-.dark-mode .mobile-menu-item:active {
-	background: rgba(255, 255, 255, 0.1);
-}
-
-.mobile-menu-item i {
-	margin-right: 12px;
-	width: 20px;
-	text-align: center;
-}
-
-.glyph-hex-code {
-	padding: 8px 16px;
-	text-align: center;
-	font-size: 14px;
-	color: #666;
-}
-
-@keyframes slideUp {
-	from {
-		transform: translateY(100%);
-		opacity: 0;
-	}
-
-	to {
-		transform: translateY(0);
-		opacity: 1;
-	}
-}
-
-.glyph-output div:active {
-	transform: scale(0.95);
-}
-
-
+/* Card Styles */
 .card {
 	border: none;
 	border-radius: var(--card-border-radius);
@@ -201,6 +49,7 @@ body {
 	border-bottom: none;
 }
 
+/* Button Styles */
 .btn-primary {
 	background-color: var(--primary-color);
 	border-color: var(--primary-color);
@@ -234,6 +83,7 @@ body {
 	margin-right: 0.25rem;
 }
 
+/* Dark Mode Styles */
 .card-header.bg-primary.dark-mode {
 	background-color: #2a2a2a !important;
 }
@@ -243,10 +93,12 @@ body {
 	color: #ffffff;
 }
 
+/* File Upload Styles */
 #glyphUpload {
 	margin-top: 5px;
 }
 
+/* Glyph Output Styles */
 #glyph-output {
 	display: grid;
 	grid-template-columns: repeat(16, minmax(40px, 1fr));
@@ -271,11 +123,6 @@ body {
 	background-repeat: no-repeat;
 	image-rendering: pixelated;
 	overflow: visible;
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
-	-webkit-touch-callout: none;
 }
 
 #glyph-output div:hover {
@@ -288,18 +135,7 @@ body {
 	background-color: rgba(200, 200, 200, 0.25);
 }
 
-#glyph-output {
-	-webkit-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
-}
-
-#glyph-output div:focus {
-	outline: none;
-	-webkit-tap-highlight-color: transparent;
-}
-
+/* Tooltip Styles */
 .tooltip {
 	position: absolute;
 	bottom: 100%;
@@ -322,6 +158,7 @@ body {
 	transform: translateX(-50%) translateY(-5px);
 }
 
+/* Copy Notification Styles */
 .copy-notification {
 	position: absolute;
 	background-color: rgba(0, 0, 0, 0.7);
@@ -350,6 +187,7 @@ body {
 	}
 }
 
+/* Footer Styles */
 footer {
 	border-top: 1px solid #dee2e6;
 	padding-top: 20px;
@@ -363,6 +201,7 @@ footer a:hover {
 	color: #007bff !important;
 }
 
+/* Zoom Window Styles */
 .zoom-window {
 	border-radius: 5px;
 	background: white;
@@ -381,6 +220,7 @@ footer a:hover {
 	text-align: center;
 }
 
+/* Mobile Alert Styles */
 #mobileAlert {
 	background-color: rgba(255, 243, 205, 0.9);
 	border: none;
@@ -396,6 +236,7 @@ footer a:hover {
 	transform: translateY(-50%);
 }
 
+/* Media Queries */
 @media (max-width: 767.98px) {
 	#glyph-output {
 		grid-template-columns: repeat(16, 50px);
