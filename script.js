@@ -129,10 +129,10 @@ function showGlyphMenu(e, glyphDiv) {
 	contextMenu.className = 'glyph-context-menu';
 	contextMenu.innerHTML = `
 		<div class="menu-item copy">
-			<i class="far fa-copy me-2"></i>Copy Character
+			<i class="far fa-copy me-2"></i>Copy Unicode
 		</div>
 		<div class="menu-item download">
-			<i class="fas fa-download me-2"></i>Download Glyph
+			<i class="fas fa-download me-2"></i>Download Image
 		</div>
 	`;
 
