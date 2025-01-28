@@ -223,6 +223,30 @@ function showMobileMenu(glyphDiv, rect) {
 			Hex: ${hexCode}
 		</div>
 	`;
+
+	document.body.appendChild(menu);
+
+	const menuRect = menu.getBoundingClientRect();
+	menu.style.left = `${(window.innerWidth - menuRect.width) / 2}px`;
+
+	menu.querySelector('.copy').addEventListener('click', () => {
+		navigator.clipboard.writeText(char).then(() => {
+			showCopyNotification(glyphDiv);
+		});
+		menu.remove();
+	});
+
+	menu.querySelector('.download').addEventListener('click', () => {
+		downloadGlyph(glyphDiv);
+		menu.remove();
+	});
+
+	document.addEventListener('click', function closeMenu(e) {
+		if (!menu.contains(e.target) && !glyphDiv.contains(e.target)) {
+			menu.remove();
+			document.removeEventListener('click', closeMenu);
+		}
+	});
 }
 
 function convertHexToEmoji(input) {
