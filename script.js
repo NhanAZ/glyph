@@ -76,6 +76,11 @@ function addClickEventToGlyphs() {
 		let touchStartY;
 		let isScrolling = false;
 
+		div.addEventListener('contextmenu', function (e) {
+			e.preventDefault();
+			showGlyphMenu(e, this);
+		});
+
 		div.addEventListener('touchstart', function (e) {
 			isScrolling = false;
 			pressStart = Date.now();
@@ -89,10 +94,7 @@ function addClickEventToGlyphs() {
 						navigator.vibrate(50);
 					}
 					if (window.innerWidth < 768) {
-						const rect = element.getBoundingClientRect();
-						showMobileMenu(element, rect);
-					} else {
-						showGlyphMenu(e, element);
+						showMobileMenu(element);
 					}
 				}
 			}, LONG_PRESS_DURATION);
@@ -136,22 +138,16 @@ function showGlyphMenu(e, glyphDiv) {
 	const contextMenu = document.createElement('div');
 	contextMenu.className = 'glyph-context-menu';
 	contextMenu.innerHTML = `
-		<div class="menu-item copy">
-			<i class="far fa-copy me-2"></i>Copy Character
-		</div>
-		<div class="menu-item download">
-			<i class="fas fa-download me-2"></i>Download Glyph
-		</div>
-	`;
+        <div class="menu-item copy">
+            <i class="far fa-copy me-2"></i>Copy Character
+        </div>
+        <div class="menu-item download">
+            <i class="fas fa-download me-2"></i>Download Glyph
+        </div>
+    `;
 
-	if (e.type.includes('touch')) {
-		const rect = glyphDiv.getBoundingClientRect();
-		contextMenu.style.left = rect.left + (rect.width / 2) - 75 + 'px';
-		contextMenu.style.top = rect.top - 60 + 'px';
-	} else {
-		contextMenu.style.left = e.pageX + 'px';
-		contextMenu.style.top = e.pageY + 'px';
-	}
+	contextMenu.style.left = e.pageX + 'px';
+	contextMenu.style.top = e.pageY + 'px';
 
 	document.body.appendChild(contextMenu);
 
@@ -180,14 +176,13 @@ function showGlyphMenu(e, glyphDiv) {
 	document.addEventListener('touchstart', closeMenu);
 }
 
-function showMobileMenu(glyphDiv, rect) {
+function showMobileMenu(glyphDiv) {
 	const existingMenu = document.querySelector('.glyph-mobile-menu');
 	if (existingMenu) {
 		existingMenu.remove();
 	}
 
 	const char = glyphDiv.getAttribute('data-char');
-	const hexCode = glyphDiv.getAttribute('data-hex');
 	const backgroundImage = glyphDiv.style.backgroundImage;
 
 	const menu = document.createElement('div');
@@ -197,32 +192,24 @@ function showMobileMenu(glyphDiv, rect) {
 		`background-image: ${backgroundImage}; background-size: contain; background-position: center; background-repeat: no-repeat;` : '';
 
 	menu.innerHTML = `
-		<div class="glyph-preview-section">
-			<div class="glyph-preview" style="${previewStyle}">
-				${!backgroundImage ? char : ''}
-			</div>
-		</div>
-		<div class="mobile-menu-content">
-			<div class="mobile-menu-item copy">
-				<i class="far fa-copy"></i>
-				<span>Copy Unicode</span>
-			</div>
-			<div class="mobile-menu-item download">
-				<i class="fas fa-download"></i>
-				<span>Download Image</span>
-			</div>
-		</div>
-		<div class="glyph-hex-code">
-			Hex: ${hexCode}
-		</div>
-	`;
+        <div class="glyph-preview-section">
+            <div class="glyph-preview" style="${previewStyle}">
+                ${!backgroundImage ? char : ''}
+            </div>
+        </div>
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-item copy">
+                <i class="far fa-copy"></i>
+                <span>Copy Unicode</span>
+            </div>
+            <div class="mobile-menu-item download">
+                <i class="fas fa-download"></i>
+                <span>Download Image</span>
+            </div>
+        </div>
+    `;
 
 	document.body.appendChild(menu);
-
-	menu.style.position = 'fixed';
-	menu.style.bottom = '20px';
-	menu.style.left = '50%';
-	menu.style.transform = 'translateX(-50%)';
 
 	menu.querySelector('.copy').addEventListener('click', () => {
 		navigator.clipboard.writeText(char).then(() => {
