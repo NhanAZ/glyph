@@ -190,12 +190,13 @@ function showMobileMenu(glyphDiv, rect) {
 	menu.className = 'glyph-mobile-menu';
 
 	const previewStyle = backgroundImage ?
-		`background-image: ${backgroundImage}; background-size: contain;` :
-		'';
+		`background-image: ${backgroundImage}; background-size: contain; background-position: center; background-repeat: no-repeat;` : '';
 
 	menu.innerHTML = `
 		<div class="glyph-preview-section">
-			<div class="glyph-preview" style="${previewStyle}">${char}</div>
+			<div class="glyph-preview" style="${previewStyle}">
+				${!backgroundImage ? char : ''}
+			</div>
 		</div>
 		<div class="mobile-menu-content">
 			<div class="mobile-menu-item copy">
@@ -214,8 +215,10 @@ function showMobileMenu(glyphDiv, rect) {
 
 	document.body.appendChild(menu);
 
-	const menuRect = menu.getBoundingClientRect();
-	menu.style.left = `${(window.innerWidth - menuRect.width) / 2}px`;
+	menu.style.position = 'fixed';
+	menu.style.bottom = '20px';
+	menu.style.left = '50%';
+	menu.style.transform = 'translateX(-50%)';
 
 	menu.querySelector('.copy').addEventListener('click', () => {
 		navigator.clipboard.writeText(char).then(() => {
