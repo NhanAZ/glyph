@@ -92,6 +92,72 @@ body {
 	font-weight: bold;
 }
 
+.glyph-mobile-menu {
+    position: fixed;
+    bottom: 20px;
+    z-index: 1000;
+    width: 90%;
+    max-width: 300px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    animation: slideUp 0.3s ease-out;
+}
+
+.dark-mode .glyph-mobile-menu {
+    background: rgba(42, 42, 42, 0.95);
+}
+
+.mobile-menu-content {
+    padding: 8px;
+}
+
+.mobile-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    font-size: 16px;
+    color: #333;
+    border-radius: 8px;
+    margin: 4px 0;
+}
+
+.dark-mode .mobile-menu-item {
+    color: #fff;
+}
+
+.mobile-menu-item:active {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .mobile-menu-item:active {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-menu-item i {
+    margin-right: 12px;
+    width: 20px;
+    text-align: center;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Add haptic feedback visual */
+.glyph-output div:active {
+    transform: scale(0.95);
+}
+
+
 /* Card Styles */
 .card {
 	border: none;
