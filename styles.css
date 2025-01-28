@@ -1,4 +1,3 @@
-/* Variables */
 :root {
 	--primary-color: #4a89dc;
 	--primary-hover-color: #3b78cc;
@@ -7,7 +6,6 @@
 	--transition-speed: 0.3s;
 }
 
-/* Global Styles */
 body {
 	background-color: var(--background-color);
 }
@@ -16,7 +14,6 @@ body {
 	max-width: 1200px;
 }
 
-/* Typography */
 .text-muted {
 	font-size: 0.9em;
 }
@@ -32,7 +29,6 @@ body {
 	font-weight: bold;
 }
 
-/* Card Styles */
 .card {
 	border: none;
 	border-radius: var(--card-border-radius);
@@ -49,7 +45,6 @@ body {
 	border-bottom: none;
 }
 
-/* Button Styles */
 .btn-primary {
 	background-color: var(--primary-color);
 	border-color: var(--primary-color);
@@ -83,7 +78,6 @@ body {
 	margin-right: 0.25rem;
 }
 
-/* Dark Mode Styles */
 .card-header.bg-primary.dark-mode {
 	background-color: #2a2a2a !important;
 }
@@ -93,12 +87,10 @@ body {
 	color: #ffffff;
 }
 
-/* File Upload Styles */
 #glyphUpload {
 	margin-top: 5px;
 }
 
-/* Glyph Output Styles */
 #glyph-output {
 	display: grid;
 	grid-template-columns: repeat(16, minmax(40px, 1fr));
@@ -135,7 +127,6 @@ body {
 	background-color: rgba(200, 200, 200, 0.25);
 }
 
-/* Tooltip Styles */
 .tooltip {
 	position: absolute;
 	bottom: 100%;
@@ -158,7 +149,6 @@ body {
 	transform: translateX(-50%) translateY(-5px);
 }
 
-/* Copy Notification Styles */
 .copy-notification {
 	position: absolute;
 	background-color: rgba(0, 0, 0, 0.7);
@@ -187,7 +177,6 @@ body {
 	}
 }
 
-/* Footer Styles */
 footer {
 	border-top: 1px solid #dee2e6;
 	padding-top: 20px;
@@ -201,18 +190,46 @@ footer a:hover {
 	color: #007bff !important;
 }
 
-/* Zoom Window Styles */
 .zoom-window {
-	border-radius: 5px;
+	position: fixed;
+	right: 20px;
+	bottom: 20px;
 	background: white;
-	padding: 10px;
-	box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+	padding: 15px;
+	border-radius: 8px;
+	box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+	z-index: 1000;
+	min-width: 300px;
 }
+
+.zoom-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 10px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #eee;
+}
+
+.zoom-window:hover {
+	opacity: 1;
+}
+
 
 .zoom-window canvas {
 	display: block;
 	image-rendering: pixelated;
+	width: 256px;
+	height: 256px;
+	margin: 0 auto;
 }
+
+.zoom-info {
+	text-align: center;
+	margin: 10px 0;
+	color: #666;
+}
+
 
 .zoom-window .zoom-info {
 	margin-top: 5px;
@@ -220,7 +237,23 @@ footer a:hover {
 	text-align: center;
 }
 
-/* Mobile Alert Styles */
+.zoom-window.dark-mode {
+	background: #2a2a2a;
+	color: white;
+}
+
+.zoom-window.dark-mode .zoom-header {
+	border-bottom-color: #444;
+}
+
+.zoom-window.dark-mode .zoom-info {
+	color: #ccc;
+}
+
+.zoom-window.dark-mode .btn-close {
+	filter: invert(1);
+}
+
 #mobileAlert {
 	background-color: rgba(255, 243, 205, 0.9);
 	border: none;
@@ -236,7 +269,6 @@ footer a:hover {
 	transform: translateY(-50%);
 }
 
-/* Media Queries */
 @media (max-width: 767.98px) {
 	#glyph-output {
 		grid-template-columns: repeat(16, 50px);
@@ -333,4 +365,32 @@ footer a:hover {
 		border-top-right-radius: 0 !important;
 		border-bottom-right-radius: 0 !important;
 	}
+}
+
+.zoom-actions {
+	display: flex;
+	gap: 10px;
+	margin-top: 10px;
+	justify-content: center;
+	padding: 5px;
+}
+
+.zoom-actions button {
+	min-width: 120px;
+	transition: all 0.2s ease;
+}
+
+.zoom-actions button:hover {
+	transform: translateY(-2px);
+}
+
+.zoom-window.dark-mode .btn {
+	background-color: #444;
+	border-color: #555;
+	color: white;
+}
+
+.zoom-window.dark-mode .btn:hover {
+	background-color: #555;
+	border-color: #666;
 }
