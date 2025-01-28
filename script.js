@@ -7,6 +7,8 @@ let zoomWindow = null;
 let updateTimer = null;
 let zoomEnabled = false;
 let isDarkMode = false;
+
+let pressTimer;
 let longPressTimer;
 const LONG_PRESS_DURATION = 500;
 
@@ -73,41 +75,55 @@ function initializeGlyph() {
 
 function addClickEventToGlyphs() {
     document.querySelectorAll('#glyph-output div').forEach(div => {
-        let isDragging = false;
-        
-        // Handle touch events for mobile
-        div.addEventListener('touchstart', function(e) {
-            longPressTimer = setTimeout(() => {
-                showGlyphMenu(e, this);
-            }, LONG_PRESS_DURATION);
-        }, { passive: true });
+        let pressStart;
+        let isLongPress = false;
 
+        // Touch start event
+        div.addEventListener('touchstart', function(e) {
+            pressStart = Date.now();
+            const element = this;
+            
+            pressTimer = setTimeout(function() {
+                isLongPress = true;
+                // Vibrate if supported
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+                
+                const rect = element.getBoundingClientRect();
+                showMobileMenu(element, rect);
+            }, LONG_PRESS_DURATION);
+        }, { passive: false });
+
+        // Touch end event
         div.addEventListener('touchend', function(e) {
-            clearTimeout(longPressTimer);
-            if (!isDragging) {
+            clearTimeout(pressTimer);
+            const pressDuration = Date.now() - pressStart;
+            
+            // Only copy if it was a short tap
+            if (pressDuration < LONG_PRESS_DURATION && !isLongPress) {
                 const char = this.getAttribute('data-char');
                 navigator.clipboard.writeText(char).then(() => {
                     showCopyNotification(this);
                 });
             }
+            isLongPress = false;
         });
 
-        div.addEventListener('touchmove', function() {
-            isDragging = true;
-            clearTimeout(longPressTimer);
+        // Prevent default touch behaviors
+        div.addEventListener('touchmove', function(e) {
+            clearTimeout(pressTimer);
+            isLongPress = false;
         });
 
-        // Handle mouse events for desktop
-        div.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-            showGlyphMenu(e, this);
-        });
-
-        div.addEventListener('click', function() {
-            const char = this.getAttribute('data-char');
-            navigator.clipboard.writeText(char).then(() => {
-                showCopyNotification(this);
-            });
+        // Keep regular click for non-touch devices
+        div.addEventListener('click', function(e) {
+            if (!e.touches) {  // Only handle non-touch clicks
+                const char = this.getAttribute('data-char');
+                navigator.clipboard.writeText(char).then(() => {
+                    showCopyNotification(this);
+                });
+            }
         });
     });
 }
@@ -172,6 +188,61 @@ function showGlyphMenu(e, glyphDiv) {
 
     document.addEventListener('click', closeMenu);
     document.addEventListener('touchstart', closeMenu);
+}
+
+// New function for showing mobile-specific menu
+function showMobileMenu(glyphDiv, rect) {
+    // Remove any existing menus
+    const existingMenu = document.querySelector('.glyph-mobile-menu');
+    if (existingMenu) {
+        existingMenu.remove();
+    }
+
+    const menu = document.createElement('div');
+    menu.className = 'glyph-mobile-menu';
+    
+    menu.innerHTML = `
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-item copy">
+                <i class="far fa-copy"></i>
+                <span>Copy Character</span>
+            </div>
+            <div class="mobile-menu-item download">
+                <i class="fas fa-download"></i>
+                <span>Download Glyph</span>
+            </div>
+        </div>
+    `;
+
+    // Position the menu
+    document.body.appendChild(menu);
+    
+    // Center the menu on screen
+    const menuRect = menu.getBoundingClientRect();
+    menu.style.left = `${(window.innerWidth - menuRect.width) / 2}px`;
+    menu.style.bottom = '20px';
+
+    // Handle menu item clicks
+    menu.querySelector('.copy').addEventListener('click', () => {
+        const char = glyphDiv.getAttribute('data-char');
+        navigator.clipboard.writeText(char).then(() => {
+            showCopyNotification(glyphDiv);
+        });
+        menu.remove();
+    });
+
+    menu.querySelector('.download').addEventListener('click', () => {
+        downloadGlyph(glyphDiv);
+        menu.remove();
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function closeMenu(e) {
+        if (!menu.contains(e.target) && !glyphDiv.contains(e.target)) {
+            menu.remove();
+            document.removeEventListener('click', closeMenu);
+        }
+    });
 }
 
 // Conversion functions
@@ -529,55 +600,6 @@ function downloadGlyph(glyphDiv) {
         link.download = `glyph_${hexCode.slice(2)}.png`;
         link.click();
     }
-}
-
-// Modify the addClickEventToGlyphs function
-function addClickEventToGlyphs() {
-    document.querySelectorAll('#glyph-output div').forEach(div => {
-        // Add right-click context menu
-        div.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-            const contextMenu = document.createElement('div');
-            contextMenu.className = 'glyph-context-menu';
-            contextMenu.innerHTML = `
-                <div class="menu-item copy">Copy Character</div>
-                <div class="menu-item download">Download Glyph</div>
-            `;
-            
-            // Position the menu
-            contextMenu.style.left = e.pageX + 'px';
-            contextMenu.style.top = e.pageY + 'px';
-            document.body.appendChild(contextMenu);
-            
-            // Handle menu item clicks
-            contextMenu.querySelector('.copy').addEventListener('click', () => {
-                const char = this.getAttribute('data-char');
-                navigator.clipboard.writeText(char).then(() => {
-                    showCopyNotification(this);
-                });
-                contextMenu.remove();
-            });
-            
-            contextMenu.querySelector('.download').addEventListener('click', () => {
-                downloadGlyph(this);
-                contextMenu.remove();
-            });
-            
-            // Remove menu when clicking elsewhere
-            document.addEventListener('click', function closeMenu() {
-                contextMenu.remove();
-                document.removeEventListener('click', closeMenu);
-            });
-        });
-        
-        // Keep existing click handler for copying
-        div.addEventListener('click', function() {
-            const char = this.getAttribute('data-char');
-            navigator.clipboard.writeText(char).then(() => {
-                showCopyNotification(this);
-            });
-        });
-    });
 }
 
 // Event listeners
