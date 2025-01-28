@@ -249,6 +249,11 @@ body {
 	background-repeat: no-repeat;
 	image-rendering: pixelated;
 	overflow: visible;
+	-webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none; /* Disable iOS callout */
 }
 
 #glyph-output div:hover {
@@ -259,6 +264,20 @@ body {
 
 #glyph-output div.transparent {
 	background-color: rgba(200, 200, 200, 0.25);
+}
+
+/* Optional: Disable text selection for the entire glyph output container */
+#glyph-output {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Prevent highlighting on touch */
+#glyph-output div:focus {
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* Tooltip Styles */
