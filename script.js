@@ -205,11 +205,11 @@ function showMobileMenu(glyphDiv, rect) {
 		<div class="mobile-menu-content">
 			<div class="mobile-menu-item copy">
 				<i class="far fa-copy"></i>
-				<span>Copy Character</span>
+				<span>Copy Unicode</span>
 			</div>
 			<div class="mobile-menu-item download">
 				<i class="fas fa-download"></i>
-				<span>Download Glyph</span>
+				<span>Download Image</span>
 			</div>
 		</div>
 		<div class="glyph-hex-code">
