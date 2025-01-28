@@ -74,31 +74,42 @@ function addClickEventToGlyphs() {
 		let pressStart;
 		let isLongPress = false;
 		let touchStartY;
-
-		div.addEventListener('contextmenu', function (e) {
-			e.preventDefault();
-		});
+		let isScrolling = false;
 
 		div.addEventListener('touchstart', function (e) {
+			isScrolling = false;
 			pressStart = Date.now();
 			touchStartY = e.touches[0].clientY;
 			const element = this;
 
 			pressTimer = setTimeout(function () {
-				isLongPress = true;
-				if (navigator.vibrate) {
-					navigator.vibrate(50);
+				if (!isScrolling) {
+					isLongPress = true;
+					if (navigator.vibrate) {
+						navigator.vibrate(50);
+					}
+					const rect = element.getBoundingClientRect();
+					showMobileMenu(element, rect);
 				}
-
-				const rect = element.getBoundingClientRect();
-				showMobileMenu(element, rect);
 			}, LONG_PRESS_DURATION);
+		}, { passive: true });
+
+		div.addEventListener('touchmove', function (e) {
+			const touchMoveY = e.touches[0].clientY;
+			const deltaY = Math.abs(touchMoveY - touchStartY);
+
+			if (deltaY > 5) {
+				isScrolling = true;
+				clearTimeout(pressTimer);
+				isLongPress = false;
+			}
 		}, { passive: true });
 
 		div.addEventListener('touchend', function (e) {
 			clearTimeout(pressTimer);
-			const pressDuration = Date.now() - pressStart;
+			if (isScrolling) return;
 
+			const pressDuration = Date.now() - pressStart;
 			if (pressDuration < LONG_PRESS_DURATION && !isLongPress) {
 				const char = this.getAttribute('data-char');
 				navigator.clipboard.writeText(char).then(() => {
@@ -106,29 +117,6 @@ function addClickEventToGlyphs() {
 				});
 			}
 			isLongPress = false;
-		});
-
-		div.addEventListener('touchmove', function (e) {
-			const touchMoveY = e.touches[0].clientY;
-			const deltaY = Math.abs(touchMoveY - touchStartY);
-
-			if (deltaY > 10) {
-				clearTimeout(pressTimer);
-				isLongPress = false;
-			}
-		}, { passive: true });
-
-		div.addEventListener('click', function (e) {
-			if (!e.touches) {
-				const char = this.getAttribute('data-char');
-				navigator.clipboard.writeText(char).then(() => {
-					showCopyNotification(this);
-				});
-			}
-		});
-
-		div.addEventListener('selectstart', function (e) {
-			e.preventDefault();
 		});
 	});
 }
