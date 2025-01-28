@@ -403,6 +403,94 @@ function createZoomWindow(unicodeSize) {
 	return zoomWindow;
 }
 
+function downloadGlyph(glyphDiv) {
+    // Get the background image URL or create canvas from character
+    const backgroundImage = glyphDiv.style.backgroundImage;
+    const char = glyphDiv.getAttribute('data-char');
+    const hexCode = glyphDiv.getAttribute('data-hex');
+    
+    if (backgroundImage && backgroundImage !== 'none') {
+        // For uploaded glyphs with background image
+        const imgUrl = backgroundImage.slice(5, -2); // Remove 'url("")'
+        const link = document.createElement('a');
+        link.href = imgUrl;
+        link.download = `glyph_${hexCode.slice(2)}.png`;
+        link.click();
+    } else {
+        // For default glyphs without background image
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 32;
+        canvas.height = 32;
+        
+        // Set background
+        ctx.fillStyle = isDarkMode ? '#2a2a2a' : '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw the character
+        ctx.fillStyle = isDarkMode ? '#ffffff' : '#000000';
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(char, canvas.width/2, canvas.height/2);
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = `glyph_${hexCode.slice(2)}.png`;
+        link.click();
+    }
+}
+
+// Modify the addClickEventToGlyphs function
+function addClickEventToGlyphs() {
+    document.querySelectorAll('#glyph-output div').forEach(div => {
+        // Add right-click context menu
+        div.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            const contextMenu = document.createElement('div');
+            contextMenu.className = 'glyph-context-menu';
+            contextMenu.innerHTML = `
+                <div class="menu-item copy">Copy Character</div>
+                <div class="menu-item download">Download Glyph</div>
+            `;
+            
+            // Position the menu
+            contextMenu.style.left = e.pageX + 'px';
+            contextMenu.style.top = e.pageY + 'px';
+            document.body.appendChild(contextMenu);
+            
+            // Handle menu item clicks
+            contextMenu.querySelector('.copy').addEventListener('click', () => {
+                const char = this.getAttribute('data-char');
+                navigator.clipboard.writeText(char).then(() => {
+                    showCopyNotification(this);
+                });
+                contextMenu.remove();
+            });
+            
+            contextMenu.querySelector('.download').addEventListener('click', () => {
+                downloadGlyph(this);
+                contextMenu.remove();
+            });
+            
+            // Remove menu when clicking elsewhere
+            document.addEventListener('click', function closeMenu() {
+                contextMenu.remove();
+                document.removeEventListener('click', closeMenu);
+            });
+        });
+        
+        // Keep existing click handler for copying
+        div.addEventListener('click', function() {
+            const char = this.getAttribute('data-char');
+            navigator.clipboard.writeText(char).then(() => {
+                showCopyNotification(this);
+            });
+        });
+    });
+}
+
 // Event listeners
 window.onload = () => {
 	initializeGlyph();
