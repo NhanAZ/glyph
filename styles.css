@@ -1,0 +1,396 @@
+/* Variables */
+:root {
+	--primary-color: #4a89dc;
+	--primary-hover-color: #3b78cc;
+	--background-color: #f8f9fa;
+	--card-border-radius: 15px;
+	--transition-speed: 0.3s;
+}
+
+/* Global Styles */
+body {
+	background-color: var(--background-color);
+}
+
+.container {
+	max-width: 1200px;
+}
+
+/* Typography */
+.text-muted {
+	font-size: 0.9em;
+}
+
+.glyph-description {
+	text-align: justify;
+	color: #6c757d;
+	font-size: 0.9em;
+}
+
+.glyph-context-menu {
+    position: fixed;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    padding: 8px 0;
+    z-index: 1000;
+    min-width: 150px;
+}
+
+.glyph-context-menu .menu-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+}
+
+.glyph-context-menu .menu-item i {
+    width: 20px;
+    text-align: center;
+    margin-right: 8px;
+}
+
+.glyph-context-menu .menu-item:hover {
+    background-color: #f0f0f0;
+}
+
+/* Dark mode support */
+.dark-mode .glyph-context-menu {
+    background: #2a2a2a;
+    border-color: #444;
+}
+
+.dark-mode .glyph-context-menu .menu-item {
+    color: white;
+}
+
+.dark-mode .glyph-context-menu .menu-item:hover {
+    background-color: #444;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+    .glyph-context-menu {
+        position: fixed;
+        left: 50% !important;
+        transform: translateX(-50%);
+        width: 200px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(5px);
+    }
+
+    .dark-mode .glyph-context-menu {
+        background: rgba(42, 42, 42, 0.95);
+    }
+}
+
+.glyph-input-label,
+.conversion-mode-text {
+	font-weight: bold;
+}
+
+/* Card Styles */
+.card {
+	border: none;
+	border-radius: var(--card-border-radius);
+	transition: all var(--transition-speed) ease;
+}
+
+.card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+	border-radius: var(--card-border-radius) var(--card-border-radius) 0 0 !important;
+	border-bottom: none;
+}
+
+/* Button Styles */
+.btn-primary {
+	background-color: var(--primary-color);
+	border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+	background-color: var(--primary-hover-color);
+	border-color: var(--primary-hover-color);
+}
+
+.btn-outline-primary {
+	color: var(--primary-color);
+	border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+	background-color: var(--primary-color);
+	color: white;
+}
+
+#conversionModeButton {
+	transition: all var(--transition-speed) ease;
+}
+
+#darkModeToggle {
+	font-size: 0.875rem;
+	padding: 0.25rem 0.5rem;
+}
+
+#darkModeToggle i {
+	margin-right: 0.25rem;
+}
+
+/* Dark Mode Styles */
+.card-header.bg-primary.dark-mode {
+	background-color: #2a2a2a !important;
+}
+
+.card.dark-mode {
+	background-color: #1a1a1a;
+	color: #ffffff;
+}
+
+/* File Upload Styles */
+#glyphUpload {
+	margin-top: 5px;
+}
+
+/* Glyph Output Styles */
+#glyph-output {
+	display: grid;
+	grid-template-columns: repeat(16, minmax(40px, 1fr));
+	gap: 2px;
+	overflow-x: auto;
+	padding-bottom: 10px;
+	width: 100%;
+}
+
+#glyph-output div {
+	aspect-ratio: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: #ffffff;
+	border-radius: 8px;
+	transition: all 0.2s ease;
+	cursor: pointer;
+	box-shadow: 0 1px 2.5px rgba(0, 0, 0, 0.05);
+	position: relative;
+	font-size: 16px;
+	background-repeat: no-repeat;
+	image-rendering: pixelated;
+	overflow: visible;
+}
+
+#glyph-output div:hover {
+	transform: scale(1.1);
+	z-index: 1;
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+#glyph-output div.transparent {
+	background-color: rgba(200, 200, 200, 0.25);
+}
+
+/* Tooltip Styles */
+.tooltip {
+	position: absolute;
+	bottom: 100%;
+	left: 50%;
+	transform: translateX(-50%);
+	background-color: #333;
+	color: #fff;
+	padding: 5px 8px;
+	border-radius: 4px;
+	font-size: 0.75em;
+	opacity: 0;
+	transition: opacity 0.2s, transform 0.2s;
+	pointer-events: none;
+	white-space: nowrap;
+	z-index: 1000;
+}
+
+#glyph-output div:hover .tooltip {
+	opacity: 1;
+	transform: translateX(-50%) translateY(-5px);
+}
+
+/* Copy Notification Styles */
+.copy-notification {
+	position: absolute;
+	background-color: rgba(0, 0, 0, 0.7);
+	color: white;
+	padding: 5px 10px;
+	border-radius: 4px;
+	font-size: 0.8em;
+	opacity: 0;
+	transition: opacity 0.3s;
+}
+
+.success-msg {
+	animation: fadeInOut 2s ease-in-out;
+}
+
+@keyframes fadeInOut {
+
+	0%,
+	100% {
+		opacity: 0;
+	}
+
+	10%,
+	90% {
+		opacity: 1;
+	}
+}
+
+/* Footer Styles */
+footer {
+	border-top: 1px solid #dee2e6;
+	padding-top: 20px;
+}
+
+footer a {
+	transition: color 0.3s ease;
+}
+
+footer a:hover {
+	color: #007bff !important;
+}
+
+/* Zoom Window Styles */
+.zoom-window {
+	border-radius: 5px;
+	background: white;
+	padding: 10px;
+	box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+}
+
+.zoom-window canvas {
+	display: block;
+	image-rendering: pixelated;
+}
+
+.zoom-window .zoom-info {
+	margin-top: 5px;
+	font-size: 12px;
+	text-align: center;
+}
+
+/* Mobile Alert Styles */
+#mobileAlert {
+	background-color: rgba(255, 243, 205, 0.9);
+	border: none;
+	border-radius: 10px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	margin-bottom: 20px;
+}
+
+#mobileAlert .btn-close {
+	position: absolute;
+	right: 10px;
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+/* Media Queries */
+@media (max-width: 767.98px) {
+	#glyph-output {
+		grid-template-columns: repeat(16, 50px);
+		gap: 4px;
+		padding: 10px;
+	}
+
+	#glyph-output div {
+		font-size: 24px;
+		width: 50px;
+		height: 50px;
+	}
+
+	.input-group {
+		flex-wrap: wrap;
+	}
+
+	#convertButton,
+	#generate-glyph {
+		width: 100%;
+		margin-top: 10px;
+		border-radius: 0.25rem !important;
+	}
+
+	#converterInput,
+	#glyph-input {
+		border-radius: 0.25rem !important;
+	}
+
+	#glyph-output::-webkit-scrollbar {
+		height: 8px;
+	}
+
+	#glyph-output::-webkit-scrollbar-thumb {
+		background-color: rgba(0, 0, 0, 0.2);
+		border-radius: 4px;
+	}
+
+	#glyph-output::-webkit-scrollbar-track {
+		background-color: rgba(0, 0, 0, 0.1);
+	}
+
+	#copyButton {
+		border-top-left-radius: 0 !important;
+		border-bottom-left-radius: 0 !important;
+	}
+
+	.input-group> :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(.invalid-feedback) {
+		margin-left: 0;
+	}
+
+	#converterInput {
+		border-radius: 0.25rem !important;
+	}
+
+	#inputPrefix {
+		border-radius: 0.25rem !important;
+		margin-bottom: 10px;
+	}
+}
+
+@media (min-width: 768px) {
+	#glyph-output {
+		overflow-x: visible;
+	}
+
+	.converter-input-group {
+		display: flex;
+	}
+
+	.converter-input-group .form-control {
+		flex: 1;
+	}
+
+	.converter-input-group .btn {
+		width: 120px;
+	}
+
+	#inputPrefix {
+		width: auto;
+	}
+
+	.glyph-description {
+		padding-right: 1rem;
+		padding-left: 1rem;
+	}
+
+	#converterInput {
+		border-top-left-radius: 0.25rem !important;
+		border-bottom-left-radius: 0.25rem !important;
+	}
+
+	#inputPrefix {
+		border-top-right-radius: 0 !important;
+		border-bottom-right-radius: 0 !important;
+	}
+}
