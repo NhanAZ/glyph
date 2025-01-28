@@ -88,8 +88,12 @@ function addClickEventToGlyphs() {
 					if (navigator.vibrate) {
 						navigator.vibrate(50);
 					}
-					const rect = element.getBoundingClientRect();
-					showMobileMenu(element, rect);
+					if (window.innerWidth < 768) {
+						const rect = element.getBoundingClientRect();
+						showMobileMenu(element, rect);
+					} else {
+						showGlyphMenu(e, element);
+					}
 				}
 			}, LONG_PRESS_DURATION);
 		}, { passive: true });
