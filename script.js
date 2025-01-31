@@ -201,63 +201,71 @@ function renderGlyphs() {
 }
 
 function processGlyph(img, hexValue) {
-	const canvas = document.createElement('canvas');
-	const ctx = canvas.getContext('2d');
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
 
-	const unicodeSize = Math.floor(Math.min(img.width, img.height) / 16);
-	canvas.width = unicodeSize * 16;
-	canvas.height = unicodeSize * 16;
+    const unicodeSize = Math.floor(Math.min(img.width, img.height) / 16);
+    canvas.width = unicodeSize * 16;
+    canvas.height = unicodeSize * 16;
 
-	ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    // Set canvas background to be transparent
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-	let markdownContent = '';
-	const startChar = parseInt(hexValue + "00", 16);
+    let markdownContent = '';
+    const startChar = parseInt(hexValue + "00", 16);
 
-	for (let i = 0; i < 256; i++) {
-		const row = Math.floor(i / 16) + 1;
-		const col = (i % 16) + 1;
-		const charCode = startChar + i;
-		const char = String.fromCodePoint(charCode);
-		const hexCode = charCode.toString(16).toUpperCase().padStart(4, '0');
+    for (let i = 0; i < 256; i++) {
+        const row = Math.floor(i / 16) + 1;
+        const col = (i % 16) + 1;
+        const charCode = startChar + i;
+        const char = String.fromCodePoint(charCode);
+        const hexCode = charCode.toString(16).toUpperCase().padStart(4, '0');
 
-		const x = (i % 16) * unicodeSize;
-		const y = Math.floor(i / 16) * unicodeSize;
-		const unicodeCanvas = document.createElement('canvas');
-		unicodeCanvas.width = unicodeSize;
-		unicodeCanvas.height = unicodeSize;
-		const unicodeCtx = unicodeCanvas.getContext('2d');
-		unicodeCtx.imageSmoothingEnabled = false;
-		unicodeCtx.drawImage(canvas, x, y, unicodeSize, unicodeSize, 0, 0, unicodeSize, unicodeSize);
+        const x = (i % 16) * unicodeSize;
+        const y = Math.floor(i / 16) * unicodeSize;
+        const unicodeCanvas = document.createElement('canvas');
+        unicodeCanvas.width = unicodeSize;
+        unicodeCanvas.height = unicodeSize;
+        const unicodeCtx = unicodeCanvas.getContext('2d', { willReadFrequently: true });
+        
+        // Ensure the new canvas is transparent
+        unicodeCtx.clearRect(0, 0, unicodeSize, unicodeSize);
+        
+        // Disable image smoothing for pixel-perfect rendering
+        unicodeCtx.imageSmoothingEnabled = false;
+        unicodeCtx.drawImage(canvas, x, y, unicodeSize, unicodeSize, 0, 0, unicodeSize, unicodeSize);
 
-		const imageData = unicodeCtx.getImageData(0, 0, unicodeSize, unicodeSize);
-		const isTransparent = imageData.data.every((value, index) => (index + 1) % 4 === 0 || value === 0);
+        const imageData = unicodeCtx.getImageData(0, 0, unicodeSize, unicodeSize);
+        const isTransparent = imageData.data.every((value, index) => (index + 1) % 4 === 0 || value === 0);
 
-		const transparentClass = isTransparent ? 'transparent' : '';
+        // Only add transparent class if truly empty
+        const transparentClass = isTransparent ? 'transparent' : '';
+        
+        markdownContent += `<div class="${transparentClass}" data-hex="0x${hexCode}" data-char="${char}" 
+            data-position="(${col};${row})" 
+            style="background-image: url(${unicodeCanvas.toDataURL('image/png')}); background-size: 100% 100%;">
+            <span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>
+            <span class="copy-notification">Copied</span>
+        </div>`;
+    }
 
-		markdownContent += `<div class="${transparentClass}" data-hex="0x${hexCode}" data-char="${char}" 
-			data-position="(${col};${row})" 
-			style="background-image: url(${unicodeCanvas.toDataURL()}); background-size: 100% 100%;">
-			<span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>
-			<span class="copy-notification">Copied</span>
-		</div>`;
-	}
+    document.getElementById('glyph-output').innerHTML = markdownContent;
+    addClickEventToGlyphs();
 
-	document.getElementById('glyph-output').innerHTML = markdownContent;
-	addClickEventToGlyphs();
+    removeZoomEvents();
+    zoomEnabled = false;
 
-	removeZoomEvents();
-	zoomEnabled = false;
+    if (img.width > 0 || img.height > 0) {
+        zoomEnabled = true;
+        addZoomEvents(unicodeSize);
+    } else {
+        hideZoomWindow();
+    }
 
-	if (img.width > 0 || img.height > 0) {
-		zoomEnabled = true;
-		addZoomEvents(unicodeSize);
-	} else {
-		hideZoomWindow();
-	}
-
-	document.getElementById('glyph-output').innerHTML = markdownContent;
-	addClickEventToGlyphs();
-	renderGlyphs();
+    document.getElementById('glyph-output').innerHTML = markdownContent;
+    addClickEventToGlyphs();
+    renderGlyphs();
 }
 
 function removeZoomEvents() {
@@ -314,8 +322,8 @@ function updateZoomWindowContent(target, unicodeSize) {
 	zoomCanvas.width = 256;
 	zoomCanvas.height = 256;
 
-	zoomCtx.imageSmoothingEnabled = false;
 	zoomCtx.clearRect(0, 0, zoomCanvas.width, zoomCanvas.height);
+        zoomCtx.imageSmoothingEnabled = false;
 
 	if (backgroundImage) {
 		const img = new Image();
@@ -323,14 +331,16 @@ function updateZoomWindowContent(target, unicodeSize) {
 			const originalSize = img.width;
 			const targetSize = zoomCanvas.width;
 
-			zoomCtx.drawImage(
-				img,
-				0, 0, originalSize, originalSize,
-				0, 0, targetSize, targetSize
-			);
-		};
-		img.src = backgroundImage.slice(5, -2);
-	}
+			// canvas before drawing new image
+                        zoomCtx.clearRect(0, 0, targetSize, targetSize);
+                        zoomCtx.drawImage(
+                             img,
+                             0, 0, originalSize, originalSize,
+                             0, 0, targetSize, targetSize
+                       );
+               };
+             img.src = backgroundImage.slice(5, -2);
+        }
 
 	const info = zoomWindow.querySelector('.zoom-info');
 	info.textContent = `Hex: ${hexCode} - Position: ${position}`;
@@ -347,15 +357,20 @@ function updateZoomWindowContent(target, unicodeSize) {
 		});
 	};
 
-	const downloadButton = zoomWindow.querySelector('#zoomDownload');
-	downloadButton.onmouseenter = () => { isInteractingWithZoom = true; };
-	downloadButton.onmouseleave = () => { isInteractingWithZoom = false; };
-	downloadButton.onclick = function () {
-		const link = document.createElement('a');
-		link.download = `unicode_${hexCode.replace('0x', '')}.png`;
-		link.href = zoomCanvas.toDataURL();
-		link.click();
-	};
+	const info = zoomWindow.querySelector('.zoom-info');
+    info.textContent = `Hex: ${hexCode} - Position: ${position}`;
+
+    const downloadButton = zoomWindow.querySelector('#zoomDownload');
+    downloadButton.onmouseenter = () => { isInteractingWithZoom = true; };
+    downloadButton.onmouseleave = () => { isInteractingWithZoom = false; };
+    downloadButton.onclick = function () {
+        const link = document.createElement('a');
+        link.download = `unicode_${hexCode.replace('0x', '')}.png`;
+        // Explicitly use PNG format to preserve transparency
+        link.href = zoomCanvas.toDataURL('image/png');
+        link.click();
+    };
+
 }
 
 function showZoomWindow(unicodeSize) {
