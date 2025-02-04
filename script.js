@@ -1,14 +1,12 @@
-// Constants
 const GRID = 16;
 
-// Global variables
 let isHexToEmoji = true;
 let zoomWindow = null;
 let updateTimer = null;
 let zoomEnabled = false;
 let isDarkMode = false;
+let isInteractingWithZoom = false;
 
-// Utility functions
 function showCopyNotification(element) {
 	const notification = element.querySelector('.copy-notification');
 	notification.style.opacity = '1';
@@ -39,7 +37,6 @@ function toggleDarkMode() {
 	renderGlyphs();
 }
 
-// Glyph related functions
 function Glyph(glyph = "E0") {
 	const filename = `glyph_${glyph}`;
 	const startChar = parseInt(filename.split("_").pop() + "00", 16);
@@ -73,14 +70,16 @@ function addClickEventToGlyphs() {
 	document.querySelectorAll('#glyph-output div').forEach(div => {
 		div.addEventListener('click', function () {
 			const char = this.getAttribute('data-char');
-			navigator.clipboard.writeText(char).then(() => {
-				showCopyNotification(this);
-			});
+			const hexCode = this.getAttribute('data-hex');
+			const position = this.getAttribute('data-position');
+			const backgroundImage = this.style.backgroundImage;
+
+			showZoomWindow(unicodeSize);
+			updateZoomWindowContent(this, unicodeSize);
 		});
 	});
 }
 
-// Conversion functions
 function convertHexToEmoji(input) {
 	try {
 		const codePoint = parseInt(input, 16);
@@ -140,7 +139,6 @@ function copyOutput() {
 	});
 }
 
-// Glyph upload and processing
 function renderGlyphs() {
 	const glyphOutput = document.getElementById('glyph-output');
 	const glyphs = glyphOutput.querySelectorAll('div');
@@ -163,17 +161,17 @@ function renderGlyphs() {
 				const data = imageData.data;
 
 				for (let i = 0; i < data.length; i += 4) {
-					if (data[i + 3] === 0) { // If pixel is transparent
+					if (data[i + 3] === 0) {
 						if (isDarkMode) {
-							data[i] = 50;	 // R
-							data[i + 1] = 50; // G
-							data[i + 2] = 50; // B
-							data[i + 3] = 128; // A (semi-transparent)
+							data[i] = 50;
+							data[i + 1] = 50;
+							data[i + 2] = 50;
+							data[i + 3] = 128;
 						} else {
-							data[i] = 200;	// R
-							data[i + 1] = 200; // G
-							data[i + 2] = 200; // B
-							data[i + 3] = 64;  // A (semi-transparent)
+							data[i] = 200;
+							data[i + 1] = 200;
+							data[i + 2] = 200;
+							data[i + 3] = 64;
 						}
 					}
 				}
@@ -181,10 +179,9 @@ function renderGlyphs() {
 				ctx.putImageData(imageData, 0, 0);
 				glyph.style.backgroundImage = `url(${canvas.toDataURL()})`;
 			};
-			img.src = backgroundImage.slice(5, -2); // Remove 'url("")' from backgroundImage
+			img.src = backgroundImage.slice(5, -2);
 		}
 
-		// Update glyph background color
 		if (glyph.classList.contains('transparent')) {
 			glyph.style.backgroundColor = isDarkMode ? 'rgba(50, 50, 50, 0.5)' : 'rgba(200, 200, 200, 0.25)';
 		}
@@ -263,7 +260,6 @@ function processGlyph(img, hexValue) {
 	renderGlyphs();
 }
 
-// Zoom related functions
 function removeZoomEvents() {
 	const glyphOutput = document.getElementById('glyph-output');
 	if (glyphOutput.zoomHandlers) {
@@ -277,39 +273,13 @@ function removeZoomEvents() {
 function addZoomEvents(unicodeSize) {
 	const glyphOutput = document.getElementById('glyph-output');
 
-	function zoomMouseoverHandler(e) {
+	glyphOutput.addEventListener('click', function (e) {
 		const target = e.target.closest('div[data-hex]');
-		if (target && zoomEnabled) {
+		if (target) {
 			showZoomWindow(unicodeSize);
 			updateZoomWindowContent(target, unicodeSize);
 		}
-	}
-
-	function zoomMousemoveHandler(e) {
-		const target = e.target.closest('div[data-hex]');
-		if (target && zoomWindow && zoomEnabled) {
-			clearTimeout(updateTimer);
-			updateTimer = setTimeout(() => {
-				updateZoomWindowContent(target, unicodeSize);
-			}, 50);
-		}
-	}
-
-	function zoomMouseoutHandler(e) {
-		if (!e.relatedTarget || !e.relatedTarget.closest('#glyph-output')) {
-			hideZoomWindow();
-		}
-	}
-
-	glyphOutput.addEventListener('mouseover', zoomMouseoverHandler);
-	glyphOutput.addEventListener('mousemove', zoomMousemoveHandler);
-	glyphOutput.addEventListener('mouseout', zoomMouseoutHandler);
-
-	glyphOutput.zoomHandlers = {
-		mouseover: zoomMouseoverHandler,
-		mousemove: zoomMousemoveHandler,
-		mouseout: zoomMouseoutHandler
-	};
+	});
 }
 
 function updateZoomWindowPosition(e) {
@@ -333,35 +303,59 @@ function updateZoomWindowPosition(e) {
 function updateZoomWindowContent(target, unicodeSize) {
 	if (!target || !zoomWindow) return;
 
+	const char = target.getAttribute('data-char');
 	const hexCode = target.getAttribute('data-hex');
 	const position = target.getAttribute('data-position');
 	const backgroundImage = target.style.backgroundImage;
 
 	const zoomCanvas = zoomWindow.querySelector('canvas');
 	const zoomCtx = zoomCanvas.getContext('2d');
-	zoomCtx.imageSmoothingEnabled = false;
 
+	zoomCanvas.width = 256;
+	zoomCanvas.height = 256;
+
+	zoomCtx.imageSmoothingEnabled = false;
 	zoomCtx.clearRect(0, 0, zoomCanvas.width, zoomCanvas.height);
 
 	if (backgroundImage) {
 		const img = new Image();
 		img.onload = function () {
-			const scale = Math.min(zoomCanvas.width / unicodeSize, zoomCanvas.height / unicodeSize);
+			const originalSize = img.width;
+			const targetSize = zoomCanvas.width;
 
-			const scaledWidth = unicodeSize * scale;
-			const scaledHeight = unicodeSize * scale;
-
-			const offsetX = (zoomCanvas.width - scaledWidth) / 2;
-			const offsetY = (zoomCanvas.height - scaledHeight) / 2;
-
-			zoomCtx.drawImage(img, 0, 0, unicodeSize, unicodeSize,
-				offsetX, offsetY, scaledWidth, scaledHeight);
+			zoomCtx.drawImage(
+				img,
+				0, 0, originalSize, originalSize,
+				0, 0, targetSize, targetSize
+			);
 		};
 		img.src = backgroundImage.slice(5, -2);
 	}
 
 	const info = zoomWindow.querySelector('.zoom-info');
 	info.textContent = `Hex: ${hexCode} - Position: ${position}`;
+
+	const copyButton = zoomWindow.querySelector('#zoomCopy');
+	copyButton.onmouseenter = () => { isInteractingWithZoom = true; };
+	copyButton.onmouseleave = () => { isInteractingWithZoom = false; };
+	copyButton.onclick = function () {
+		navigator.clipboard.writeText(char).then(() => {
+			this.innerHTML = '<i class="fas fa-check me-2"></i>Copied';
+			setTimeout(() => {
+				this.innerHTML = '<i class="far fa-copy me-2"></i>Copy Unicode';
+			}, 2000);
+		});
+	};
+
+	const downloadButton = zoomWindow.querySelector('#zoomDownload');
+	downloadButton.onmouseenter = () => { isInteractingWithZoom = true; };
+	downloadButton.onmouseleave = () => { isInteractingWithZoom = false; };
+	downloadButton.onclick = function () {
+		const link = document.createElement('a');
+		link.download = `unicode_${hexCode.replace('0x', '')}.png`;
+		link.href = zoomCanvas.toDataURL();
+		link.click();
+	};
 }
 
 function showZoomWindow(unicodeSize) {
@@ -381,29 +375,31 @@ function hideZoomWindow() {
 function createZoomWindow(unicodeSize) {
 	const zoomWindow = document.createElement('div');
 	zoomWindow.className = 'zoom-window';
-	zoomWindow.style.position = 'fixed';
-	zoomWindow.style.right = '20px';
-	zoomWindow.style.bottom = '20px';
-	zoomWindow.style.zIndex = '1000';
-	zoomWindow.style.background = 'white';
-	zoomWindow.style.border = '1px solid #ccc';
-	zoomWindow.style.boxShadow = '0 0 10px rgba(0,0,0,0.3)';
-	zoomWindow.style.padding = '5px';
-	zoomWindow.style.display = 'none';
+	zoomWindow.innerHTML = `
+		<div class="zoom-header">
+			<h6 class="mb-0">Unicode Preview</h6>
+			<button class="btn-close" id="closeZoom"></button>
+		</div>
+		<canvas></canvas>
+		<div class="zoom-info"></div>
+		<div class="zoom-actions">
+			<button class="btn btn-primary btn-sm" id="zoomCopy">
+				<i class="far fa-copy me-2"></i>Copy Unicode
+			</button>
+			<button class="btn btn-secondary btn-sm" id="zoomDownload">
+				<i class="fas fa-download me-2"></i>Download Image
+			</button>
+		</div>
+	`;
 
-	const zoomCanvas = document.createElement('canvas');
-	zoomCanvas.width = 256;
-	zoomCanvas.height = 256;
-	zoomWindow.appendChild(zoomCanvas);
+	zoomWindow.querySelector('#closeZoom').onclick = () => {
+		hideZoomWindow();
+	};
 
-	const info = document.createElement('div');
-	info.className = 'zoom-info';
-	zoomWindow.appendChild(info);
-
+	document.body.appendChild(zoomWindow);
 	return zoomWindow;
 }
 
-// Event listeners
 window.onload = () => {
 	initializeGlyph();
 };
@@ -464,17 +460,14 @@ document.getElementById('glyphUpload').addEventListener('change', function (e) {
 	reader.readAsDataURL(file);
 });
 
-window.addEventListener('scroll', function () {
-	hideZoomWindow();
-});
-
-window.addEventListener('scroll', function () {
-	if (zoomWindow) {
-		zoomWindow.style.bottom = '20px';
+document.addEventListener('click', function (e) {
+	if (zoomWindow &&
+		!zoomWindow.contains(e.target) &&
+		!e.target.closest('#glyph-output div')) {
+		hideZoomWindow();
 	}
 });
 
-// Add CSS for zoom window
 const style = document.createElement('style');
 style.textContent = `
 	.zoom-window {
@@ -504,7 +497,6 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Mobile Alert functionality
 document.addEventListener('DOMContentLoaded', function () {
 	const mobileAlert = document.getElementById('mobileAlert');
 
