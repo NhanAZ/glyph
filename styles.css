@@ -37,12 +37,22 @@ body {
 	color: var(--text-primary);
 	font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 	-webkit-font-smoothing: antialiased;
+	line-height: 1.6;
+	font-size: clamp(15px, 1vw + 0.5rem, 16px);
 	transition: background-color var(--transition), color var(--transition);
 }
 
 .app-container {
+	width: 100%;
 	max-width: 1100px;
 	margin: 0 auto;
+	padding-inline: clamp(1rem, 4vw, 2.75rem);
+}
+
+img, picture, video, canvas {
+	max-width: 100%;
+	height: auto;
+	display: block;
 }
 
 /* Typography */
@@ -51,21 +61,28 @@ h1, h2, h3, h4, h5 {
 }
 
 .title-text {
-	font-size: 2.5rem;
+	font-size: clamp(1.9rem, 3vw, 2.5rem);
 	letter-spacing: -0.025em;
 }
 
 .subtitle-text {
-	font-size: 1.1rem;
+	font-size: clamp(0.98rem, 1.4vw, 1.1rem);
 	font-weight: 400;
+	max-width: 38rem;
 }
 
 .detail-text {
-	font-size: 0.75rem;
+	font-size: 0.78rem;
 	font-weight: 600;
 	letter-spacing: 0.05em;
 	color: var(--text-secondary);
 	text-transform: uppercase;
+}
+
+.hint-link {
+	font-size: 0.9rem;
+	cursor: pointer;
+	transition: opacity 0.2s ease;
 }
 
 .text-primary {
@@ -76,12 +93,22 @@ h1, h2, h3, h4, h5 {
 	color: var(--text-secondary) !important;
 }
 
+.header-bar {
+	gap: 1.25rem;
+	flex-wrap: wrap;
+}
+
+.header-actions {
+	gap: 0.5rem;
+}
+
 /* Apple Cards */
 .apple-card {
 	background-color: var(--bg-card);
 	border-radius: var(--radius-card);
 	box-shadow: var(--shadow-card);
 	border: 1px solid var(--border-light);
+	padding: clamp(1.2rem, 2vw + 0.5rem, 1.6rem);
 	transition: transform 0.3s ease, box-shadow 0.3s ease, background-color var(--transition);
 }
 
@@ -95,8 +122,9 @@ h1, h2, h3, h4, h5 {
 	background-color: var(--bg-input);
 	border: 2px solid transparent;
 	border-radius: var(--radius-input);
-	padding: 14px 18px;
+	padding: 0.875rem 1.1rem;
 	font-size: 1rem;
+	min-height: 3rem;
 	color: var(--text-primary);
 	transition: all 0.2s ease;
 	outline: none;
@@ -119,6 +147,16 @@ h1, h2, h3, h4, h5 {
 
 .dark-mode .apple-input:focus {
 	box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.2);
+}
+
+.output-wrapper .apple-input {
+	padding-right: 3.1rem;
+}
+
+.copy-button {
+	right: 0.75rem;
+	top: 50%;
+	transform: translateY(-50%);
 }
 
 /* Segmented Control */
@@ -159,6 +197,11 @@ h1, h2, h3, h4, h5 {
 	position: relative;
 	transition: all 0.2s ease;
 	overflow: hidden;
+	padding: 0.75rem 1.1rem;
+	min-height: 3.25rem;
+	gap: 0.75rem;
+	align-items: center;
+	flex-wrap: wrap;
 }
 
 .upload-zone:hover {
@@ -168,6 +211,27 @@ h1, h2, h3, h4, h5 {
 
 .upload-zone input {
 	opacity: 0;
+	inset: 0;
+	cursor: pointer;
+}
+
+.upload-zone-label,
+.upload-zone-icon {
+	pointer-events: none;
+}
+
+.upload-zone-label {
+	flex: 1 1 auto;
+}
+
+.upload-label-text {
+	font-size: 1rem;
+}
+
+.pill-action {
+	font-size: 0.9rem;
+	transition: background-color 0.2s ease;
+	min-height: 2.6rem;
 }
 
 /* Icon Buttons */
@@ -175,8 +239,8 @@ h1, h2, h3, h4, h5 {
 	background: var(--bg-input);
 	color: var(--text-primary);
 	border: none;
-	width: 36px;
-	height: 36px;
+	width: 2.5rem;
+	height: 2.5rem;
 	border-radius: 50%;
 	display: flex;
 	align-items: center;
@@ -197,9 +261,34 @@ h1, h2, h3, h4, h5 {
 .glass-btn {
 	background: rgba(118, 118, 128, 0.12);
 	backdrop-filter: blur(10px);
-	width: 44px;
-	height: 44px;
+	width: 2.75rem;
+	height: 2.75rem;
 	font-size: 1.1rem;
+}
+
+.mobile-nav-card {
+	margin-top: 0.5rem;
+}
+
+.mobile-nav-links {
+	display: grid;
+	gap: 0.5rem;
+}
+
+.mobile-nav-links a {
+	color: var(--text-primary);
+	text-decoration: none;
+	font-weight: 600;
+	font-size: 0.95rem;
+	padding: 0.25rem 0;
+	display: flex;
+	align-items: center;
+	min-height: 44px;
+}
+
+.mobile-nav-links a i {
+	width: 1.25rem;
+	text-align: center;
 }
 
 .dark-mode .badge.bg-light {
@@ -216,12 +305,17 @@ h1, h2, h3, h4, h5 {
 	font-weight: 500;
 }
 
+.mobile-alert {
+	display: none;
+}
+
 /* Glyph Output Styles */
 #glyph-output {
+	--glyph-columns: 16;
 	display: grid;
-	grid-template-columns: repeat(16, minmax(36px, 1fr));
-	gap: 4px;
-	padding: 8px;
+	grid-template-columns: repeat(var(--glyph-columns), minmax(34px, 1fr));
+	gap: 6px;
+	padding: clamp(0.5rem, 2vw, 0.75rem);
 	overflow-x: auto;
 	width: 100%;
 }
@@ -236,7 +330,7 @@ h1, h2, h3, h4, h5 {
 	transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 	cursor: pointer;
 	position: relative;
-	font-size: 18px;
+	font-size: clamp(1rem, 2vw, 1.125rem);
 	background-repeat: no-repeat;
 	image-rendering: pixelated;
 }
@@ -328,22 +422,102 @@ h1, h2, h3, h4, h5 {
 	color: var(--text-primary);
 }
 
-/* Mobile Adjustments */
-@media (max-width: 767.98px) {
+/* Responsive Adjustments */
+@media (max-width: 1023px) {
+	.app-container {
+		padding-inline: clamp(1rem, 5vw, 2rem);
+	}
+
+	.header-bar {
+		align-items: flex-start;
+	}
+
 	.title-text {
-		font-size: 2rem;
+		font-size: clamp(1.7rem, 3vw, 2.2rem);
 	}
-	
+
+	.subtitle-text {
+		font-size: clamp(0.95rem, 1.4vw, 1.05rem);
+	}
+
 	.apple-card {
-		padding: 20px !important;
+		padding: clamp(1.05rem, 3vw, 1.35rem);
 	}
-	
+
 	#glyph-output {
-		grid-template-columns: repeat(8, 1fr);
-		gap: 6px;
+		--glyph-columns: 12;
 	}
-	
+}
+
+@media (max-width: 767px) {
+	.app-container {
+		padding-inline: 1rem;
+	}
+
+	.header-bar {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.75rem;
+	}
+
+	.header-actions {
+		width: 100%;
+		justify-content: flex-end;
+	}
+
+	.mobile-nav-card {
+		margin-top: 0.25rem;
+	}
+
+	.apple-card {
+		padding: 1rem 1.1rem;
+	}
+
+	.pill-action {
+		flex: 1 1 48%;
+		width: 100%;
+		text-align: center;
+	}
+
+	.upload-zone {
+		flex-direction: column;
+		align-items: flex-start;
+		justify-content: flex-start;
+		row-gap: 0.5rem;
+	}
+
+	.icon-button {
+		width: 2.75rem;
+		height: 2.75rem;
+	}
+
+	.btn,
+	.pill-action,
+	.icon-button,
+	.dropdown-item {
+		min-height: 44px;
+	}
+
+	#glyph-output {
+		--glyph-columns: 6;
+		gap: 5px;
+	}
+
 	#glyph-output div {
-		font-size: 20px;
+		font-size: 1rem;
+	}
+
+	.footer-links {
+		gap: 0.75rem;
+		justify-content: flex-start;
+	}
+
+	.footer-links a {
+		width: 100%;
+		text-align: left;
+		padding: 0.25rem 0;
+		min-height: 44px;
+		display: flex;
+		align-items: center;
 	}
 }

@@ -14,18 +14,39 @@
 	<div class="app-container py-4 px-3 px-md-5">
 		
 		<!-- Header -->
-		<header class="d-flex justify-content-between align-items-center mb-5 mt-2 header-bar">
-			<div>
-				<h1 class="fw-bold mb-0 title-text">Glyph Tools 🇻🇳</h1>
-				<p class="text-secondary subtitle-text mb-0 mt-1">Smart, intelligent character tools</p>
-			</div>
+	<header class="d-flex justify-content-between align-items-center mb-5 mt-2 header-bar">
+		<div>
+			<h1 class="fw-bold mb-0 title-text">Glyph Tools 🇻🇳</h1>
+			<p class="text-secondary subtitle-text mb-0 mt-1">Smart, intelligent character tools</p>
+		</div>
+		<div class="d-flex align-items-center gap-2 header-actions">
+			<button class="icon-button glass-btn d-md-none nav-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false" aria-label="Toggle navigation">
+				<i class="fas fa-bars"></i>
+			</button>
 			<button id="darkModeToggle" class="icon-button glass-btn" title="Toggle Dark Mode">
 				<i class="fas fa-moon"></i>
 			</button>
-		</header>
+		</div>
+	</header>
+
+	<div class="collapse d-md-none mobile-nav" id="mobileNav">
+		<div class="apple-card p-3 mobile-nav-card">
+			<nav class="mobile-nav-links">
+				<a href="https://github.com/NhanAZ/glyph" target="_blank" rel="noopener noreferrer" class="d-flex align-items-center gap-2">
+					<i class="fab fa-github"></i> GitHub
+				</a>
+				<a href="https://wiki.bedrock.dev/text/custom-emojis" target="_blank" rel="noopener noreferrer" class="d-flex align-items-center gap-2">
+					<i class="fas fa-book"></i> Docs
+				</a>
+				<a href="https://discord.gg/j2X83ujT6c" target="_blank" rel="noopener noreferrer" class="d-flex align-items-center gap-2">
+					<i class="fab fa-discord"></i> Discord
+				</a>
+			</nav>
+		</div>
+	</div>
 
 		<!-- Mobile Alert -->
-		<div id="mobileAlert" class="alert alert-warning alert-dismissible fade show d-md-none rounded-alert" role="alert" style="display: none;">
+		<div id="mobileAlert" class="alert alert-warning alert-dismissible fade show d-md-none rounded-alert mobile-alert" role="alert">
 			<strong>Mobile User Notice:</strong> For the best experience, we recommend using a desktop device.
 			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 		</div>
@@ -44,24 +65,24 @@
 						<div class="input-wrapper">
 							<input type="text" id="glyph-input" class="apple-input text-uppercase font-monospace fw-bold" placeholder="E0 used by default" maxlength="4">
 						</div>
-						<div id="defaultImageHint" class="text-primary fw-medium mt-2 d-none" style="font-size: 0.85rem; cursor: pointer; transition: opacity 0.2s;">
+						<div id="defaultImageHint" class="text-primary fw-medium mt-2 d-none hint-link">
 							<i class="fas fa-download me-1"></i> Load default <span id="hintHex">E0</span> image
 						</div>
 					</div>
 					
 					<div class="mb-3">
 						<label class="form-label detail-text mb-2">CUSTOM GLYPH PNG</label>
-						<div class="upload-zone d-flex align-items-center justify-content-between" style="padding: 10px 18px; border-radius: var(--radius-input); min-height: 52px;">
-							<input type="file" id="glyphUpload" accept=".png" class="file-input opacity-0 position-absolute w-100 h-100" style="cursor: pointer; top:0; left:0; z-index: 10;">
-							<div class="d-flex align-items-center gap-3 position-relative" style="pointer-events: none;">
+						<div class="upload-zone d-flex align-items-center justify-content-between">
+							<input type="file" id="glyphUpload" accept=".png" class="file-input opacity-0 position-absolute w-100 h-100">
+							<div class="d-flex align-items-center gap-3 position-relative upload-zone-label">
 								<i class="fas fa-image text-secondary opacity-75 fs-5"></i>
-								<span id="uploadLabel" class="text-secondary" style="font-size: 1rem;">Upload glyph_XX.png</span>
+								<span id="uploadLabel" class="text-secondary upload-label-text">Upload glyph_XX.png</span>
 							</div>
-							<i class="fas fa-cloud-upload-alt text-primary fs-5" style="pointer-events: none;"></i>
+							<i class="fas fa-cloud-upload-alt text-primary fs-5 upload-zone-icon"></i>
 						</div>
 						<div class="d-flex gap-2 mt-3 flex-wrap">
-							<button id="btnLoadTemplate" class="btn btn-sm btn-outline-secondary rounded-pill fw-medium" style="font-size: 0.8rem; transition: background-color 0.2s;"><i class="fas fa-border-all me-1"></i> Grid Template</button>
-							<button id="btnLoadExample" class="btn btn-sm btn-outline-secondary rounded-pill fw-medium" style="font-size: 0.8rem; transition: background-color 0.2s;"><i class="fas fa-palette me-1"></i> E1 Example</button>
+							<button id="btnLoadTemplate" class="btn btn-sm btn-outline-secondary rounded-pill fw-medium pill-action"><i class="fas fa-border-all me-1"></i> Grid Template</button>
+							<button id="btnLoadExample" class="btn btn-sm btn-outline-secondary rounded-pill fw-medium pill-action"><i class="fas fa-palette me-1"></i> E1 Example</button>
 						</div>
 					</div>
 
@@ -86,7 +107,7 @@
 						<label class="form-label detail-text mb-2">OUTPUT</label>
 						<div class="output-wrapper position-relative">
 							<input type="text" id="converterOutput" class="apple-input" readonly placeholder="Result appears here">
-							<button id="copyButton" class="icon-button position-absolute" style="right: 12px; top: 50%; transform: translateY(-50%);" title="Copy to clipboard">
+							<button id="copyButton" class="icon-button position-absolute copy-button" title="Copy to clipboard">
 								<i class="far fa-copy"></i>
 							</button>
 						</div>
