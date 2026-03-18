@@ -10,43 +10,43 @@ function Glyph(glyph = "E0") {
 		const charCode = startChar + i;
 		const char = String.fromCodePoint(charCode);
 		const hexCode = charCode.toString(16).toUpperCase().padStart(4, '0');
-		markdownContent += `<div data-hex="0x${hexCode}" data-char="${char}" data-position="(${col};${row})" style="color: ${isDarkMode ? '#ffffff' : '#000000'}">
-			${char}
-			<span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>
-			<span class="copy-notification">Copied</span>
-		</div>`;
+		
+		markdownContent += `<div data-hex="0x${hexCode}" data-char="${char}" data-position="(${col};${row})">${char}</div>`;
 	}
 
 	document.getElementById('glyph-output').innerHTML = markdownContent;
-	addClickEventToGlyphs();
+	
+	if (typeof removeZoomEvents === 'function') {
+		removeZoomEvents();
+		zoomEnabled = false;
+		if (typeof hideZoomWindow === 'function') hideZoomWindow();
+	}
 }
 
 function initializeGlyph() {
 	const glyphOutput = document.getElementById('glyph-output');
 	if (glyphOutput.innerHTML.trim() === '') {
-		Glyph("E0");
+		if (typeof DEFAULT_GLYPHS !== 'undefined' && DEFAULT_GLYPHS["E0"]) {
+			const img = new Image();
+			img.onload = function() {
+				processGlyph(img, "E0");
+			};
+			img.onerror = function() {
+				Glyph("E0");
+			};
+			img.src = DEFAULT_GLYPHS["E0"];
+		} else {
+			Glyph("E0");
+		}
 	}
 }
 
-function addClickEventToGlyphs() {
-	document.querySelectorAll('#glyph-output div').forEach(div => {
-		div.addEventListener('click', function () {
-			const char = this.getAttribute('data-char');
-			navigator.clipboard.writeText(char).then(() => {
-				showCopyNotification(this);
-			});
-		});
-	});
-}
 
 function renderGlyphs() {
 	const glyphOutput = document.getElementById('glyph-output');
 	const glyphs = glyphOutput.querySelectorAll('div');
 
 	glyphs.forEach(glyph => {
-		glyph.style.backgroundColor = isDarkMode ? '#2a2a2a' : '#ffffff';
-		glyph.style.color = isDarkMode ? '#ffffff' : '#000000';
-
 		const backgroundImage = glyph.style.backgroundImage;
 		if (backgroundImage) {
 			const img = new Image();
@@ -80,23 +80,6 @@ function renderGlyphs() {
 				glyph.style.backgroundImage = `url(${canvas.toDataURL()})`;
 			};
 			img.src = backgroundImage.slice(5, -2); // Remove 'url("")' from backgroundImage
-		}
-
-		// Update glyph background color
-		if (glyph.classList.contains('transparent')) {
-			glyph.style.backgroundColor = isDarkMode ? 'rgba(50, 50, 50, 0.5)' : 'rgba(200, 200, 200, 0.25)';
-		}
-
-		const tooltip = glyph.querySelector('.tooltip');
-		if (tooltip) {
-			tooltip.style.backgroundColor = isDarkMode ? '#4a4a4a' : '#333';
-			tooltip.style.color = isDarkMode ? '#ffffff' : '#ffffff';
-		}
-
-		const copyNotification = glyph.querySelector('.copy-notification');
-		if (copyNotification) {
-			copyNotification.style.backgroundColor = isDarkMode ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.8)';
-			copyNotification.style.color = isDarkMode ? '#000000' : '#ffffff';
 		}
 	});
 }
@@ -137,10 +120,7 @@ function processGlyph(img, hexValue) {
 
 		markdownContent += `<div class="${transparentClass}" data-hex="0x${hexCode}" data-char="${char}" 
 			data-position="(${col};${row})" 
-			style="background-image: url(${unicodeCanvas.toDataURL()}); background-size: 100% 100%;">
-			<span class="tooltip">Position: (${col};${row}) - Hex: 0x${hexCode}</span>
-			<span class="copy-notification">Copied</span>
-		</div>`;
+			style="background-image: url(${unicodeCanvas.toDataURL()}); background-size: 100% 100%;"></div>`;
 	}
 
 	removeZoomEvents();
@@ -154,6 +134,5 @@ function processGlyph(img, hexValue) {
 	}
 
 	document.getElementById('glyph-output').innerHTML = markdownContent;
-	addClickEventToGlyphs();
 	renderGlyphs();
 }

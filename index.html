@@ -6,136 +6,142 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Glyph Tools 🇻🇳</title>
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 	<link href="styles.css" rel="stylesheet">
-
 </head>
 
 <body>
-	<div class="container py-5">
-		<header class="text-center mb-5">
-			<h1 class="display-4 fw-bold">Glyph Tools 🇻🇳</h1>
-			<p class="lead">Generate glyphs and convert between hex and emoji</p>
+	<div class="app-container py-4 px-3 px-md-5">
+		
+		<!-- Header -->
+		<header class="d-flex justify-content-between align-items-center mb-5 mt-2 header-bar">
+			<div>
+				<h1 class="fw-bold mb-0 title-text">Glyph Tools 🇻🇳</h1>
+				<p class="text-secondary subtitle-text mb-0 mt-1">Smart, intelligent character tools</p>
+			</div>
+			<button id="darkModeToggle" class="icon-button glass-btn" title="Toggle Dark Mode">
+				<i class="fas fa-moon"></i>
+			</button>
 		</header>
 
-		<div id="mobileAlert" class="alert alert-warning alert-dismissible fade show d-md-none" role="alert"
-			style="display: none;">
-			<strong>Mobile User Notice:</strong> For the best experience, we recommend using this tool on a desktop
-			device. We're working on improving mobile responsiveness.
+		<!-- Mobile Alert -->
+		<div id="mobileAlert" class="alert alert-warning alert-dismissible fade show d-md-none rounded-alert" role="alert" style="display: none;">
+			<strong>Mobile User Notice:</strong> For the best experience, we recommend using a desktop device.
 			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 		</div>
 
-		<div class="row g-4">
+		<div class="row g-4 mb-4">
+			<!-- Glyph Generator Card -->
 			<div class="col-md-6">
-				<div class="card h-100 shadow-sm">
-					<div class="card-header bg-primary text-white">
-						<h2 class="h5 mb-0">Glyph Generator</h2>
+				<div class="apple-card h-100 p-4">
+					<h2 class="h5 fw-bold mb-4">Glyph Generator</h2>
+					
+					<div class="mb-4">
+						<label class="form-label detail-text mb-2 d-flex justify-content-between">
+							<span>HEX CODE</span>
+							<span id="inputValidation" class="text-danger small d-none">Invalid hex</span>
+						</label>
+						<div class="input-wrapper">
+							<input type="text" id="glyph-input" class="apple-input text-uppercase font-monospace fw-bold" placeholder="E0 used by default" maxlength="4">
+						</div>
+						<div id="defaultImageHint" class="text-primary fw-medium mt-2 d-none" style="font-size: 0.85rem; cursor: pointer; transition: opacity 0.2s;">
+							<i class="fas fa-download me-1"></i> Load default <span id="hintHex">E0</span> image
+						</div>
 					</div>
-					<div class="card-body">
-						<div class="mb-3">
-							<div class="input-group">
-								<input type="text" id="glyph-input" class="form-control"
-									placeholder="E0 used by default">
-								<button id="generate-glyph" class="btn btn-primary">
-									<i class="fas fa-sync-alt me-2"></i>Generate
-								</button>
+					
+					<div class="mb-3">
+						<label class="form-label detail-text mb-2">CUSTOM GLYPH PNG</label>
+						<div class="upload-zone d-flex align-items-center justify-content-between" style="padding: 10px 18px; border-radius: var(--radius-input); min-height: 52px;">
+							<input type="file" id="glyphUpload" accept=".png" class="file-input opacity-0 position-absolute w-100 h-100" style="cursor: pointer; top:0; left:0; z-index: 10;">
+							<div class="d-flex align-items-center gap-3 position-relative" style="pointer-events: none;">
+								<i class="fas fa-image text-secondary opacity-75 fs-5"></i>
+								<span id="uploadLabel" class="text-secondary" style="font-size: 1rem;">Upload glyph_XX.png</span>
 							</div>
+							<i class="fas fa-cloud-upload-alt text-primary fs-5" style="pointer-events: none;"></i>
 						</div>
-						<div class="mb-3">
-							<strong>Upload your glyph</strong> <span class="text-muted">(PNG format, name:
-								glyph_XX.png)</span>
-							<input type="file" class="form-control" id="glyphUpload" accept=".png">
-						</div>
-
-						<div id="glyphSuccessMsg" class="alert alert-success alert-dismissible fade show d-none"
-							role="alert">
-							Glyph generated successfully!
-						</div>
-						<div id="glyphErrorMsg" class="alert alert-danger alert-dismissible fade show d-none"
-							role="alert">
+						<div class="d-flex gap-2 mt-3 flex-wrap">
+							<button id="btnLoadTemplate" class="btn btn-sm btn-outline-secondary rounded-pill fw-medium" style="font-size: 0.8rem; transition: background-color 0.2s;"><i class="fas fa-border-all me-1"></i> Grid Template</button>
+							<button id="btnLoadExample" class="btn btn-sm btn-outline-secondary rounded-pill fw-medium" style="font-size: 0.8rem; transition: background-color 0.2s;"><i class="fas fa-palette me-1"></i> E1 Example</button>
 						</div>
 					</div>
+
+					<div id="glyphSuccessMsg" class="alert rounded-alert alert-success mt-3 d-none mb-0 py-2"></div>
+					<div id="glyphErrorMsg" class="alert rounded-alert alert-danger mt-3 d-none mb-0 py-2"></div>
 				</div>
 			</div>
 
+			<!-- Converter Card -->
 			<div class="col-md-6">
-				<div class="card h-100 shadow-sm">
-					<div class="card-header bg-primary text-white">
-						<h2 class="h5 mb-0">Hex ↔ Emoji Converter</h2>
+				<div class="apple-card h-100 p-4">
+					<h2 class="h5 fw-bold mb-4">Smart Converter</h2>
+					
+					<div class="mb-4">
+						<label class="form-label detail-text mb-2 d-flex justify-content-between">
+							<span>INPUT</span>
+						</label>
+						<input type="text" id="converterInput" class="apple-input" placeholder="Paste hex or emoji here...">
 					</div>
-					<div class="card-body">
-						<div class="mb-3">
-							<button id="conversionModeButton"
-								class="btn btn-outline-primary w-100 conversion-mode-text">
-								Hex to Emoji
+					
+					<div class="mb-3 position-relative">
+						<label class="form-label detail-text mb-2">OUTPUT</label>
+						<div class="output-wrapper position-relative">
+							<input type="text" id="converterOutput" class="apple-input" readonly placeholder="Result appears here">
+							<button id="copyButton" class="icon-button position-absolute" style="right: 12px; top: 50%; transform: translateY(-50%);" title="Copy to clipboard">
+								<i class="far fa-copy"></i>
 							</button>
 						</div>
-						<div class="input-group mb-3 converter-input-group">
-							<span id="inputPrefix" class="input-group-text">0x</span>
-							<input type="text" id="converterInput" class="form-control" placeholder="Enter hex value">
-							<button id="convertButton" class="btn btn-primary">
-								<i class="fas fa-exchange-alt me-2"></i>Convert
-							</button>
-						</div>
-						<div class="input-group converter-input-group">
-							<input type="text" class="form-control" id="converterOutput" readonly
-								placeholder="Conversion result">
-							<button id="copyButton" class="btn btn-secondary">
-								<i class="far fa-copy me-2"></i>Copy
-							</button>
-						</div>
-						<div id="errorMsg" class="alert alert-danger d-none mt-3" role="alert"></div>
-						<div id="successMsg" class="alert alert-success d-none mt-3" role="alert"></div>
 					</div>
+
+					<div id="errorMsg" class="alert rounded-alert alert-danger mt-3 d-none mb-0 py-2"></div>
+					<div id="successMsg" class="alert rounded-alert alert-success mt-3 d-none mb-0 py-2"></div>
 				</div>
 			</div>
 		</div>
 
-		<div class="row mt-4">
+		<!-- Grid Card -->
+		<div class="row">
 			<div class="col-12">
-				<div class="card shadow-sm">
-					<div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-						<h5 class="h5 mb-0">Generated Glyph</h5>
-						<button id="darkModeToggle" class="btn btn-outline-light btn-sm">
-							<i class="fas fa-moon"></i> Toggle Dark Mode
-						</button>
+				<div class="apple-card p-4">
+					<div class="d-flex justify-content-between align-items-center mb-4">
+						<h2 class="h5 fw-bold mb-0">Generated Output</h2>
+						<div class="dropdown">
+							<button class="btn btn-sm btn-light border rounded-pill px-3 py-2 fw-medium shadow-sm dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+								<i class="fas fa-file-export me-1"></i> Smart Export
+							</button>
+							<ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2" aria-labelledby="exportDropdown">
+								<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnCopyAll"><i class="far fa-copy me-2 text-primary"></i> Copy All (Minecraft String)</button></li>
+								<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnCopyReference"><i class="fas fa-list-ul me-2 text-info"></i> Copy Reference (Text Map)</button></li>
+								<li><hr class="dropdown-divider opacity-50"></li>
+								<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadJson"><i class="far fa-file-code me-2 text-success"></i> Download JSON (Pack)</button></li>
+								<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadFullJson"><i class="fas fa-database me-2 text-warning"></i> Download JSON (Metadata)</button></li>
+							</ul>
+						</div>
 					</div>
-					<div class="card-body">
+					<div class="card-body p-0">
 						<div id="glyph-output" class="glyph-grid"></div>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<footer class="container mt-5 mb-3">
-			<div class="row justify-content-center">
-				<div class="col-md-8">
-					<div class="d-flex justify-content-center flex-wrap gap-3">
-						<a href="https://github.com/NhanAZ/glyph" class="text-decoration-none text-muted"
-							target="_blank" rel="noopener noreferrer">
-							<i class="fab fa-github me-2"></i>Contribute on GitHub
-						</a>
-						<a href="https://wiki.bedrock.dev/concepts/emojis.html" class="text-decoration-none text-muted"
-							target="_blank" rel="noopener noreferrer">
-							<i class="fas fa-book me-2"></i>Emojis & Symbols Docs
-						</a>
-						<a href="https://discord.gg/j2X83ujT6c" class="text-decoration-none text-muted" target="_blank"
-							rel="noopener noreferrer">
-							<i class="fab fa-discord me-2"></i>Join our Discord
-						</a>
-						<a href="https://github.com/NhanAZ" class="text-decoration-none text-muted" target="_blank"
-							rel="noopener noreferrer">
-							<i class="fas fa-user me-2"></i>Author's GitHub Profile
-						</a>
-					</div>
-				</div>
+		<footer class="mt-5 mb-4 text-center">
+			<div class="d-flex justify-content-center flex-wrap gap-4 footer-links">
+				<a href="https://github.com/NhanAZ/glyph" target="_blank" rel="noopener noreferrer">
+					<i class="fab fa-github me-1"></i> GitHub
+				</a>
+				<a href="https://wiki.bedrock.dev/text/custom-emojis" target="_blank" rel="noopener noreferrer">
+					<i class="fas fa-book me-1"></i> Docs
+				</a>
+				<a href="https://discord.gg/j2X83ujT6c" target="_blank" rel="noopener noreferrer">
+					<i class="fab fa-discord me-1"></i> Discord
+				</a>
 			</div>
 		</footer>
 	</div>
 
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 	<script src="js/state.js"></script>
+	<script src="js/defaults.js"></script>
 	<script src="js/utils.js"></script>
 	<script src="js/converter.js"></script>
 	<script src="js/zoom.js"></script>

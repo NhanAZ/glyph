@@ -120,10 +120,6 @@ function createZoomWindow(unicodeSize) {
 	zoomWindow.style.right = '20px';
 	zoomWindow.style.bottom = '20px';
 	zoomWindow.style.zIndex = '1000';
-	zoomWindow.style.background = 'white';
-	zoomWindow.style.border = '1px solid #ccc';
-	zoomWindow.style.boxShadow = '0 0 10px rgba(0,0,0,0.3)';
-	zoomWindow.style.padding = '5px';
 	zoomWindow.style.display = 'none';
 
 	const zoomCanvas = document.createElement('canvas');

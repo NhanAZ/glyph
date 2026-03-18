@@ -19,7 +19,7 @@ function convertEmojiToHex(input) {
 }
 
 function convert() {
-	const input = document.getElementById('converterInput').value.trim();
+	let input = document.getElementById('converterInput').value.trim();
 	const errorMsg = document.getElementById('errorMsg');
 	const successMsg = document.getElementById('successMsg');
 	const output = document.getElementById('converterOutput');
@@ -27,21 +27,27 @@ function convert() {
 	successMsg.classList.add('d-none');
 	output.value = '';
 
-	if (isHexToEmoji) {
-		if (/^[0-9A-Fa-f]{1,6}$/.test(input)) {
-			convertHexToEmoji(input);
-		} else {
-			errorMsg.textContent = 'Invalid input. Please enter a valid hex value.';
-			errorMsg.classList.remove('d-none');
-		}
-	} else {
-		if (Array.from(input).length === 1) {
-			convertEmojiToHex(input);
-		} else {
-			errorMsg.textContent = 'Invalid input. Please enter a single emoji/symbol.';
-			errorMsg.classList.remove('d-none');
-		}
+	if (!input) {
+		updateCopyButtonState();
+		return;
 	}
+
+	// 1. Explicit hex prefix
+	let isExplicitHex = false;
+	if (/^(0x|u\+|U\+)/i.test(input)) {
+		isExplicitHex = true;
+		input = input.replace(/^(0x|u\+|U\+)/i, '');
+	}
+
+	if (isExplicitHex || (input.length > 1 && /^[0-9A-Fa-f]+$/.test(input))) {
+		convertHexToEmoji(input);
+	} else if (Array.from(input).length === 1) {
+		convertEmojiToHex(input);
+	} else {
+		errorMsg.textContent = 'Invalid input. Please enter a valid hex value or a single symbol/emoji.';
+		errorMsg.classList.remove('d-none');
+	}
+	
 	updateCopyButtonState();
 }
 
@@ -55,7 +61,7 @@ function copyOutput() {
 
 	navigator.clipboard.writeText(output.value).then(() => {
 		const originalText = copyButton.innerHTML;
-		copyButton.innerHTML = '<i class="fas fa-check me-2"></i>Copied';
+		copyButton.innerHTML = '<i class="fas fa-check text-primary"></i>';
 		copyButton.disabled = true;
 
 		setTimeout(() => {
