@@ -21,6 +21,3 @@ A lightweight, client-side toolkit for generating and exporting Minecraft glyphs
 ## Community & docs
 - Emoji/Text symbols reference: https://wiki.bedrock.dev/text/custom-emojis
 - Discord: https://discord.gg/j2X83ujT6c
-
-## License
-- See `LICENSE` for details.
