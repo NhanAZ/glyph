@@ -27,13 +27,20 @@ function convert() {
 	successMsg.classList.add('d-none');
 	output.value = '';
 
-	if (/^[0-9A-Fa-f]{1,6}$/.test(input)) {
-		convertHexToEmoji(input);
-	} else if (input.length === 1) {
-		convertEmojiToHex(input);
+	if (isHexToEmoji) {
+		if (/^[0-9A-Fa-f]{1,6}$/.test(input)) {
+			convertHexToEmoji(input);
+		} else {
+			errorMsg.textContent = 'Invalid input. Please enter a valid hex value.';
+			errorMsg.classList.remove('d-none');
+		}
 	} else {
-		errorMsg.textContent = 'Invalid input. Please enter a hex value or a single emoji/symbol.';
-		errorMsg.classList.remove('d-none');
+		if (Array.from(input).length === 1) {
+			convertEmojiToHex(input);
+		} else {
+			errorMsg.textContent = 'Invalid input. Please enter a single emoji/symbol.';
+			errorMsg.classList.remove('d-none');
+		}
 	}
 	updateCopyButtonState();
 }

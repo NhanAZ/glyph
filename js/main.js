@@ -8,8 +8,14 @@ document.getElementById('glyph-input').addEventListener('input', function () {
 	const glyphSuccessMsg = document.getElementById('glyphSuccessMsg');
 	const glyphErrorMsg = document.getElementById('glyphErrorMsg');
 
-	if (/^[A-Fa-f0-9]{1,2}$/.test(glyphInput)) {
-		Glyph(glyphInput || "E0");
+	if (glyphInput === '') {
+		Glyph("E0");
+		glyphSuccessMsg.textContent = 'Default glyph generated!';
+		glyphSuccessMsg.classList.remove('d-none');
+		glyphErrorMsg.classList.add('d-none');
+		renderGlyphs();
+	} else if (/^[A-Fa-f0-9]{1,2}$/.test(glyphInput)) {
+		Glyph(glyphInput);
 		glyphSuccessMsg.textContent = 'Glyph generated successfully!';
 		glyphSuccessMsg.classList.remove('d-none');
 		glyphErrorMsg.classList.add('d-none');
