@@ -118,10 +118,36 @@ window.addEventListener('scroll', function () {
 // Smart Tooltip & Copy Logic
 document.addEventListener('DOMContentLoaded', () => {
 	const mobileAlert = document.getElementById('mobileAlert');
+	const glyphGrid = document.getElementById('glyph-output');
+	const gridModeToggle = document.getElementById('gridModeToggle');
+	const gridToggleLabel = gridModeToggle ? gridModeToggle.querySelector('.grid-toggle-label') : null;
+	const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+	let gridMode = 'adaptive';
+	let mobileAlertTimer = null;
+
+	function applyGridMode(mode) {
+		if (!glyphGrid) return;
+		if (mode === 'fixed') {
+			glyphGrid.style.setProperty('--glyph-columns', 16);
+			if (gridToggleLabel) gridToggleLabel.textContent = '16x16 view';
+		} else {
+			glyphGrid.style.removeProperty('--glyph-columns');
+			if (gridToggleLabel) gridToggleLabel.textContent = 'Adaptive grid';
+		}
+	}
 
 	function checkScreenSize() {
 		if (window.innerWidth < 768) {
 			mobileAlert.style.display = 'block';
+			if (mobileAlertTimer) clearTimeout(mobileAlertTimer);
+			mobileAlertTimer = setTimeout(() => {
+				if (window.bootstrap && bootstrap.Alert) {
+					const alertInstance = bootstrap.Alert.getOrCreateInstance(mobileAlert);
+					alertInstance.close();
+				} else {
+					mobileAlert.style.display = 'none';
+				}
+			}, 5000);
 		} else {
 			mobileAlert.style.display = 'none';
 		}
@@ -129,6 +155,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	checkScreenSize();
 	window.addEventListener('resize', checkScreenSize);
+	applyGridMode(gridMode);
+
+	if (gridModeToggle && glyphGrid) {
+		gridModeToggle.addEventListener('click', () => {
+			gridMode = gridMode === 'adaptive' ? 'fixed' : 'adaptive';
+			gridModeToggle.classList.toggle('active', gridMode === 'fixed');
+			applyGridMode(gridMode);
+		});
+	}
 
     const tooltip = document.createElement('div');
     tooltip.className = 'smart-tooltip';
@@ -137,6 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentCopiedCell = null;
 
     document.addEventListener('mousemove', (e) => {
+		if (isCoarsePointer) return;
         const cell = e.target.closest('#glyph-output div[data-hex]');
         if (cell) {
             const hex = cell.getAttribute('data-hex');
@@ -161,6 +197,34 @@ document.addEventListener('DOMContentLoaded', () => {
             currentCopiedCell = null;
         }
     });
+
+	document.addEventListener('touchstart', (e) => {
+		if (!isCoarsePointer) return;
+		const cell = e.target.closest('#glyph-output div[data-hex]');
+		if (cell) {
+			const touch = e.touches && e.touches[0];
+			const hex = cell.getAttribute('data-hex');
+			const pos = cell.getAttribute('data-position');
+			tooltip.classList.remove('success');
+			tooltip.innerHTML = `Pos: ${pos}<br>Hex: ${hex}`;
+			const rect = cell.getBoundingClientRect();
+			const left = touch ? touch.pageX : rect.left + window.scrollX + (rect.width / 2);
+			const top = touch ? touch.pageY - 12 : rect.top + window.scrollY - 8;
+			tooltip.style.left = `${left}px`;
+			tooltip.style.top = `${top}px`;
+			tooltip.classList.add('visible');
+			currentCopiedCell = null;
+			setTimeout(() => {
+				if (!tooltip.classList.contains('success')) {
+					tooltip.classList.remove('visible');
+				}
+			}, 1200);
+		} else {
+			tooltip.classList.remove('visible');
+			tooltip.classList.remove('success');
+			currentCopiedCell = null;
+		}
+	}, { passive: true });
 
 	document.addEventListener('click', (e) => {
 		const cell = e.target.closest('#glyph-output div[data-hex]');

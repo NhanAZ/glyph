@@ -234,6 +234,15 @@ h1, h2, h3, h4, h5 {
 	min-height: 2.6rem;
 }
 
+.grid-toggle {
+	min-height: 2.5rem;
+	padding-inline: 1rem;
+}
+
+.grid-toggle .grid-toggle-label {
+	white-space: nowrap;
+}
+
 /* Icon Buttons */
 .icon-button {
 	background: var(--bg-input);

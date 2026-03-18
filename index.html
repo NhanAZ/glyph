@@ -46,9 +46,8 @@
 	</div>
 
 		<!-- Mobile Alert -->
-		<div id="mobileAlert" class="alert alert-warning alert-dismissible fade show d-md-none rounded-alert mobile-alert" role="alert">
-			<strong>Mobile User Notice:</strong> For the best experience, we recommend using a desktop device.
-			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+		<div id="mobileAlert" class="alert alert-warning fade show d-md-none rounded-alert mobile-alert" role="alert">
+			<strong>Mobile tip:</strong> Best viewed on desktop - this will close in 5s.
 		</div>
 
 		<div class="row g-4 mb-4">
@@ -123,8 +122,13 @@
 		<div class="row">
 			<div class="col-12">
 				<div class="apple-card p-4">
-					<div class="d-flex justify-content-between align-items-center mb-4">
-						<h2 class="h5 fw-bold mb-0">Generated Output</h2>
+					<div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-4">
+						<div class="d-flex align-items-center gap-2 flex-wrap">
+							<h2 class="h5 fw-bold mb-0">Generated Output</h2>
+							<button id="gridModeToggle" class="btn btn-outline-secondary btn-sm rounded-pill fw-medium grid-toggle d-lg-none" type="button">
+								<i class="fas fa-th-large me-1"></i><span class="grid-toggle-label">Adaptive grid</span>
+							</button>
+						</div>
 						<div class="dropdown">
 							<button class="btn btn-sm btn-light border rounded-pill px-3 py-2 fw-medium shadow-sm dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
 								<i class="fas fa-file-export me-1"></i> Smart Export
