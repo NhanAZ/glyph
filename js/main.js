@@ -446,6 +446,32 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
+	const btnLoadEmpty = document.getElementById('btnLoadEmpty');
+	if (btnLoadEmpty) {
+		btnLoadEmpty.addEventListener('click', () => {
+			const glyphInput = document.getElementById('glyph-input');
+			const current = glyphInput ? glyphInput.value.trim().toUpperCase() : "E0";
+			const hex = /^[A-F0-9]{1,4}$/.test(current) ? current : "E0";
+
+			if (typeof DEFAULT_GLYPHS !== 'undefined' && DEFAULT_GLYPHS['EMPTY']) {
+				if (typeof updateTimer !== 'undefined') clearTimeout(updateTimer);
+				const img = new Image();
+				img.crossOrigin = 'anonymous';
+				img.onload = function() {
+					processGlyph(img, hex, { cacheKey: 'EMPTY', label: 'glyph_empty.png' });
+					const hintMsg = document.getElementById('defaultImageHint');
+					if (hintMsg) hintMsg.classList.add('d-none');
+					const label = document.getElementById('uploadLabel');
+					if (label) {
+						label.textContent = "Loaded: glyph_empty.png";
+						label.className = "text-primary fw-bold";
+					}
+				};
+				img.src = DEFAULT_GLYPHS['EMPTY'];
+			}
+		});
+	}
+
 	// Smart Export Logic
 	const btnCopyAll = document.getElementById('btnCopyAll');
 	if (btnCopyAll) {
