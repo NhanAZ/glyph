@@ -186,7 +186,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	const detailCopyBtn = document.getElementById('glyphDetailCopyBtn');
 	const detailDownloadBtn = document.getElementById('glyphDetailDownloadBtn');
 	const detailClearBtn = document.getElementById('glyphDetailClearBtn');
+	const detailReplaceBtn = document.getElementById('glyphDetailReplaceBtn');
+	const detailReplaceInput = document.getElementById('glyphDetailReplaceInput');
+	const beforeAfterWrap = document.getElementById('glyphBeforeAfter');
+	const beforeImg = document.getElementById('glyphBeforeImg');
+	const afterImg = document.getElementById('glyphAfterImg');
 	let clearConfirmTimer = null;
+	let replacePending = null;
 
 	function showGlyphDetail(cell) {
 		if (!cell || !detailModal) return;
@@ -194,6 +200,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			clearTimeout(clearConfirmTimer);
 			clearConfirmTimer = null;
 		}
+		replacePending = null;
+		if (beforeAfterWrap) beforeAfterWrap.classList.add('d-none');
+		if (detailImg) detailImg.classList.remove('d-none');
+		if (detailCharFallback) detailCharFallback.classList.add('d-none');
 
 		const hex = cell.getAttribute('data-hex') || '';
 		const pos = cell.getAttribute('data-position') || '';
@@ -205,10 +215,12 @@ document.addEventListener('DOMContentLoaded', () => {
 		const heightAttr = cell.getAttribute('data-height');
 		let dimText = '';
 		let downloadUrl = '';
+		let currentPreviewUrl = '';
 
 		if (bg) {
 			const url = bg.slice(5, -2);
 			downloadUrl = url;
+			currentPreviewUrl = url;
 			detailImg.src = url;
 			detailImg.classList.remove('d-none');
 			detailCharFallback.classList.add('d-none');
@@ -237,6 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			ctx.font = 'bold 120px "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
 			ctx.fillText(char || '?', canvas.width / 2, canvas.height / 2 + 8);
 			downloadUrl = canvas.toDataURL('image/png');
+			currentPreviewUrl = downloadUrl;
 			dimText = `${canvas.width}px x ${canvas.height}px`;
 
 			detailImg.src = downloadUrl;
@@ -337,6 +350,89 @@ document.addEventListener('DOMContentLoaded', () => {
 						clearConfirmTimer = null;
 					}, 3000);
 				}
+			};
+		}
+
+		if (detailReplaceBtn && detailReplaceInput) {
+			detailReplaceBtn.disabled = false;
+			detailReplaceBtn.classList.remove('btn-warning', 'btn-primary');
+			detailReplaceBtn.classList.add('btn-outline-info');
+			detailReplaceBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Update & Replace';
+			detailReplaceBtn.onclick = () => {
+				// If a file is pending confirmation, confirm replace
+				if (replacePending) {
+					const { img } = replacePending;
+					if (typeof replaceAtlasTile === 'function') {
+						replaceAtlasTile(cell, img).then((res) => {
+							const tileUrl = res && res.tileUrl;
+							const tileW = res && res.tileW;
+							const tileH = res && res.tileH;
+							if (tileUrl) {
+								cell.style.backgroundImage = `url(${tileUrl})`;
+								cell.style.backgroundSize = '100% 100%';
+								cell.classList.remove('transparent');
+								if (tileW) cell.setAttribute('data-width', tileW);
+								if (tileH) cell.setAttribute('data-height', tileH);
+								// refresh modal preview
+								detailImg.src = tileUrl;
+								detailImg.classList.remove('d-none');
+								detailCharFallback.classList.add('d-none');
+								if (detailDim) detailDim.textContent = tileW && tileH ? `${tileW}px x ${tileH}px` : detailDim.textContent;
+								// update download button to new tile
+								if (detailDownloadBtn) {
+							const fileName = `glyph_${hex.replace(/^0x/i, '').toLowerCase() || 'char'}.png`;
+							detailDownloadBtn.disabled = false;
+							detailDownloadBtn.onclick = () => {
+								const a = document.createElement('a');
+								a.href = tileUrl;
+										a.download = fileName;
+										a.click();
+									};
+								}
+							}
+							// reset state
+							replacePending = null;
+							detailReplaceBtn.classList.remove('btn-warning', 'btn-primary');
+							detailReplaceBtn.classList.add('btn-outline-info');
+							detailReplaceBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Update & Replace';
+							if (beforeAfterWrap) beforeAfterWrap.classList.add('d-none');
+							if (detailImg) detailImg.classList.remove('d-none');
+						});
+					}
+				} else {
+					detailReplaceInput.value = '';
+					detailReplaceInput.click();
+				}
+			};
+
+			detailReplaceInput.onchange = (ev) => {
+				const file = ev.target.files && ev.target.files[0];
+				if (!file) return;
+				if (!file.type || !file.type.includes('png')) {
+					alert('Please select a PNG file.');
+					return;
+				}
+
+				const reader = new FileReader();
+				reader.onload = (e) => {
+					const newImg = new Image();
+					newImg.onload = function () {
+						replacePending = { img: newImg };
+						detailReplaceBtn.classList.remove('btn-outline-info');
+						detailReplaceBtn.classList.add('btn-primary');
+						detailReplaceBtn.innerHTML = '<i class="fas fa-check me-1"></i> Confirm replace';
+
+						// show before/after preview
+						if (beforeAfterWrap && beforeImg && afterImg) {
+							beforeImg.src = currentPreviewUrl || (detailImg && detailImg.src) || '';
+							afterImg.src = e.target.result;
+							beforeAfterWrap.classList.remove('d-none');
+							if (detailImg) detailImg.classList.add('d-none');
+						}
+					};
+					newImg.src = e.target.result;
+				};
+				reader.readAsDataURL(file);
 			};
 		}
 

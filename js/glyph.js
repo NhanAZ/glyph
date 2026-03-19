@@ -225,3 +225,51 @@ function clearAtlasTile(cell) {
 		img.src = currentAtlasDataUrl;
 	});
 }
+
+// Replace a single glyph cell with a provided image; updates atlas and cache
+function replaceAtlasTile(cell, newImage) {
+	return new Promise((resolve) => {
+		if (!currentAtlasDataUrl || !cell || !newImage) return resolve(null);
+
+		const pos = cell.getAttribute('data-position');
+		const match = pos ? pos.match(/\((\d+);(\d+)\)/) : null;
+		if (!match) return resolve(null);
+		const col = parseInt(match[1], 10);
+		const row = parseInt(match[2], 10);
+
+		const widthAttr = parseInt(cell.getAttribute('data-width'), 10);
+		const heightAttr = parseInt(cell.getAttribute('data-height'), 10);
+
+		const atlasImg = new Image();
+		atlasImg.onload = function () {
+			const canvas = document.createElement('canvas');
+			canvas.width = atlasImg.width;
+			canvas.height = atlasImg.height;
+			const ctx = canvas.getContext('2d');
+			ctx.imageSmoothingEnabled = false;
+			ctx.drawImage(atlasImg, 0, 0);
+
+			const tileW = widthAttr || Math.floor(atlasImg.width / GRID);
+			const tileH = heightAttr || Math.floor(atlasImg.height / GRID);
+			const x = (col - 1) * tileW;
+			const y = (row - 1) * tileH;
+
+			ctx.clearRect(x, y, tileW, tileH);
+			ctx.drawImage(newImage, 0, 0, newImage.width, newImage.height, x, y, tileW, tileH);
+
+			currentAtlasDataUrl = canvas.toDataURL('image/png');
+			glyphCache.clear();
+			setAtlasInfo(atlasImg.width, atlasImg.height, currentAtlasLabel || 'Atlas');
+
+			const tileCanvas = document.createElement('canvas');
+			tileCanvas.width = tileW;
+			tileCanvas.height = tileH;
+			const tileCtx = tileCanvas.getContext('2d');
+			tileCtx.imageSmoothingEnabled = false;
+			tileCtx.drawImage(newImage, 0, 0, newImage.width, newImage.height, 0, 0, tileW, tileH);
+
+			resolve({ tileUrl: tileCanvas.toDataURL('image/png'), tileW, tileH });
+		};
+		atlasImg.src = currentAtlasDataUrl;
+	});
+}

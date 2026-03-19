@@ -462,6 +462,37 @@ h1, h2, h3, h4, h5 {
 	padding: 20px 0;
 }
 
+.replace-preview {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+	align-items: start;
+}
+
+.replace-card {
+	background: var(--bg-input);
+	border: 1px solid var(--border-light);
+	border-radius: 12px;
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+}
+
+.replace-label {
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--text-secondary);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.replace-preview .glyph-preview-img {
+	width: 160px;
+	height: 160px;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 1023px) {
 	.app-container {
