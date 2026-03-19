@@ -1,4 +1,15 @@
 // Glyph related functions
+function setAtlasInfo(width, height, label) {
+	const infoEl = document.getElementById('atlasInfo');
+	if (!infoEl) return;
+
+	if (width && height) {
+		infoEl.textContent = `${label || 'Atlas'} - ${width}px × ${height}px`;
+	} else {
+		infoEl.textContent = label ? `${label} - no image` : 'Atlas: not loaded';
+	}
+}
+
 function Glyph(glyph = "E0") {
 	const filename = `glyph_${glyph}`;
 	const startChar = parseInt(filename.split("_").pop() + "00", 16);
@@ -11,7 +22,7 @@ function Glyph(glyph = "E0") {
 		const char = String.fromCodePoint(charCode);
 		const hexCode = charCode.toString(16).toUpperCase().padStart(4, '0');
 		
-		markdownContent += `<div data-hex="0x${hexCode}" data-char="${char}" data-position="(${col};${row})">${char}</div>`;
+		markdownContent += `<div data-hex="0x${hexCode}" data-char="${char}" data-position="(${col};${row})" data-width="" data-height="">${char}</div>`;
 	}
 
 	document.getElementById('glyph-output').innerHTML = markdownContent;
@@ -21,6 +32,8 @@ function Glyph(glyph = "E0") {
 		zoomEnabled = false;
 		if (typeof hideZoomWindow === 'function') hideZoomWindow();
 	}
+
+	setAtlasInfo(null, null, `${filename}.png`);
 }
 
 function initializeGlyph() {
@@ -30,7 +43,7 @@ function initializeGlyph() {
 			const img = new Image();
 			img.crossOrigin = 'anonymous';
 			img.onload = function() {
-				processGlyph(img, "E0", { cacheKey: "E0_DEFAULT" });
+				processGlyph(img, "E0", { cacheKey: "E0_DEFAULT", label: "glyph_E0.png" });
 			};
 			img.onerror = function() {
 				Glyph("E0");
@@ -50,6 +63,8 @@ function applyCachedGlyph(entry) {
 	if (typeof hideZoomWindow === 'function') {
 		hideZoomWindow();
 	}
+
+	setAtlasInfo(entry.width, entry.height, entry.label);
 }
 
 function renderGlyphs() {
@@ -99,6 +114,7 @@ function renderGlyphs() {
 
 function processGlyph(img, hexValue, options = {}) {
 	const cacheKey = options.cacheKey;
+	const label = options.label || `glyph_${hexValue.toUpperCase()}.png`;
 	const themedKey = cacheKey ? `${cacheKey}__${isDarkMode ? 'dark' : 'light'}` : null;
 
 	if (themedKey && glyphCache.has(themedKey)) {
@@ -140,7 +156,7 @@ function processGlyph(img, hexValue, options = {}) {
 		const transparentClass = isTransparent ? 'transparent' : '';
 
 		markdownContent += `<div class="${transparentClass}" data-hex="0x${hexCode}" data-char="${char}" 
-			data-position="(${col};${row})" 
+			data-position="(${col};${row})" data-width="${unicodeSize}" data-height="${unicodeSize}"
 			style="background-image: url(${unicodeCanvas.toDataURL()}); background-size: 100% 100%;"></div>`;
 	}
 
@@ -151,10 +167,15 @@ function processGlyph(img, hexValue, options = {}) {
 	document.getElementById('glyph-output').innerHTML = markdownContent;
 	renderGlyphs();
 
+	setAtlasInfo(img.width, img.height, label);
+
 	if (themedKey) {
 		glyphCache.set(themedKey, {
 			markup: document.getElementById('glyph-output').innerHTML,
-			unicodeSize
+			unicodeSize,
+			width: img.width,
+			height: img.height,
+			label
 		});
 	}
 }

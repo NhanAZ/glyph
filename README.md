@@ -1,6 +1,6 @@
 # Glyph Tools
 
-A lightweight, client-side toolkit for generating and exporting Minecraft glyphs and custom emoji assets. Upload or type hex, preview a 16×16 grid, and export strings or JSON packs—all without a backend.
+A lightweight, client-side toolkit for generating and exporting Minecraft glyphs and custom emoji assets. Upload or type hex, preview a 16×16 grid, and export strings or JSON packs-all without a backend.
 
 ## Live site
 - https://nhanaz.github.io/glyph/

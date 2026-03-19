@@ -83,7 +83,7 @@ document.getElementById('glyphUpload').addEventListener('change', function (e) {
 		const img = new Image();
 		img.onload = function () {
 			if (typeof updateTimer !== 'undefined') clearTimeout(updateTimer);
-			processGlyph(img, hexValue);
+			processGlyph(img, hexValue, { label: file.name });
 			
 			const hintMsg = document.getElementById('defaultImageHint');
 			if (hintMsg) hintMsg.classList.add('d-none');
@@ -182,6 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const detailDec = document.getElementById('glyphDetailDec');
 	const detailPos = document.getElementById('glyphDetailPos');
 	const detailCharText = document.getElementById('glyphDetailCharText');
+	const detailDim = document.getElementById('glyphDetailDim');
 	const detailCopyBtn = document.getElementById('glyphDetailCopyBtn');
 	const detailDownloadBtn = document.getElementById('glyphDetailDownloadBtn');
 
@@ -194,6 +195,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		const codePoint = char.codePointAt(0);
 		const decVal = typeof codePoint === 'number' ? codePoint.toString(10) : '';
 		const bg = cell.style.backgroundImage;
+		const widthAttr = cell.getAttribute('data-width');
+		const heightAttr = cell.getAttribute('data-height');
+		let dimText = '';
 		let downloadUrl = '';
 
 		if (bg) {
@@ -202,6 +206,17 @@ document.addEventListener('DOMContentLoaded', () => {
 			detailImg.src = url;
 			detailImg.classList.remove('d-none');
 			detailCharFallback.classList.add('d-none');
+			// If dimensions exist as attributes, use them; otherwise try to read image natural size later
+			if (widthAttr && heightAttr) {
+				dimText = `${widthAttr}px × ${heightAttr}px`;
+			} else {
+				const probe = new Image();
+				probe.onload = function () {
+					dimText = `${probe.naturalWidth}px × ${probe.naturalHeight}px`;
+					if (detailDim) detailDim.textContent = dimText;
+				};
+				probe.src = url;
+			}
 		} else {
 			// Generate a simple preview image from the character itself
 			const canvas = document.createElement('canvas');
@@ -216,6 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			ctx.font = 'bold 120px "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
 			ctx.fillText(char || '?', canvas.width / 2, canvas.height / 2 + 8);
 			downloadUrl = canvas.toDataURL('image/png');
+			dimText = `${canvas.width}px × ${canvas.height}px`;
 
 			detailImg.src = downloadUrl;
 			detailImg.classList.remove('d-none');
@@ -227,6 +243,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		detailDec.textContent = decVal;
 		detailPos.textContent = pos;
 		detailCharText.textContent = char;
+		if (detailDim) {
+			detailDim.textContent = dimText || '-';
+		}
 
 		if (detailCopyBtn) {
 			detailCopyBtn.disabled = !char;
@@ -278,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				const img = new Image();
 				img.crossOrigin = 'anonymous';
 				img.onload = function() {
-					processGlyph(img, hex, { cacheKey: `${hex}_DEFAULT` });
+					processGlyph(img, hex, { cacheKey: `${hex}_DEFAULT`, label: `glyph_${hex}.png` });
 					hintMsg.classList.add('d-none');
 				};
 				img.src = DEFAULT_GLYPHS[hex];
@@ -303,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				const img = new Image();
 				img.crossOrigin = 'anonymous';
 				img.onload = function() {
-					processGlyph(img, hex, { cacheKey: 'TEMPLATE' });
+					processGlyph(img, hex, { cacheKey: 'TEMPLATE', label: 'glyph_grid.png' });
 					
 					if (hintMsg) hintMsg.classList.add('d-none');
 					const label = document.getElementById('uploadLabel');
@@ -327,7 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				const img = new Image();
 				img.crossOrigin = 'anonymous';
 				img.onload = function() {
-					processGlyph(img, hex, { cacheKey: 'E1_MOD' });
+					processGlyph(img, hex, { cacheKey: 'E1_MOD', label: 'glyph_E1_modified.png' });
 					
 					if (hintMsg) hintMsg.classList.add('d-none');
 					const label = document.getElementById('uploadLabel');
