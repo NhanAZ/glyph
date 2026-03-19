@@ -431,6 +431,33 @@ h1, h2, h3, h4, h5 {
 	color: var(--text-primary);
 }
 
+/* Glyph Detail Modal */
+.detail-preview {
+	background: var(--bg-card);
+	min-height: 260px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.glyph-preview-img {
+	width: 220px;
+	height: 220px;
+	image-rendering: pixelated;
+	background: var(--bg-input);
+	border-radius: 10px;
+	border: 1px solid var(--border-light);
+	object-fit: contain;
+}
+
+
+.glyph-preview-char {
+	font-size: clamp(3.5rem, 7vw, 4.5rem);
+	font-weight: 700;
+	color: var(--text-primary);
+	padding: 20px 0;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 1023px) {
 	.app-container {

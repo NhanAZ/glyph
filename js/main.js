@@ -157,6 +157,14 @@ document.addEventListener('DOMContentLoaded', () => {
 	window.addEventListener('resize', checkScreenSize);
 	applyGridMode(gridMode);
 
+	// Minimal tooltip container (used only for action confirmations)
+	let smartTooltip = document.querySelector('.smart-tooltip');
+	if (!smartTooltip) {
+		smartTooltip = document.createElement('div');
+		smartTooltip.className = 'smart-tooltip';
+		document.body.appendChild(smartTooltip);
+	}
+
 	if (gridModeToggle && glyphGrid) {
 		gridModeToggle.addEventListener('click', () => {
 			gridMode = gridMode === 'adaptive' ? 'fixed' : 'adaptive';
@@ -165,89 +173,69 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
-    const tooltip = document.createElement('div');
-    tooltip.className = 'smart-tooltip';
-    document.body.appendChild(tooltip);
+	// Glyph detail modal (click to inspect + copy)
+	const detailModalEl = document.getElementById('glyphDetailModal');
+	const detailModal = detailModalEl ? new bootstrap.Modal(detailModalEl) : null;
+	const detailImg = document.getElementById('glyphDetailImage');
+	const detailCharFallback = document.getElementById('glyphDetailChar');
+	const detailHex = document.getElementById('glyphDetailHex');
+	const detailDec = document.getElementById('glyphDetailDec');
+	const detailPos = document.getElementById('glyphDetailPos');
+	const detailCharText = document.getElementById('glyphDetailCharText');
+	const detailCopyBtn = document.getElementById('glyphDetailCopyBtn');
 
-    let currentCopiedCell = null;
+	function showGlyphDetail(cell) {
+		if (!cell || !detailModal) return;
 
-    document.addEventListener('mousemove', (e) => {
-		if (isCoarsePointer) return;
-        const cell = e.target.closest('#glyph-output div[data-hex]');
-        if (cell) {
-            const hex = cell.getAttribute('data-hex');
-            const pos = cell.getAttribute('data-position');
-            
-            if (currentCopiedCell && currentCopiedCell !== cell) {
-                tooltip.classList.remove('success');
-                currentCopiedCell = null;
-            }
+		const hex = cell.getAttribute('data-hex') || '';
+		const pos = cell.getAttribute('data-position') || '';
+		const char = cell.getAttribute('data-char') || '';
+		const codePoint = char.codePointAt(0);
+		const decVal = typeof codePoint === 'number' ? codePoint.toString(10) : '';
+		const bg = cell.style.backgroundImage;
 
-            if (!tooltip.classList.contains('success')) {
-                tooltip.innerHTML = `Pos: ${pos}<br>Hex: ${hex}`;
-            }
-            
-            const rect = cell.getBoundingClientRect();
-            tooltip.style.left = (rect.left + window.scrollX + (rect.width / 2)) + 'px';
-            tooltip.style.top = (rect.top + window.scrollY - 8) + 'px';
-            tooltip.classList.add('visible');
-        } else {
-            tooltip.classList.remove('visible');
-            tooltip.classList.remove('success');
-            currentCopiedCell = null;
-        }
-    });
-
-	document.addEventListener('touchstart', (e) => {
-		if (!isCoarsePointer) return;
-		const cell = e.target.closest('#glyph-output div[data-hex]');
-		if (cell) {
-			const touch = e.touches && e.touches[0];
-			const hex = cell.getAttribute('data-hex');
-			const pos = cell.getAttribute('data-position');
-			tooltip.classList.remove('success');
-			tooltip.innerHTML = `Pos: ${pos}<br>Hex: ${hex}`;
-			const rect = cell.getBoundingClientRect();
-			const left = touch ? touch.pageX : rect.left + window.scrollX + (rect.width / 2);
-			const top = touch ? touch.pageY - 12 : rect.top + window.scrollY - 8;
-			tooltip.style.left = `${left}px`;
-			tooltip.style.top = `${top}px`;
-			tooltip.classList.add('visible');
-			currentCopiedCell = null;
-			setTimeout(() => {
-				if (!tooltip.classList.contains('success')) {
-					tooltip.classList.remove('visible');
-				}
-			}, 1200);
+		if (bg) {
+			const url = bg.slice(5, -2);
+			detailImg.src = url;
+			detailImg.classList.remove('d-none');
+			detailCharFallback.classList.add('d-none');
 		} else {
-			tooltip.classList.remove('visible');
-			tooltip.classList.remove('success');
-			currentCopiedCell = null;
+			detailImg.classList.add('d-none');
+			detailCharFallback.classList.remove('d-none');
+			detailCharFallback.textContent = char || '?';
 		}
-	}, { passive: true });
 
-	document.addEventListener('click', (e) => {
-		const cell = e.target.closest('#glyph-output div[data-hex]');
-		if (cell) {
-			const char = cell.getAttribute('data-char');
-			navigator.clipboard.writeText(char).then(() => {
-                currentCopiedCell = cell;
-                tooltip.innerHTML = "Copied!";
-                tooltip.classList.add('success');
-                setTimeout(() => {
-                    tooltip.classList.remove('success');
-                    if (currentCopiedCell === cell && cell.matches(':hover')) {
-                        const hex = cell.getAttribute('data-hex');
-                        const pos = cell.getAttribute('data-position');
-                        tooltip.innerHTML = `Pos: ${pos}<br>Hex: ${hex}`;
-                    }
-                    if (currentCopiedCell === cell) {
-                        currentCopiedCell = null;
-                    }
-                }, 1500);
-            });
+		detailHex.textContent = hex;
+		detailDec.textContent = decVal;
+		detailPos.textContent = pos;
+		detailCharText.textContent = char;
+
+		if (detailCopyBtn) {
+			detailCopyBtn.disabled = !char;
+			detailCopyBtn.innerHTML = '<i class="far fa-copy me-1"></i> Copy glyph';
+			detailCopyBtn.onclick = () => {
+				if (!char) return;
+				navigator.clipboard.writeText(char).then(() => {
+					detailCopyBtn.innerHTML = '<i class="fas fa-check me-1"></i> Copied!';
+					setTimeout(() => {
+						detailCopyBtn.innerHTML = '<i class="far fa-copy me-1"></i> Copy glyph';
+					}, 1500);
+				});
+			};
 		}
-	});
+
+		detailModal.show();
+	}
+
+	if (glyphGrid) {
+		glyphGrid.addEventListener('click', (e) => {
+			const cell = e.target.closest('#glyph-output div[data-hex]');
+			if (cell) {
+				e.preventDefault();
+				showGlyphDetail(cell);
+			}
+		});
+	}
 
 	// Hint click logic
 	const hintMsg = document.getElementById('defaultImageHint');

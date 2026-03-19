@@ -47,11 +47,7 @@ function applyCachedGlyph(entry) {
 	document.getElementById('glyph-output').innerHTML = entry.markup;
 	removeZoomEvents();
 	zoomEnabled = false;
-
-	if (entry.unicodeSize && entry.unicodeSize > 0) {
-		zoomEnabled = true;
-		addZoomEvents(entry.unicodeSize);
-	} else if (typeof hideZoomWindow === 'function') {
+	if (typeof hideZoomWindow === 'function') {
 		hideZoomWindow();
 	}
 }
@@ -150,13 +146,7 @@ function processGlyph(img, hexValue, options = {}) {
 
 	removeZoomEvents();
 	zoomEnabled = false;
-
-	if (img.width > 0 || img.height > 0) {
-		zoomEnabled = true;
-		addZoomEvents(unicodeSize);
-	} else {
-		hideZoomWindow();
-	}
+	hideZoomWindow();
 
 	document.getElementById('glyph-output').innerHTML = markdownContent;
 	renderGlyphs();
