@@ -185,9 +185,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	const detailDim = document.getElementById('glyphDetailDim');
 	const detailCopyBtn = document.getElementById('glyphDetailCopyBtn');
 	const detailDownloadBtn = document.getElementById('glyphDetailDownloadBtn');
+	const detailClearBtn = document.getElementById('glyphDetailClearBtn');
+	let clearConfirmTimer = null;
 
 	function showGlyphDetail(cell) {
 		if (!cell || !detailModal) return;
+		if (clearConfirmTimer) {
+			clearTimeout(clearConfirmTimer);
+			clearConfirmTimer = null;
+		}
 
 		const hex = cell.getAttribute('data-hex') || '';
 		const pos = cell.getAttribute('data-position') || '';
@@ -208,11 +214,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			detailCharFallback.classList.add('d-none');
 			// If dimensions exist as attributes, use them; otherwise try to read image natural size later
 			if (widthAttr && heightAttr) {
-				dimText = `${widthAttr}px × ${heightAttr}px`;
+				dimText = `${widthAttr}px x ${heightAttr}px`;
 			} else {
 				const probe = new Image();
 				probe.onload = function () {
-					dimText = `${probe.naturalWidth}px × ${probe.naturalHeight}px`;
+					dimText = `${probe.naturalWidth}px x ${probe.naturalHeight}px`;
 					if (detailDim) detailDim.textContent = dimText;
 				};
 				probe.src = url;
@@ -231,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			ctx.font = 'bold 120px "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
 			ctx.fillText(char || '?', canvas.width / 2, canvas.height / 2 + 8);
 			downloadUrl = canvas.toDataURL('image/png');
-			dimText = `${canvas.width}px × ${canvas.height}px`;
+			dimText = `${canvas.width}px x ${canvas.height}px`;
 
 			detailImg.src = downloadUrl;
 			detailImg.classList.remove('d-none');
@@ -242,9 +248,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		detailHex.textContent = hex;
 		detailDec.textContent = decVal;
 		detailPos.textContent = pos;
-		detailCharText.textContent = char;
+			detailCharText.textContent = char;
 		if (detailDim) {
-			detailDim.textContent = dimText || '-';
+			detailDim.textContent = dimText || '—';
 		}
 
 		if (detailCopyBtn) {
@@ -271,6 +277,66 @@ document.addEventListener('DOMContentLoaded', () => {
 				a.href = downloadUrl;
 				a.download = fileName;
 				a.click();
+			};
+		}
+
+		if (detailClearBtn) {
+			detailClearBtn.disabled = false;
+			detailClearBtn.innerHTML = '<i class="fas fa-eraser me-1"></i> Clear to transparent';
+			detailClearBtn.onclick = () => {
+				if (clearConfirmTimer) {
+					clearTimeout(clearConfirmTimer);
+					clearConfirmTimer = null;
+					// perform clear
+					cell.style.backgroundImage = '';
+					cell.style.backgroundSize = '';
+					cell.classList.add('transparent');
+					// keep width/height attributes so we can map back to atlas
+					// update modal view
+					const bglessCanvas = document.createElement('canvas');
+					bglessCanvas.width = 220;
+					bglessCanvas.height = 220;
+					const ctx = bglessCanvas.getContext('2d');
+					ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card') || '#f5f5f7';
+					ctx.fillRect(0, 0, bglessCanvas.width, bglessCanvas.height);
+					ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') || '#555';
+					ctx.textAlign = 'center';
+					ctx.textBaseline = 'middle';
+					ctx.font = 'bold 120px "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+					ctx.fillText(char || '?', bglessCanvas.width / 2, bglessCanvas.height / 2 + 8);
+					const clearedUrl = bglessCanvas.toDataURL('image/png');
+					if (detailImg) {
+						detailImg.src = clearedUrl;
+						detailImg.classList.remove('d-none');
+					}
+					if (detailCharFallback) {
+						detailCharFallback.classList.add('d-none');
+					}
+					if (detailDim) detailDim.textContent = `${bglessCanvas.width}px x ${bglessCanvas.height}px`;
+					if (detailDownloadBtn) {
+						detailDownloadBtn.disabled = false;
+						detailDownloadBtn.onclick = () => {
+							const a = document.createElement('a');
+							a.href = clearedUrl;
+							a.download = `glyph_${hex.replace(/^0x/i, '').toLowerCase() || 'char'}.png`;
+							a.click();
+						};
+					}
+					detailClearBtn.innerHTML = '<i class="fas fa-check me-1"></i> Cleared';
+
+					// update atlas source (if any) to keep Download Atlas in sync
+					if (typeof clearAtlasTile === 'function') {
+						clearAtlasTile(cell).then(() => {
+							// no-op; atlas info already updated inside helper
+						});
+					}
+				} else {
+					detailClearBtn.innerHTML = '<i class="fas fa-question-circle me-1"></i> Click again to confirm';
+					clearConfirmTimer = setTimeout(() => {
+						detailClearBtn.innerHTML = '<i class="fas fa-eraser me-1"></i> Clear to transparent';
+						clearConfirmTimer = null;
+					}, 3000);
+				}
 			};
 		}
 
@@ -390,6 +456,42 @@ document.addEventListener('DOMContentLoaded', () => {
 					}, 2000);
 				}
 			});
+	});
+}
+
+	const btnDownloadAtlas = document.getElementById('btnDownloadAtlas');
+	if (btnDownloadAtlas) {
+		btnDownloadAtlas.addEventListener('click', () => {
+			if (typeof currentAtlasDataUrl !== 'undefined' && currentAtlasDataUrl) {
+				const glyphInput = document.getElementById('glyph-input');
+				const startHex = (glyphInput && glyphInput.value.trim()) ? glyphInput.value.trim().toUpperCase() : "E0";
+				const fileName = `glyph_${startHex.toLowerCase()}.png`;
+				const a = document.createElement('a');
+				a.href = currentAtlasDataUrl;
+				a.download = fileName;
+				a.click();
+				if (smartTooltip) {
+					smartTooltip.innerHTML = "Atlas downloaded!";
+					smartTooltip.classList.add('success', 'visible');
+					smartTooltip.style.left = "50%";
+					smartTooltip.style.top = "50px";
+					smartTooltip.style.position = "fixed";
+					setTimeout(() => {
+						smartTooltip.classList.remove('success', 'visible');
+						smartTooltip.style.position = "absolute";
+					}, 1500);
+				}
+			} else if (smartTooltip) {
+				smartTooltip.innerHTML = "No atlas image loaded";
+				smartTooltip.classList.add('visible');
+				smartTooltip.style.left = "50%";
+				smartTooltip.style.top = "50px";
+				smartTooltip.style.position = "fixed";
+				setTimeout(() => {
+					smartTooltip.classList.remove('visible', 'success');
+					smartTooltip.style.position = "absolute";
+				}, 1500);
+			}
 		});
 	}
 

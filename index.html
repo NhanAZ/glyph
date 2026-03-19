@@ -143,6 +143,7 @@
 							<ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2" aria-labelledby="exportDropdown">
 								<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnCopyAll"><i class="far fa-copy me-2 text-primary"></i> Copy All (Minecraft String)</button></li>
 								<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnCopyReference"><i class="fas fa-list-ul me-2 text-info"></i> Copy Reference (Text Map)</button></li>
+								<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadAtlas"><i class="fas fa-image me-2 text-warning"></i> Download Atlas PNG</button></li>
 								<li><hr class="dropdown-divider opacity-50"></li>
 								<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadJson"><i class="far fa-file-code me-2 text-success"></i> Download JSON (Pack)</button></li>
 								<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadFullJson"><i class="fas fa-database me-2 text-warning"></i> Download JSON (Metadata)</button></li>
@@ -208,14 +209,17 @@
 						</div>
 					</div>
 				</div>
-				<div class="modal-footer d-flex justify-content-between flex-wrap gap-2">
-					<div class="text-secondary small">Copy or download this glyph.</div>
-					<div class="d-flex gap-2">
-						<button type="button" class="btn btn-outline-secondary" id="glyphDetailDownloadBtn">
-							<i class="fas fa-download me-1"></i> Download glyph
-						</button>
-						<button type="button" class="btn btn-primary" id="glyphDetailCopyBtn">
-							<i class="far fa-copy me-1"></i> Copy glyph
+					<div class="modal-footer d-flex justify-content-between flex-wrap gap-2">
+						<div class="text-secondary small">Copy or download this glyph.</div>
+						<div class="d-flex gap-2 flex-wrap">
+							<button type="button" class="btn btn-outline-danger" id="glyphDetailClearBtn">
+								<i class="fas fa-eraser me-1"></i> Clear to transparent
+							</button>
+							<button type="button" class="btn btn-outline-secondary" id="glyphDetailDownloadBtn">
+								<i class="fas fa-download me-1"></i> Download glyph
+							</button>
+							<button type="button" class="btn btn-primary" id="glyphDetailCopyBtn">
+								<i class="far fa-copy me-1"></i> Copy glyph
 						</button>
 					</div>
 				</div>

@@ -6,6 +6,8 @@ let zoomWindow = null;
 let updateTimer = null;
 let zoomEnabled = false;
 let isDarkMode = false;
+let currentAtlasDataUrl = null;
+let currentAtlasLabel = '';
 
 // Cache for processed glyph markup to avoid repeated canvas work
 // Key format: `${cacheKey}__${theme}` (theme = 'light' | 'dark')

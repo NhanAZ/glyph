@@ -3,10 +3,12 @@ function setAtlasInfo(width, height, label) {
 	const infoEl = document.getElementById('atlasInfo');
 	if (!infoEl) return;
 
+	if (label) currentAtlasLabel = label;
+
 	if (width && height) {
-		infoEl.textContent = `${label || 'Atlas'} - ${width}px × ${height}px`;
+		infoEl.textContent = `${label || 'Atlas'} — ${width}px x ${height}px`;
 	} else {
-		infoEl.textContent = label ? `${label} - no image` : 'Atlas: not loaded';
+		infoEl.textContent = label ? `${label} — no image` : 'Atlas: not loaded';
 	}
 }
 
@@ -14,6 +16,8 @@ function Glyph(glyph = "E0") {
 	const filename = `glyph_${glyph}`;
 	const startChar = parseInt(filename.split("_").pop() + "00", 16);
 	let markdownContent = ``;
+	currentAtlasDataUrl = null;
+	currentAtlasLabel = `${filename}.png`;
 
 	for (let i = 0; i < GRID * GRID; i++) {
 		const row = Math.floor(i / GRID) + 1;
@@ -64,6 +68,8 @@ function applyCachedGlyph(entry) {
 		hideZoomWindow();
 	}
 
+	currentAtlasDataUrl = entry.atlasDataUrl || null;
+	currentAtlasLabel = entry.label || currentAtlasLabel;
 	setAtlasInfo(entry.width, entry.height, entry.label);
 }
 
@@ -167,6 +173,8 @@ function processGlyph(img, hexValue, options = {}) {
 	document.getElementById('glyph-output').innerHTML = markdownContent;
 	renderGlyphs();
 
+	currentAtlasDataUrl = canvas.toDataURL('image/png');
+	currentAtlasLabel = label;
 	setAtlasInfo(img.width, img.height, label);
 
 	if (themedKey) {
@@ -175,7 +183,45 @@ function processGlyph(img, hexValue, options = {}) {
 			unicodeSize,
 			width: img.width,
 			height: img.height,
-			label
+			label,
+			atlasDataUrl: currentAtlasDataUrl
 		});
 	}
+}
+
+// Clear a single glyph cell from the current atlas (makes it transparent) and update the cached atlas DataURL
+function clearAtlasTile(cell) {
+	return new Promise((resolve) => {
+		if (!currentAtlasDataUrl || !cell) return resolve(null);
+
+		const pos = cell.getAttribute('data-position');
+		const match = pos ? pos.match(/\((\d+);(\d+)\)/) : null;
+		if (!match) return resolve(null);
+		const col = parseInt(match[1], 10);
+		const row = parseInt(match[2], 10);
+
+		const widthAttr = parseInt(cell.getAttribute('data-width'), 10);
+		const heightAttr = parseInt(cell.getAttribute('data-height'), 10);
+
+		const img = new Image();
+		img.onload = function () {
+			const canvas = document.createElement('canvas');
+			canvas.width = img.width;
+			canvas.height = img.height;
+			const ctx = canvas.getContext('2d');
+			ctx.drawImage(img, 0, 0);
+
+			const tileW = widthAttr || Math.floor(img.width / GRID);
+			const tileH = heightAttr || Math.floor(img.height / GRID);
+			const x = (col - 1) * tileW;
+			const y = (row - 1) * tileH;
+			ctx.clearRect(x, y, tileW, tileH);
+
+			currentAtlasDataUrl = canvas.toDataURL('image/png');
+			glyphCache.clear(); // force regen next time to reflect cleared tile
+			setAtlasInfo(img.width, img.height, currentAtlasLabel || 'Atlas');
+			resolve(currentAtlasDataUrl);
+		};
+		img.src = currentAtlasDataUrl;
+	});
 }
