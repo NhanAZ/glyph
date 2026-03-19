@@ -213,6 +213,20 @@ document.addEventListener('DOMContentLoaded', () => {
 	let replacePending = null;
 	let currentDetailCell = null;
 
+	function showToast(message, variant = 'success', duration = 1500) {
+		if (!smartTooltip) return;
+		smartTooltip.innerHTML = message;
+		smartTooltip.classList.toggle('success', variant === 'success');
+		smartTooltip.classList.add('visible');
+		smartTooltip.style.left = "50%";
+		smartTooltip.style.top = "50px";
+		smartTooltip.style.position = "fixed";
+		setTimeout(() => {
+			smartTooltip.classList.remove('visible', 'success');
+			smartTooltip.style.position = "absolute";
+		}, duration);
+	}
+
 	function resetReplaceButton() {}
 
 	function showGlyphDetail(cell) {
@@ -291,18 +305,15 @@ document.addEventListener('DOMContentLoaded', () => {
 			detailCopyBtn.onclick = () => {
 				if (!char) return;
 				navigator.clipboard.writeText(char).then(() => {
-					detailCopyBtn.innerHTML = '<i class="fas fa-check me-1"></i> Copied!';
-					setTimeout(() => {
-						detailCopyBtn.innerHTML = '<i class="far fa-copy me-1"></i> Copy glyph';
-					}, 1500);
+					showToast('Copied glyph');
 				});
 			};
 		}
 
 		if (detailDownloadBtn) {
 			detailDownloadBtn.disabled = !downloadUrl;
+			detailDownloadBtn.setAttribute('title', 'Download glyph');
 			const fileName = `glyph_${hex.replace(/^0x/i, '').toLowerCase() || 'char'}.png`;
-			detailDownloadBtn.innerHTML = '<i class="fas fa-download me-1"></i> Download glyph';
 			detailDownloadBtn.onclick = () => {
 				if (!downloadUrl) return;
 				const a = document.createElement('a');
@@ -351,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						a.click();
 					};
 				}
-				detailClearBtn.innerHTML = '<i class="fas fa-check me-1"></i> Cleared';
+				showToast('Cleared to transparent');
 
 				// update atlas source (if any) to keep Download Atlas in sync
 				if (typeof clearAtlasTile === 'function') {
