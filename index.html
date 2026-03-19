@@ -255,9 +255,30 @@
 					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
 				<div class="modal-body">
-					<div class="mb-3">
-						<input type="text" id="vanillaSearchInput" class="form-control" placeholder="Search textures (type name or path)...">
-						<small id="vanillaPickerStatus" class="text-muted">Fetching list…</small>
+					<div class="row g-2 mb-3 align-items-center">
+						<div class="col-md-8">
+							<input type="text" id="vanillaSearchInput" class="form-control" placeholder="Search textures (type name or path)...">
+						</div>
+						<div class="col-md-4">
+							<select id="vanillaCategorySelect" class="form-select">
+								<option value="all">All categories</option>
+							</select>
+						</div>
+						<small id="vanillaPickerStatus" class="text-muted ms-2 mt-1">Fetching list…</small>
+					</div>
+					<div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+						<label class="form-label mb-0 small text-secondary">Page size:</label>
+						<select id="vanillaPageSize" class="form-select form-select-sm" style="width: 120px;">
+							<option value="100">100</option>
+							<option value="200" selected>200</option>
+							<option value="500">500</option>
+							<option value="all">Show all</option>
+						</select>
+						<div class="ms-auto d-flex align-items-center gap-2">
+							<button class="btn btn-sm btn-outline-secondary" id="vanillaPrevPage">&lt;</button>
+							<span id="vanillaPageInfo" class="small text-secondary">Page 1/1</span>
+							<button class="btn btn-sm btn-outline-secondary" id="vanillaNextPage">&gt;</button>
+						</div>
 					</div>
 					<div id="vanillaGrid" class="vanilla-grid"></div>
 				</div>

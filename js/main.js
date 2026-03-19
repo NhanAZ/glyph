@@ -199,7 +199,16 @@ document.addEventListener('DOMContentLoaded', () => {
 	const vanillaPickerModalEl = document.getElementById('vanillaPickerModal');
 	const vanillaPickerModal = vanillaPickerModalEl ? new bootstrap.Modal(vanillaPickerModalEl) : null;
 	const vanillaSearchInput = document.getElementById('vanillaSearchInput');
+	const vanillaCategorySelect = document.getElementById('vanillaCategorySelect');
+	const vanillaPageSizeSelect = document.getElementById('vanillaPageSize');
+	const vanillaPrevPage = document.getElementById('vanillaPrevPage');
+	const vanillaNextPage = document.getElementById('vanillaNextPage');
+	const vanillaPageInfo = document.getElementById('vanillaPageInfo');
 	let vanillaPaths = [];
+	let vanillaCategories = ['all'];
+	let vanillaFiltered = [];
+	let vanillaPage = 1;
+	let vanillaPageSize = 200;
 	let clearConfirmTimer = null;
 	let replacePending = null;
 	let currentDetailCell = null;
@@ -273,7 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		detailPos.textContent = pos;
 			detailCharText.textContent = char;
 		if (detailDim) {
-			detailDim.textContent = dimText || '—';
+			detailDim.textContent = dimText || '-';
 		}
 
 		if (detailCopyBtn) {
@@ -600,45 +609,36 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (vanillaStatus) vanillaStatus.textContent = text;
 	}
 
-	// Vanilla cache stored on window to avoid repeated parsing; still cached in localStorage for reuse across sessions
-	function cacheVanillaList(paths) {
-		const payload = { timestamp: Date.now(), paths };
-		localStorage.setItem('vanillaTexturesCache', JSON.stringify(payload));
-		window.__vanillaPaths = paths;
-	}
-
-	function getVanillaCache() {
-		if (window.__vanillaPaths && window.__vanillaPaths.length) {
-			return { timestamp: Date.now(), paths: window.__vanillaPaths };
-		}
+	// Vanilla list loader (local manifest only, no remote API). Always refresh manifest on load.
+	async function fetchVanillaList() {
+		localStorage.removeItem('vanillaTexturesCache'); // force refresh to avoid stale prefixed paths
+		setVanillaStatus('Loading vanilla manifest…');
 		try {
-			const raw = localStorage.getItem('vanillaTexturesCache');
-			return raw ? JSON.parse(raw) : null;
-		} catch {
-			return null;
-		}
-	}
-
-	async function fetchVanillaList(force = false) {
-		const cache = getVanillaCache();
-		const weekMs = 7 * 24 * 60 * 60 * 1000;
-		if (!force && cache && cache.timestamp && (Date.now() - cache.timestamp < weekMs) && cache.paths?.length) {
-			window.__vanillaPaths = cache.paths;
-			return cache.paths;
-		}
-		setVanillaStatus('Fetching vanilla textures…');
-		try {
-			const resp = await fetch('https://api.github.com/repos/Mojang/bedrock-samples/git/trees/main?recursive=1');
+			const resp = await fetch('vanilla-textures/manifest.json', { cache: 'reload' });
 			const data = await resp.json();
-			const paths = (data.tree || [])
-				.filter(node => node.type === 'blob' && node.path.startsWith('resource_pack/textures/') && node.path.endsWith('.png'))
-				.map(node => node.path);
-			if (paths.length) cacheVanillaList(paths);
-			setVanillaStatus(`Loaded ${paths.length} textures (cached 7 days).`);
+			let paths = data.paths || [];
+			// Migration: strip resource_pack/textures/ prefix if present in older cache
+			paths = paths.map(p => p.startsWith('resource_pack/textures/') ? p.replace('resource_pack/textures/', '') : p);
+			window.__vanillaPaths = paths;
+			localStorage.setItem('vanillaTexturesCache', JSON.stringify({ timestamp: Date.now(), paths }));
+			vanillaCategories = Array.from(new Set(paths.map(p => p.split('/')[0]))).sort();
+			setVanillaStatus(`Loaded ${paths.length} textures (local).`);
 			return paths;
 		} catch (err) {
-			setVanillaStatus('Failed to fetch textures.');
-			return cache?.paths || [];
+			setVanillaStatus('Failed to load local manifest.');
+			try {
+				const raw = localStorage.getItem('vanillaTexturesCache');
+				if (raw) {
+					const cached = JSON.parse(raw);
+					let paths = cached.paths || [];
+					paths = paths.map(p => p.startsWith('resource_pack/textures/') ? p.replace('resource_pack/textures/', '') : p);
+					window.__vanillaPaths = paths;
+					vanillaCategories = Array.from(new Set(paths.map(p => p.split('/')[0]))).sort();
+					setVanillaStatus(`Using cached list (${paths.length}).`);
+					return paths;
+				}
+			} catch {}
+			return [];
 		}
 	}
 
@@ -690,23 +690,55 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Preload vanilla cache on first open (non-blocking)
 	fetchVanillaList(false).then(paths => {
 		vanillaPaths = paths || [];
+		populateCategories();
 	});
 
 	// Vanilla picker modal interactions
+	function populateCategories() {
+		if (!vanillaCategorySelect) return;
+		const cats = ['all', ...vanillaCategories];
+		vanillaCategorySelect.innerHTML = '';
+		cats.forEach(c => {
+			const opt = document.createElement('option');
+			opt.value = c;
+			opt.textContent = c === 'all' ? 'All categories' : c;
+			vanillaCategorySelect.appendChild(opt);
+		});
+	}
+
 	function renderVanillaGrid(filterText = '') {
 		if (!vanillaGrid) return;
+		const needle = (filterText || '').toLowerCase();
+		const selectedCat = vanillaCategorySelect ? vanillaCategorySelect.value : 'all';
+		vanillaFiltered = (vanillaPaths || []).filter(p => {
+			const matchText = needle ? p.toLowerCase().includes(needle) : true;
+			const matchCat = selectedCat === 'all' ? true : p.startsWith(selectedCat + '/');
+			return matchText && matchCat;
+		});
+
+		// pagination
+		const total = vanillaFiltered.length;
+		let pageSize = vanillaPageSize;
+		if (vanillaPageSizeSelect && vanillaPageSizeSelect.value === 'all') {
+			pageSize = total || 1;
+		}
+		const totalPages = Math.max(1, Math.ceil(total / pageSize));
+		if (vanillaPage > totalPages) vanillaPage = totalPages;
+		const start = (vanillaPage - 1) * pageSize;
+		const pageItems = vanillaFiltered.slice(start, start + pageSize);
+
 		vanillaGrid.innerHTML = '';
-		const needle = filterText.toLowerCase();
-		const filtered = (vanillaPaths || []).filter(p => p.toLowerCase().includes(needle)).slice(0, 400);
-		if (vanillaPickerStatus) vanillaPickerStatus.textContent = `Showing ${filtered.length} textures`;
-		filtered.forEach(path => {
+		if (vanillaPickerStatus) vanillaPickerStatus.textContent = `Showing ${pageItems.length} of ${total} textures`;
+		if (vanillaPageInfo) vanillaPageInfo.textContent = `Page ${vanillaPage}/${totalPages}`;
+
+		pageItems.forEach(path => {
 			const card = document.createElement('div');
 			card.className = 'vanilla-tile';
 			card.dataset.path = path;
 			const img = document.createElement('img');
 			img.loading = 'lazy';
 			img.crossOrigin = 'anonymous';
-			img.src = `https://raw.githubusercontent.com/Mojang/bedrock-samples/main/${path}`;
+			img.src = `./vanilla-textures/${path}`;
 			const label = document.createElement('div');
 			label.className = 'vanilla-name';
 			label.textContent = path.split('/').slice(-1)[0].replace('.png','');
@@ -734,9 +766,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (!vanillaPaths || !vanillaPaths.length) {
 				const list = await fetchVanillaList(false);
 				vanillaPaths = list || [];
+				populateCategories();
 			}
+			vanillaPage = 1;
 			renderVanillaGrid('');
-			if (vanillaPickerStatus) vanillaPickerStatus.textContent = 'Click a texture to preview.';
+			if (vanillaPickerStatus) vanillaPickerStatus.textContent = 'Click a texture to apply immediately.';
 			if (vanillaPickerModal) vanillaPickerModal.show();
 		});
 	}
@@ -747,6 +781,45 @@ document.addEventListener('DOMContentLoaded', () => {
 			const val = vanillaSearchInput.value || '';
 			if (searchDebounce) clearTimeout(searchDebounce);
 			searchDebounce = setTimeout(() => renderVanillaGrid(val), 200);
+		});
+	}
+
+	if (vanillaCategorySelect) {
+		vanillaCategorySelect.addEventListener('change', () => {
+			const val = vanillaSearchInput ? vanillaSearchInput.value : '';
+			vanillaPage = 1;
+			renderVanillaGrid(val);
+		});
+	}
+
+	if (vanillaPageSizeSelect) {
+		vanillaPageSizeSelect.addEventListener('change', () => {
+			const val = vanillaPageSizeSelect.value;
+			vanillaPageSize = val === 'all' ? Number.MAX_SAFE_INTEGER : parseInt(val, 10) || 200;
+			vanillaPage = 1;
+			const searchVal = vanillaSearchInput ? vanillaSearchInput.value : '';
+			renderVanillaGrid(searchVal);
+		});
+	}
+
+	if (vanillaPrevPage && vanillaNextPage) {
+		vanillaPrevPage.addEventListener('click', () => {
+			if (vanillaPage > 1) {
+				vanillaPage--;
+				const searchVal = vanillaSearchInput ? vanillaSearchInput.value : '';
+				renderVanillaGrid(searchVal);
+			}
+		});
+		vanillaNextPage.addEventListener('click', () => {
+			const pageSize = vanillaPageSizeSelect && vanillaPageSizeSelect.value === 'all'
+				? Number.MAX_SAFE_INTEGER
+				: (parseInt(vanillaPageSizeSelect?.value || '200', 10) || 200);
+			const totalPages = Math.max(1, Math.ceil((vanillaFiltered.length || 0) / pageSize));
+			if (vanillaPage < totalPages) {
+				vanillaPage++;
+				const searchVal = vanillaSearchInput ? vanillaSearchInput.value : '';
+				renderVanillaGrid(searchVal);
+			}
 		});
 	}
 

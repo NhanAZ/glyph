@@ -6,9 +6,9 @@ function setAtlasInfo(width, height, label) {
 	if (label) currentAtlasLabel = label;
 
 	if (width && height) {
-		infoEl.textContent = `${label || 'Atlas'} — ${width}px x ${height}px`;
+		infoEl.textContent = `${label || 'Atlas'} - ${width}px x ${height}px`;
 	} else {
-		infoEl.textContent = label ? `${label} — no image` : 'Atlas: not loaded';
+		infoEl.textContent = label ? `${label} - no image` : 'Atlas: not loaded';
 	}
 }
 
