@@ -183,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const detailPos = document.getElementById('glyphDetailPos');
 	const detailCharText = document.getElementById('glyphDetailCharText');
 	const detailCopyBtn = document.getElementById('glyphDetailCopyBtn');
+	const detailDownloadBtn = document.getElementById('glyphDetailDownloadBtn');
 
 	function showGlyphDetail(cell) {
 		if (!cell || !detailModal) return;
@@ -193,15 +194,32 @@ document.addEventListener('DOMContentLoaded', () => {
 		const codePoint = char.codePointAt(0);
 		const decVal = typeof codePoint === 'number' ? codePoint.toString(10) : '';
 		const bg = cell.style.backgroundImage;
+		let downloadUrl = '';
 
 		if (bg) {
 			const url = bg.slice(5, -2);
+			downloadUrl = url;
 			detailImg.src = url;
 			detailImg.classList.remove('d-none');
 			detailCharFallback.classList.add('d-none');
 		} else {
-			detailImg.classList.add('d-none');
-			detailCharFallback.classList.remove('d-none');
+			// Generate a simple preview image from the character itself
+			const canvas = document.createElement('canvas');
+			canvas.width = 220;
+			canvas.height = 220;
+			const ctx = canvas.getContext('2d');
+			ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card') || '#f5f5f7';
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+			ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-primary') || '#000';
+			ctx.textAlign = 'center';
+			ctx.textBaseline = 'middle';
+			ctx.font = 'bold 120px "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+			ctx.fillText(char || '?', canvas.width / 2, canvas.height / 2 + 8);
+			downloadUrl = canvas.toDataURL('image/png');
+
+			detailImg.src = downloadUrl;
+			detailImg.classList.remove('d-none');
+			detailCharFallback.classList.add('d-none');
 			detailCharFallback.textContent = char || '?';
 		}
 
@@ -221,6 +239,19 @@ document.addEventListener('DOMContentLoaded', () => {
 						detailCopyBtn.innerHTML = '<i class="far fa-copy me-1"></i> Copy glyph';
 					}, 1500);
 				});
+			};
+		}
+
+		if (detailDownloadBtn) {
+			detailDownloadBtn.disabled = !downloadUrl;
+			const fileName = `glyph_${hex.replace(/^0x/i, '').toLowerCase() || 'char'}.png`;
+			detailDownloadBtn.innerHTML = '<i class="fas fa-download me-1"></i> Download glyph';
+			detailDownloadBtn.onclick = () => {
+				if (!downloadUrl) return;
+				const a = document.createElement('a');
+				a.href = downloadUrl;
+				a.download = fileName;
+				a.click();
 			};
 		}
 
