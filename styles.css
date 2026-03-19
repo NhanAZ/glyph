@@ -493,6 +493,50 @@ h1, h2, h3, h4, h5 {
 	height: 160px;
 }
 
+.vanilla-picker .form-control {
+	min-width: 220px;
+}
+
+.vanilla-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+	gap: 12px;
+	max-height: 480px;
+	overflow-y: auto;
+}
+
+.vanilla-tile {
+	background: var(--bg-input);
+	border: 1px solid var(--border-light);
+	border-radius: 10px;
+	padding: 8px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+	transition: transform 0.1s ease, border-color 0.1s ease;
+}
+
+.vanilla-tile:hover {
+	transform: translateY(-2px);
+	border-color: var(--accent);
+}
+
+.vanilla-tile img {
+	width: 48px;
+	height: 48px;
+	image-rendering: pixelated;
+}
+
+.vanilla-tile .vanilla-name {
+	font-size: 11px;
+	text-align: center;
+	color: var(--text-secondary);
+	line-height: 1.2;
+	word-break: break-word;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 1023px) {
 	.app-container {

@@ -216,15 +216,20 @@
 									<span class="text-secondary">Dimensions</span><span id="glyphDetailDim" class="fw-bold"></span>
 								</li>
 							</ul>
+
+							<small id="vanillaStatus" class="text-muted d-block mt-3"></small>
 						</div>
 					</div>
 				</div>
 				<div class="modal-footer d-flex justify-content-between flex-wrap gap-2">
 					<div class="text-secondary small">Copy, download, update, or clear this glyph.</div>
-					<div class="d-flex gap-2 flex-wrap">
+					<div class="d-flex gap-2 flex-wrap align-items-center">
 						<input type="file" id="glyphDetailReplaceInput" accept=".png" class="d-none">
-						<button type="button" class="btn btn-outline-info" id="glyphDetailReplaceBtn">
-							<i class="fas fa-sync-alt me-1"></i> Update & Replace
+						<button type="button" class="btn btn-outline-info" id="actionUploadPng">
+							<i class="fas fa-upload me-1"></i> Upload PNG
+						</button>
+						<button type="button" class="btn btn-primary" id="actionVanillaPicker">
+							<i class="fas fa-images me-1"></i> Pick from Vanilla
 						</button>
 						<button type="button" class="btn btn-outline-danger" id="glyphDetailClearBtn">
 							<i class="fas fa-eraser me-1"></i> Clear to transparent
@@ -236,6 +241,28 @@
 								<i class="far fa-copy me-1"></i> Copy glyph
 						</button>
 					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Vanilla Picker Modal -->
+	<div class="modal fade" id="vanillaPickerModal" tabindex="-1" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered modal-xl">
+			<div class="modal-content rounded-4 border-0 shadow-lg">
+				<div class="modal-header">
+					<h5 class="modal-title">Select Vanilla Texture</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<div class="mb-3">
+						<input type="text" id="vanillaSearchInput" class="form-control" placeholder="Search textures (type name or path)...">
+						<small id="vanillaPickerStatus" class="text-muted">Fetching list…</small>
+					</div>
+					<div id="vanillaGrid" class="vanilla-grid"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
 				</div>
 			</div>
 		</div>

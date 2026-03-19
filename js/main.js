@@ -186,24 +186,34 @@ document.addEventListener('DOMContentLoaded', () => {
 	const detailCopyBtn = document.getElementById('glyphDetailCopyBtn');
 	const detailDownloadBtn = document.getElementById('glyphDetailDownloadBtn');
 	const detailClearBtn = document.getElementById('glyphDetailClearBtn');
-	const detailReplaceBtn = document.getElementById('glyphDetailReplaceBtn');
 	const detailReplaceInput = document.getElementById('glyphDetailReplaceInput');
+	const actionUploadPng = document.getElementById('actionUploadPng');
+	const actionVanillaPicker = document.getElementById('actionVanillaPicker');
 	const beforeAfterWrap = document.getElementById('glyphBeforeAfter');
 	const beforeImg = document.getElementById('glyphBeforeImg');
 	const afterImg = document.getElementById('glyphAfterImg');
+	const vanillaStatus = document.getElementById('vanillaStatus');
+	const vanillaOpenPickerBtn = actionVanillaPicker;
+	const vanillaPickerStatus = document.getElementById('vanillaPickerStatus');
+	const vanillaGrid = document.getElementById('vanillaGrid');
+	const vanillaPickerModalEl = document.getElementById('vanillaPickerModal');
+	const vanillaPickerModal = vanillaPickerModalEl ? new bootstrap.Modal(vanillaPickerModalEl) : null;
+	const vanillaSearchInput = document.getElementById('vanillaSearchInput');
+	let vanillaPaths = [];
 	let clearConfirmTimer = null;
 	let replacePending = null;
+	let currentDetailCell = null;
+
+	function resetReplaceButton() {}
 
 	function showGlyphDetail(cell) {
 		if (!cell || !detailModal) return;
-		if (clearConfirmTimer) {
-			clearTimeout(clearConfirmTimer);
-			clearConfirmTimer = null;
-		}
+		currentDetailCell = cell;
 		replacePending = null;
 		if (beforeAfterWrap) beforeAfterWrap.classList.add('d-none');
 		if (detailImg) detailImg.classList.remove('d-none');
 		if (detailCharFallback) detailCharFallback.classList.add('d-none');
+		if (vanillaStatus) vanillaStatus.textContent = '';
 
 		const hex = cell.getAttribute('data-hex') || '';
 		const pos = cell.getAttribute('data-position') || '';
@@ -297,142 +307,47 @@ document.addEventListener('DOMContentLoaded', () => {
 			detailClearBtn.disabled = false;
 			detailClearBtn.innerHTML = '<i class="fas fa-eraser me-1"></i> Clear to transparent';
 			detailClearBtn.onclick = () => {
-				if (clearConfirmTimer) {
-					clearTimeout(clearConfirmTimer);
-					clearConfirmTimer = null;
-					// perform clear
-					cell.style.backgroundImage = '';
-					cell.style.backgroundSize = '';
-					cell.classList.add('transparent');
-					// keep width/height attributes so we can map back to atlas
-					// update modal view
-					const bglessCanvas = document.createElement('canvas');
-					bglessCanvas.width = 220;
-					bglessCanvas.height = 220;
-					const ctx = bglessCanvas.getContext('2d');
-					ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card') || '#f5f5f7';
-					ctx.fillRect(0, 0, bglessCanvas.width, bglessCanvas.height);
-					ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') || '#555';
-					ctx.textAlign = 'center';
-					ctx.textBaseline = 'middle';
-					ctx.font = 'bold 120px "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
-					ctx.fillText(char || '?', bglessCanvas.width / 2, bglessCanvas.height / 2 + 8);
-					const clearedUrl = bglessCanvas.toDataURL('image/png');
-					if (detailImg) {
-						detailImg.src = clearedUrl;
-						detailImg.classList.remove('d-none');
-					}
-					if (detailCharFallback) {
-						detailCharFallback.classList.add('d-none');
-					}
-					if (detailDim) detailDim.textContent = `${bglessCanvas.width}px x ${bglessCanvas.height}px`;
-					if (detailDownloadBtn) {
-						detailDownloadBtn.disabled = false;
-						detailDownloadBtn.onclick = () => {
-							const a = document.createElement('a');
-							a.href = clearedUrl;
-							a.download = `glyph_${hex.replace(/^0x/i, '').toLowerCase() || 'char'}.png`;
-							a.click();
-						};
-					}
-					detailClearBtn.innerHTML = '<i class="fas fa-check me-1"></i> Cleared';
-
-					// update atlas source (if any) to keep Download Atlas in sync
-					if (typeof clearAtlasTile === 'function') {
-						clearAtlasTile(cell).then(() => {
-							// no-op; atlas info already updated inside helper
-						});
-					}
-				} else {
-					detailClearBtn.innerHTML = '<i class="fas fa-question-circle me-1"></i> Click again to confirm';
-					clearConfirmTimer = setTimeout(() => {
-						detailClearBtn.innerHTML = '<i class="fas fa-eraser me-1"></i> Clear to transparent';
-						clearConfirmTimer = null;
-					}, 3000);
+				// perform clear immediately
+				cell.style.backgroundImage = '';
+				cell.style.backgroundSize = '';
+				cell.classList.add('transparent');
+				// keep width/height attributes so we can map back to atlas
+				// update modal view
+				const bglessCanvas = document.createElement('canvas');
+				bglessCanvas.width = 220;
+				bglessCanvas.height = 220;
+				const ctx = bglessCanvas.getContext('2d');
+				ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card') || '#f5f5f7';
+				ctx.fillRect(0, 0, bglessCanvas.width, bglessCanvas.height);
+				ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') || '#555';
+				ctx.textAlign = 'center';
+				ctx.textBaseline = 'middle';
+				ctx.font = 'bold 120px "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+				ctx.fillText(char || '?', bglessCanvas.width / 2, bglessCanvas.height / 2 + 8);
+				const clearedUrl = bglessCanvas.toDataURL('image/png');
+				if (detailImg) {
+					detailImg.src = clearedUrl;
+					detailImg.classList.remove('d-none');
 				}
-			};
-		}
-
-		if (detailReplaceBtn && detailReplaceInput) {
-			detailReplaceBtn.disabled = false;
-			detailReplaceBtn.classList.remove('btn-warning', 'btn-primary');
-			detailReplaceBtn.classList.add('btn-outline-info');
-			detailReplaceBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Update & Replace';
-			detailReplaceBtn.onclick = () => {
-				// If a file is pending confirmation, confirm replace
-				if (replacePending) {
-					const { img } = replacePending;
-					if (typeof replaceAtlasTile === 'function') {
-						replaceAtlasTile(cell, img).then((res) => {
-							const tileUrl = res && res.tileUrl;
-							const tileW = res && res.tileW;
-							const tileH = res && res.tileH;
-							if (tileUrl) {
-								cell.style.backgroundImage = `url(${tileUrl})`;
-								cell.style.backgroundSize = '100% 100%';
-								cell.classList.remove('transparent');
-								if (tileW) cell.setAttribute('data-width', tileW);
-								if (tileH) cell.setAttribute('data-height', tileH);
-								// refresh modal preview
-								detailImg.src = tileUrl;
-								detailImg.classList.remove('d-none');
-								detailCharFallback.classList.add('d-none');
-								if (detailDim) detailDim.textContent = tileW && tileH ? `${tileW}px x ${tileH}px` : detailDim.textContent;
-								// update download button to new tile
-								if (detailDownloadBtn) {
-							const fileName = `glyph_${hex.replace(/^0x/i, '').toLowerCase() || 'char'}.png`;
-							detailDownloadBtn.disabled = false;
-							detailDownloadBtn.onclick = () => {
-								const a = document.createElement('a');
-								a.href = tileUrl;
-										a.download = fileName;
-										a.click();
-									};
-								}
-							}
-							// reset state
-							replacePending = null;
-							detailReplaceBtn.classList.remove('btn-warning', 'btn-primary');
-							detailReplaceBtn.classList.add('btn-outline-info');
-							detailReplaceBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Update & Replace';
-							if (beforeAfterWrap) beforeAfterWrap.classList.add('d-none');
-							if (detailImg) detailImg.classList.remove('d-none');
-						});
-					}
-				} else {
-					detailReplaceInput.value = '';
-					detailReplaceInput.click();
+				if (detailCharFallback) {
+					detailCharFallback.classList.add('d-none');
 				}
-			};
-
-			detailReplaceInput.onchange = (ev) => {
-				const file = ev.target.files && ev.target.files[0];
-				if (!file) return;
-				if (!file.type || !file.type.includes('png')) {
-					alert('Please select a PNG file.');
-					return;
-				}
-
-				const reader = new FileReader();
-				reader.onload = (e) => {
-					const newImg = new Image();
-					newImg.onload = function () {
-						replacePending = { img: newImg };
-						detailReplaceBtn.classList.remove('btn-outline-info');
-						detailReplaceBtn.classList.add('btn-primary');
-						detailReplaceBtn.innerHTML = '<i class="fas fa-check me-1"></i> Confirm replace';
-
-						// show before/after preview
-						if (beforeAfterWrap && beforeImg && afterImg) {
-							beforeImg.src = currentPreviewUrl || (detailImg && detailImg.src) || '';
-							afterImg.src = e.target.result;
-							beforeAfterWrap.classList.remove('d-none');
-							if (detailImg) detailImg.classList.add('d-none');
-						}
+				if (detailDim) detailDim.textContent = `${bglessCanvas.width}px x ${bglessCanvas.height}px`;
+				if (detailDownloadBtn) {
+					detailDownloadBtn.disabled = false;
+					detailDownloadBtn.onclick = () => {
+						const a = document.createElement('a');
+						a.href = clearedUrl;
+						a.download = `glyph_${hex.replace(/^0x/i, '').toLowerCase() || 'char'}.png`;
+						a.click();
 					};
-					newImg.src = e.target.result;
-				};
-				reader.readAsDataURL(file);
+				}
+				detailClearBtn.innerHTML = '<i class="fas fa-check me-1"></i> Cleared';
+
+				// update atlas source (if any) to keep Download Atlas in sync
+				if (typeof clearAtlasTile === 'function') {
+					clearAtlasTile(cell).then(() => {});
+				}
 			};
 		}
 
@@ -678,5 +593,187 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			downloadFile(JSON.stringify(json, null, 2), `glyph_${startHex.toLowerCase()}_metadata.json`, "application/json");
 		});
+	}
+
+	// Vanilla texture helpers
+	function setVanillaStatus(text) {
+		if (vanillaStatus) vanillaStatus.textContent = text;
+	}
+
+	// Vanilla cache stored on window to avoid repeated parsing; still cached in localStorage for reuse across sessions
+	function cacheVanillaList(paths) {
+		const payload = { timestamp: Date.now(), paths };
+		localStorage.setItem('vanillaTexturesCache', JSON.stringify(payload));
+		window.__vanillaPaths = paths;
+	}
+
+	function getVanillaCache() {
+		if (window.__vanillaPaths && window.__vanillaPaths.length) {
+			return { timestamp: Date.now(), paths: window.__vanillaPaths };
+		}
+		try {
+			const raw = localStorage.getItem('vanillaTexturesCache');
+			return raw ? JSON.parse(raw) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	async function fetchVanillaList(force = false) {
+		const cache = getVanillaCache();
+		const weekMs = 7 * 24 * 60 * 60 * 1000;
+		if (!force && cache && cache.timestamp && (Date.now() - cache.timestamp < weekMs) && cache.paths?.length) {
+			window.__vanillaPaths = cache.paths;
+			return cache.paths;
+		}
+		setVanillaStatus('Fetching vanilla textures…');
+		try {
+			const resp = await fetch('https://api.github.com/repos/Mojang/bedrock-samples/git/trees/main?recursive=1');
+			const data = await resp.json();
+			const paths = (data.tree || [])
+				.filter(node => node.type === 'blob' && node.path.startsWith('resource_pack/textures/') && node.path.endsWith('.png'))
+				.map(node => node.path);
+			if (paths.length) cacheVanillaList(paths);
+			setVanillaStatus(`Loaded ${paths.length} textures (cached 7 days).`);
+			return paths;
+		} catch (err) {
+			setVanillaStatus('Failed to fetch textures.');
+			return cache?.paths || [];
+		}
+	}
+
+	function queueReplaceCandidate(imgObj, imgSrc, currentPreviewUrl) {
+		replacePending = { img: imgObj };
+		applyPendingReplace();
+	}
+
+	function applyPendingReplace() {
+		if (!replacePending || !currentDetailCell) return;
+		const { img } = replacePending;
+		const cell = currentDetailCell;
+		const hex = cell.getAttribute('data-hex') || '';
+		if (typeof replaceAtlasTile === 'function') {
+			replaceAtlasTile(cell, img).then((res) => {
+				const tileUrl = res && res.tileUrl;
+				const tileW = res && res.tileW;
+				const tileH = res && res.tileH;
+				if (tileUrl) {
+					cell.style.backgroundImage = `url(${tileUrl})`;
+					cell.style.backgroundSize = '100% 100%';
+					cell.classList.remove('transparent');
+					if (tileW) cell.setAttribute('data-width', tileW);
+					if (tileH) cell.setAttribute('data-height', tileH);
+					// refresh modal preview
+					detailImg.src = tileUrl;
+					detailImg.classList.remove('d-none');
+					detailCharFallback.classList.add('d-none');
+					if (detailDim) detailDim.textContent = tileW && tileH ? `${tileW}px x ${tileH}px` : detailDim.textContent;
+					// update download button to new tile
+					if (detailDownloadBtn) {
+						const fileName = `glyph_${hex.replace(/^0x/i, '').toLowerCase() || 'char'}.png`;
+						detailDownloadBtn.disabled = false;
+						detailDownloadBtn.onclick = () => {
+							const a = document.createElement('a');
+							a.href = tileUrl;
+							a.download = fileName;
+							a.click();
+						};
+					}
+				}
+				replacePending = null;
+				if (beforeAfterWrap) beforeAfterWrap.classList.add('d-none');
+				if (detailImg) detailImg.classList.remove('d-none');
+			});
+		}
+	}
+
+	// Preload vanilla cache on first open (non-blocking)
+	fetchVanillaList(false).then(paths => {
+		vanillaPaths = paths || [];
+	});
+
+	// Vanilla picker modal interactions
+	function renderVanillaGrid(filterText = '') {
+		if (!vanillaGrid) return;
+		vanillaGrid.innerHTML = '';
+		const needle = filterText.toLowerCase();
+		const filtered = (vanillaPaths || []).filter(p => p.toLowerCase().includes(needle)).slice(0, 400);
+		if (vanillaPickerStatus) vanillaPickerStatus.textContent = `Showing ${filtered.length} textures`;
+		filtered.forEach(path => {
+			const card = document.createElement('div');
+			card.className = 'vanilla-tile';
+			card.dataset.path = path;
+			const img = document.createElement('img');
+			img.loading = 'lazy';
+			img.crossOrigin = 'anonymous';
+			img.src = `https://raw.githubusercontent.com/Mojang/bedrock-samples/main/${path}`;
+			const label = document.createElement('div');
+			label.className = 'vanilla-name';
+			label.textContent = path.split('/').slice(-1)[0].replace('.png','');
+			card.appendChild(img);
+			card.appendChild(label);
+			card.addEventListener('click', () => {
+				const previewSrc = img.src;
+				const previewImg = new Image();
+				previewImg.crossOrigin = 'anonymous';
+				previewImg.onload = function () {
+					queueReplaceCandidate(previewImg, previewSrc, detailImg && detailImg.src);
+					if (vanillaPickerModal) vanillaPickerModal.hide();
+				};
+				previewImg.onerror = function () {
+					if (vanillaPickerStatus) vanillaPickerStatus.textContent = 'Failed to load texture.';
+				};
+				previewImg.src = previewSrc;
+			});
+			vanillaGrid.appendChild(card);
+		});
+	}
+
+	if (vanillaOpenPickerBtn) {
+		vanillaOpenPickerBtn.addEventListener('click', async () => {
+			if (!vanillaPaths || !vanillaPaths.length) {
+				const list = await fetchVanillaList(false);
+				vanillaPaths = list || [];
+			}
+			renderVanillaGrid('');
+			if (vanillaPickerStatus) vanillaPickerStatus.textContent = 'Click a texture to preview.';
+			if (vanillaPickerModal) vanillaPickerModal.show();
+		});
+	}
+
+	if (vanillaSearchInput) {
+		let searchDebounce = null;
+		vanillaSearchInput.addEventListener('input', () => {
+			const val = vanillaSearchInput.value || '';
+			if (searchDebounce) clearTimeout(searchDebounce);
+			searchDebounce = setTimeout(() => renderVanillaGrid(val), 200);
+		});
+	}
+
+	// Upload PNG action (from unified dropdown)
+	if (actionUploadPng && detailReplaceInput) {
+		actionUploadPng.addEventListener('click', () => {
+			detailReplaceInput.value = '';
+			detailReplaceInput.click();
+		});
+
+		detailReplaceInput.onchange = (ev) => {
+			const file = ev.target.files && ev.target.files[0];
+			if (!file) return;
+			if (!file.type || !file.type.includes('png')) {
+				alert('Please select a PNG file.');
+				return;
+			}
+
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				const newImg = new Image();
+				newImg.onload = function () {
+					queueReplaceCandidate(newImg, e.target.result, detailImg && detailImg.src);
+				};
+				newImg.src = e.target.result;
+			};
+			reader.readAsDataURL(file);
+		};
 	}
 });
