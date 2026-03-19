@@ -124,6 +124,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
 	let gridMode = 'adaptive';
 	let mobileAlertTimer = null;
+	const themeVar = (name, fallback) => {
+		const val = getComputedStyle(document.body).getPropertyValue(name);
+		return val && val.trim() ? val.trim() : fallback;
+	};
 
 	function applyGridMode(mode) {
 		if (!glyphGrid) return;
@@ -274,9 +278,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			canvas.width = 220;
 			canvas.height = 220;
 			const ctx = canvas.getContext('2d');
-			ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card') || '#f5f5f7';
+			ctx.fillStyle = themeVar('--bg-card', '#f5f5f7');
 			ctx.fillRect(0, 0, canvas.width, canvas.height);
-			ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-primary') || '#000';
+			ctx.fillStyle = themeVar('--text-primary', '#000');
 			ctx.textAlign = 'center';
 			ctx.textBaseline = 'middle';
 			ctx.font = 'bold 120px "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
@@ -337,9 +341,9 @@ document.addEventListener('DOMContentLoaded', () => {
 				bglessCanvas.width = 220;
 				bglessCanvas.height = 220;
 				const ctx = bglessCanvas.getContext('2d');
-				ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card') || '#f5f5f7';
+				ctx.fillStyle = themeVar('--bg-card', '#f5f5f7');
 				ctx.fillRect(0, 0, bglessCanvas.width, bglessCanvas.height);
-				ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary') || '#555';
+				ctx.fillStyle = themeVar('--text-secondary', '#555');
 				ctx.textAlign = 'center';
 				ctx.textBaseline = 'middle';
 				ctx.font = 'bold 120px "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
