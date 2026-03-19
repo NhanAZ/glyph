@@ -257,8 +257,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			
 			if (typeof DEFAULT_GLYPHS !== 'undefined' && DEFAULT_GLYPHS[hex]) {
 				const img = new Image();
+				img.crossOrigin = 'anonymous';
 				img.onload = function() {
-					processGlyph(img, hex);
+					processGlyph(img, hex, { cacheKey: `${hex}_DEFAULT` });
 					hintMsg.classList.add('d-none');
 				};
 				img.src = DEFAULT_GLYPHS[hex];
@@ -275,14 +276,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (btnLoadTemplate) {
 		btnLoadTemplate.addEventListener('click', () => {
 			const glyphInput = document.getElementById('glyph-input');
-			let hex = "E0";
-			if (glyphInput) glyphInput.value = hex;
+			const current = glyphInput ? glyphInput.value.trim().toUpperCase() : "";
+			const hex = /^[A-F0-9]{1,4}$/.test(current) ? current : "E0";
 			
 			if (typeof DEFAULT_GLYPHS !== 'undefined' && DEFAULT_GLYPHS['TEMPLATE']) {
 				if (typeof updateTimer !== 'undefined') clearTimeout(updateTimer);
 				const img = new Image();
+				img.crossOrigin = 'anonymous';
 				img.onload = function() {
-					processGlyph(img, hex);
+					processGlyph(img, hex, { cacheKey: 'TEMPLATE' });
 					
 					if (hintMsg) hintMsg.classList.add('d-none');
 					const label = document.getElementById('uploadLabel');
@@ -300,16 +302,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (btnLoadExample) {
 		btnLoadExample.addEventListener('click', () => {
 			const hex = "E1"; 
-			const glyphInput = document.getElementById('glyph-input');
-			if (glyphInput) {
-				glyphInput.value = hex;
-			}
 			
 			if (typeof DEFAULT_GLYPHS !== 'undefined' && DEFAULT_GLYPHS['E1_MOD']) {
 				if (typeof updateTimer !== 'undefined') clearTimeout(updateTimer);
 				const img = new Image();
+				img.crossOrigin = 'anonymous';
 				img.onload = function() {
-					processGlyph(img, hex);
+					processGlyph(img, hex, { cacheKey: 'E1_MOD' });
 					
 					if (hintMsg) hintMsg.classList.add('d-none');
 					const label = document.getElementById('uploadLabel');

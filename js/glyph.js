@@ -28,8 +28,9 @@ function initializeGlyph() {
 	if (glyphOutput.innerHTML.trim() === '') {
 		if (typeof DEFAULT_GLYPHS !== 'undefined' && DEFAULT_GLYPHS["E0"]) {
 			const img = new Image();
+			img.crossOrigin = 'anonymous';
 			img.onload = function() {
-				processGlyph(img, "E0");
+				processGlyph(img, "E0", { cacheKey: "E0_DEFAULT" });
 			};
 			img.onerror = function() {
 				Glyph("E0");
@@ -41,6 +42,19 @@ function initializeGlyph() {
 	}
 }
 
+
+function applyCachedGlyph(entry) {
+	document.getElementById('glyph-output').innerHTML = entry.markup;
+	removeZoomEvents();
+	zoomEnabled = false;
+
+	if (entry.unicodeSize && entry.unicodeSize > 0) {
+		zoomEnabled = true;
+		addZoomEvents(entry.unicodeSize);
+	} else if (typeof hideZoomWindow === 'function') {
+		hideZoomWindow();
+	}
+}
 
 function renderGlyphs() {
 	const glyphOutput = document.getElementById('glyph-output');
@@ -77,14 +91,25 @@ function renderGlyphs() {
 				}
 
 				ctx.putImageData(imageData, 0, 0);
-				glyph.style.backgroundImage = `url(${canvas.toDataURL()})`;
+				const processedUrl = canvas.toDataURL();
+				glyph.style.backgroundImage = `url(${processedUrl})`;
+				glyph.dataset.originalBg = processedUrl;
 			};
+			img.crossOrigin = 'anonymous';
 			img.src = backgroundImage.slice(5, -2); // Remove 'url("")' from backgroundImage
 		}
 	});
 }
 
-function processGlyph(img, hexValue) {
+function processGlyph(img, hexValue, options = {}) {
+	const cacheKey = options.cacheKey;
+	const themedKey = cacheKey ? `${cacheKey}__${isDarkMode ? 'dark' : 'light'}` : null;
+
+	if (themedKey && glyphCache.has(themedKey)) {
+		applyCachedGlyph(glyphCache.get(themedKey));
+		return;
+	}
+
 	const canvas = document.createElement('canvas');
 	const ctx = canvas.getContext('2d');
 
@@ -135,4 +160,11 @@ function processGlyph(img, hexValue) {
 
 	document.getElementById('glyph-output').innerHTML = markdownContent;
 	renderGlyphs();
+
+	if (themedKey) {
+		glyphCache.set(themedKey, {
+			markup: document.getElementById('glyph-output').innerHTML,
+			unicodeSize
+		});
+	}
 }
