@@ -989,13 +989,13 @@ h1, h2, h3, h4, h5 {
 
 .detail-field {
 	cursor: pointer;
-	transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .detail-field:hover {
 	border-color: rgba(59, 130, 246, 0.4);
 	box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-	transform: translateY(-1px);
+	transform: none;
 }
 
 .detail-value {
@@ -1211,6 +1211,12 @@ h1, h2, h3, h4, h5 {
 
 	.detail-actions {
 		flex-direction: column;
+	}
+
+	.detail-actions .btn {
+		width: 100%;
+		flex: 0 0 auto;
+		height: 48px;
 	}
 
 	.detail-meta {

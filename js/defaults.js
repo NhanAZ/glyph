@@ -2,6 +2,7 @@
 // Paths are relative to index.html
 const DEFAULT_GLYPHS = {
 	E0: "RP/font/glyph_E0.png",
+	E1: "RP/font/glyph_E1.png",
 	TEMPLATE: "RP/font/glyph_grid.png",
 	E1_MOD: "RP/font/glyph_E1_modified.png",
 	EMPTY: "RP/font/glyph_empty.png"
