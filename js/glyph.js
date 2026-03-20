@@ -82,6 +82,9 @@ function renderGlyphs() {
 		if (backgroundImage) {
 			const img = new Image();
 			img.onload = function () {
+				// Always keep a reference to the original (transparent) tile so downloads stay clean
+				const originalUrl = glyph.dataset.originalBg || backgroundImage.slice(5, -2); // strip url("")
+
 				const canvas = document.createElement('canvas');
 				const ctx = canvas.getContext('2d');
 				canvas.width = img.width;
@@ -110,10 +113,12 @@ function renderGlyphs() {
 				ctx.putImageData(imageData, 0, 0);
 				const processedUrl = canvas.toDataURL();
 				glyph.style.backgroundImage = `url(${processedUrl})`;
-				glyph.dataset.originalBg = processedUrl;
+				glyph.dataset.originalBg = originalUrl;
+				glyph.dataset.displayBg = processedUrl;
 			};
 			img.crossOrigin = 'anonymous';
-			img.src = backgroundImage.slice(5, -2); // Remove 'url("")' from backgroundImage
+			// Use the unmodified tile when present to avoid baking the checker tint into downloads
+			img.src = glyph.dataset.originalBg || backgroundImage.slice(5, -2);
 		}
 	});
 }

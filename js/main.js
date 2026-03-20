@@ -248,17 +248,19 @@ document.addEventListener('DOMContentLoaded', () => {
 		const codePoint = char.codePointAt(0);
 		const decVal = typeof codePoint === 'number' ? codePoint.toString(10) : '';
 		const bg = cell.style.backgroundImage;
+		const originalBg = (cell.dataset && cell.dataset.originalBg) ? cell.dataset.originalBg : '';
 		const widthAttr = cell.getAttribute('data-width');
 		const heightAttr = cell.getAttribute('data-height');
 		let dimText = '';
 		let downloadUrl = '';
 		let currentPreviewUrl = '';
 
-		if (bg) {
-			const url = bg.slice(5, -2);
-			downloadUrl = url;
-			currentPreviewUrl = url;
-			detailImg.src = url;
+		const resolvedImageUrl = originalBg || (bg ? bg.slice(5, -2) : '');
+
+		if (resolvedImageUrl) {
+			downloadUrl = resolvedImageUrl;
+			currentPreviewUrl = resolvedImageUrl;
+			detailImg.src = resolvedImageUrl;
 			detailImg.classList.remove('d-none');
 			detailCharFallback.classList.add('d-none');
 			// If dimensions exist as attributes, use them; otherwise try to read image natural size later
@@ -270,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					dimText = `${probe.naturalWidth}px x ${probe.naturalHeight}px`;
 					if (detailDim) detailDim.textContent = dimText;
 				};
-				probe.src = url;
+				probe.src = resolvedImageUrl;
 			}
 		} else {
 			// Generate a simple preview image from the character itself
@@ -335,6 +337,10 @@ document.addEventListener('DOMContentLoaded', () => {
 				cell.style.backgroundImage = '';
 				cell.style.backgroundSize = '';
 				cell.classList.add('transparent');
+				if (cell.dataset) {
+					cell.dataset.originalBg = '';
+					cell.dataset.displayBg = '';
+				}
 				// keep width/height attributes so we can map back to atlas
 				// update modal view
 				const bglessCanvas = document.createElement('canvas');
@@ -702,6 +708,10 @@ document.addEventListener('DOMContentLoaded', () => {
 					cell.style.backgroundImage = `url(${tileUrl})`;
 					cell.style.backgroundSize = '100% 100%';
 					cell.classList.remove('transparent');
+					if (cell.dataset) {
+						cell.dataset.originalBg = tileUrl;
+						cell.dataset.displayBg = '';
+					}
 					if (tileW) cell.setAttribute('data-width', tileW);
 					if (tileH) cell.setAttribute('data-height', tileH);
 					// refresh modal preview
