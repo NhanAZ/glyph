@@ -187,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const detailPos = document.getElementById('glyphDetailPos');
 	const detailCharText = document.getElementById('glyphDetailCharText');
 	const detailDim = document.getElementById('glyphDetailDim');
+	const detailPreview = document.querySelector('.detail-preview');
 	const detailCopyBtn = document.getElementById('glyphDetailCopyBtn');
 	const detailDownloadBtn = document.getElementById('glyphDetailDownloadBtn');
 	const detailClearBtn = document.getElementById('glyphDetailClearBtn');
@@ -242,6 +243,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (detailCharFallback) detailCharFallback.classList.add('d-none');
 		if (vanillaStatus) vanillaStatus.textContent = '';
 
+		const isTransparentCell = cell.classList.contains('transparent');
+		if (detailPreview) detailPreview.classList.remove('transparent-state');
+
 		const hex = cell.getAttribute('data-hex') || '';
 		const pos = cell.getAttribute('data-position') || '';
 		const char = cell.getAttribute('data-char') || '';
@@ -258,6 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const resolvedImageUrl = originalBg || (bg ? bg.slice(5, -2) : '');
 
 		if (resolvedImageUrl) {
+			if (detailPreview && isTransparentCell) detailPreview.classList.add('transparent-state');
 			downloadUrl = resolvedImageUrl;
 			currentPreviewUrl = resolvedImageUrl;
 			detailImg.src = resolvedImageUrl;
@@ -275,26 +280,18 @@ document.addEventListener('DOMContentLoaded', () => {
 				probe.src = resolvedImageUrl;
 			}
 		} else {
-			// Generate a simple preview image from the character itself
-			const canvas = document.createElement('canvas');
-			canvas.width = 220;
-			canvas.height = 220;
-			const ctx = canvas.getContext('2d');
-			ctx.fillStyle = themeVar('--bg-card', '#f5f5f7');
-			ctx.fillRect(0, 0, canvas.width, canvas.height);
-			ctx.fillStyle = themeVar('--text-primary', '#000');
-			ctx.textAlign = 'center';
-			ctx.textBaseline = 'middle';
-			ctx.font = 'bold 120px "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
-			ctx.fillText(char || '?', canvas.width / 2, canvas.height / 2 + 8);
-			downloadUrl = canvas.toDataURL('image/png');
+			// Transparent state: generate a fully transparent PNG at tile size (if known)
+			if (detailPreview) detailPreview.classList.add('transparent-state');
+			const transparentCanvas = document.createElement('canvas');
+			transparentCanvas.width = widthAttr ? parseInt(widthAttr, 10) || 220 : 220;
+			transparentCanvas.height = heightAttr ? parseInt(heightAttr, 10) || 220 : 220;
+			downloadUrl = transparentCanvas.toDataURL('image/png');
 			currentPreviewUrl = downloadUrl;
-			dimText = `${canvas.width}px x ${canvas.height}px`;
+			dimText = `${transparentCanvas.width}px x ${transparentCanvas.height}px`;
 
 			detailImg.src = downloadUrl;
 			detailImg.classList.remove('d-none');
 			detailCharFallback.classList.add('d-none');
-			detailCharFallback.textContent = char || '?';
 		}
 
 		detailHex.textContent = hex;
@@ -343,18 +340,13 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 				// keep width/height attributes so we can map back to atlas
 				// update modal view
-				const bglessCanvas = document.createElement('canvas');
-				bglessCanvas.width = 220;
-				bglessCanvas.height = 220;
-				const ctx = bglessCanvas.getContext('2d');
-				ctx.fillStyle = themeVar('--bg-card', '#f5f5f7');
-				ctx.fillRect(0, 0, bglessCanvas.width, bglessCanvas.height);
-				ctx.fillStyle = themeVar('--text-secondary', '#555');
-				ctx.textAlign = 'center';
-				ctx.textBaseline = 'middle';
-				ctx.font = 'bold 120px "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
-				ctx.fillText(char || '?', bglessCanvas.width / 2, bglessCanvas.height / 2 + 8);
-				const clearedUrl = bglessCanvas.toDataURL('image/png');
+				const clearedCanvas = document.createElement('canvas');
+				const tileW = widthAttr ? parseInt(widthAttr, 10) || 220 : 220;
+				const tileH = heightAttr ? parseInt(heightAttr, 10) || 220 : 220;
+				clearedCanvas.width = tileW;
+				clearedCanvas.height = tileH;
+				// leave fully transparent; no glyph drawing to avoid tofu box
+				const clearedUrl = clearedCanvas.toDataURL('image/png');
 				if (detailImg) {
 					detailImg.src = clearedUrl;
 					detailImg.classList.remove('d-none');
@@ -362,7 +354,8 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (detailCharFallback) {
 					detailCharFallback.classList.add('d-none');
 				}
-				if (detailDim) detailDim.textContent = `${bglessCanvas.width}px x ${bglessCanvas.height}px`;
+				if (detailPreview) detailPreview.classList.add('transparent-state');
+				if (detailDim) detailDim.textContent = `${tileW}px x ${tileH}px`;
 				if (detailDownloadBtn) {
 					detailDownloadBtn.disabled = false;
 					detailDownloadBtn.onclick = () => {
@@ -712,6 +705,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						cell.dataset.originalBg = tileUrl;
 						cell.dataset.displayBg = '';
 					}
+					if (detailPreview) detailPreview.classList.remove('transparent-state');
 					if (tileW) cell.setAttribute('data-width', tileW);
 					if (tileH) cell.setAttribute('data-height', tileH);
 					// refresh modal preview

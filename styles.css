@@ -641,6 +641,21 @@ h1, h2, h3, h4, h5 {
 	position: relative;
 }
 
+.detail-preview.transparent-state::before {
+	content: "";
+	position: absolute;
+	inset: 14px;
+	border-radius: 12px;
+	background-size: 16px 16px;
+	background-image:
+		linear-gradient(45deg, rgba(0,0,0,0.08) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.08) 75%, rgba(0,0,0,0.08)),
+		linear-gradient(45deg, rgba(0,0,0,0.08) 25%, transparent 25%, transparent 75%, rgba(0,0,0,0.08) 75%, rgba(0,0,0,0.08));
+	background-position: 0 0, 8px 8px;
+	opacity: 0.6;
+	pointer-events: none;
+	z-index: 0;
+}
+
 .detail-preview-col {
 	display: flex;
 	align-items: stretch;
@@ -658,6 +673,8 @@ h1, h2, h3, h4, h5 {
 	border-radius: 0;
 	border: none;
 	object-fit: contain;
+	position: relative;
+	z-index: 1;
 }
 
 
