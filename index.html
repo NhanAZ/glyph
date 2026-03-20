@@ -205,20 +205,47 @@
 						</div>
 						<div class="col-md-7">
 							<ul class="list-group list-group-flush detail-meta">
-								<li class="list-group-item">
-									<span class="text-secondary">Character</span><span id="glyphDetailCharText" class="fw-bold"></span>
+								<li class="list-group-item detail-field" data-copy-target="glyphDetailCharText" data-label="character">
+									<span class="text-secondary">Character</span>
+									<div class="detail-value">
+										<span id="glyphDetailCharText" class="fw-bold"></span>
+										<i class="far fa-copy detail-copy-icon" aria-hidden="true"></i>
+									</div>
 								</li>
-								<li class="list-group-item">
-									<span class="text-secondary">Hex</span><span id="glyphDetailHex" class="fw-bold"></span>
+								<li class="list-group-item detail-field" data-copy-target="glyphDetailHex" data-label="hex">
+									<span class="text-secondary">Hex</span>
+									<div class="detail-value">
+										<span id="glyphDetailHex" class="fw-bold"></span>
+										<i class="far fa-copy detail-copy-icon" aria-hidden="true"></i>
+									</div>
 								</li>
-								<li class="list-group-item">
-									<span class="text-secondary">Decimal</span><span id="glyphDetailDec" class="fw-bold"></span>
+								<li class="list-group-item detail-field" data-copy-target="glyphDetailDec" data-label="decimal">
+									<span class="text-secondary">Decimal</span>
+									<div class="detail-value">
+										<span id="glyphDetailDec" class="fw-bold"></span>
+										<i class="far fa-copy detail-copy-icon" aria-hidden="true"></i>
+									</div>
 								</li>
-								<li class="list-group-item">
-									<span class="text-secondary">Position</span><span id="glyphDetailPos" class="fw-bold"></span>
+								<li class="list-group-item detail-field" data-copy-target="glyphDetailPos" data-label="position">
+									<span class="text-secondary">Position</span>
+									<div class="detail-value">
+										<span id="glyphDetailPos" class="fw-bold"></span>
+										<i class="far fa-copy detail-copy-icon" aria-hidden="true"></i>
+									</div>
 								</li>
-								<li class="list-group-item">
-									<span class="text-secondary">Dimensions</span><span id="glyphDetailDim" class="fw-bold"></span>
+								<li class="list-group-item detail-field" data-copy-target="glyphDetailDim" data-label="dimensions">
+									<span class="text-secondary">Dimensions</span>
+									<div class="detail-value">
+										<span id="glyphDetailDim" class="fw-bold"></span>
+										<i class="far fa-copy detail-copy-icon" aria-hidden="true"></i>
+									</div>
+								</li>
+								<li class="list-group-item detail-field" data-copy-target="glyphDetailUnicode" data-label="unicode escape">
+									<span class="text-secondary">Unicode Esc.</span>
+									<div class="detail-value">
+										<span id="glyphDetailUnicode" class="fw-bold"></span>
+										<i class="far fa-copy detail-copy-icon" aria-hidden="true"></i>
+									</div>
 								</li>
 							</ul>
 
@@ -238,8 +265,8 @@
 						<button type="button" class="btn btn-outline-danger" id="glyphDetailClearBtn">
 							<i class="fas fa-eraser me-1"></i> Clear to transparent
 						</button>
-							<button type="button" class="btn btn-primary" id="glyphDetailCopyBtn">
-								<i class="far fa-copy me-1"></i> Copy glyph
+						<button type="button" class="btn btn-primary" id="glyphDetailCopyBtn">
+							<i class="fas fa-pen-nib me-1"></i> Draw
 						</button>
 					</div>
 				</div>

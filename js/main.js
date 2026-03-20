@@ -187,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const detailPos = document.getElementById('glyphDetailPos');
 	const detailCharText = document.getElementById('glyphDetailCharText');
 	const detailDim = document.getElementById('glyphDetailDim');
+	const detailUnicode = document.getElementById('glyphDetailUnicode');
 	const detailPreview = document.querySelector('.detail-preview');
 	const detailCopyBtn = document.getElementById('glyphDetailCopyBtn');
 	const detailDownloadBtn = document.getElementById('glyphDetailDownloadBtn');
@@ -209,6 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const vanillaPrevPage = document.getElementById('vanillaPrevPage');
 	const vanillaNextPage = document.getElementById('vanillaNextPage');
 	const vanillaPageInfo = document.getElementById('vanillaPageInfo');
+	const detailMeta = document.querySelector('.detail-meta');
 	let vanillaPaths = [];
 	let vanillaCategories = ['all'];
 	let vanillaFiltered = [];
@@ -233,6 +235,55 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function resetReplaceButton() {}
+
+	function formatUnicodeEscape(hexValue) {
+		if (!hexValue) return '-';
+		const clean = hexValue.toString().trim().replace(/^0x/i, '');
+		if (!clean || !/^[0-9A-Fa-f]+$/.test(clean)) return '-';
+		return `\\u{0x${clean.toUpperCase()}}`;
+	}
+
+	function ensureDrawerPrompt(url) {
+		let overlay = document.getElementById('drawerRedirectPrompt');
+		if (!overlay) {
+			overlay = document.createElement('div');
+			overlay.id = 'drawerRedirectPrompt';
+			overlay.className = 'drawer-redirect-overlay';
+			overlay.innerHTML = `
+				<div class="drawer-redirect-card">
+					<h6 class="mb-2 fw-bold">Open glyph drawer?</h6>
+					<p class="mb-3 text-secondary">You are about to open the dedicated glyph drawing page in a new tab.</p>
+					<div class="d-flex gap-2 flex-wrap">
+						<button type="button" class="btn btn-outline-secondary flex-fill drawer-cancel">Cancel</button>
+						<button type="button" class="btn btn-primary flex-fill drawer-confirm">Open drawer</button>
+					</div>
+				</div>
+			`;
+			document.body.appendChild(overlay);
+
+			const cancelBtn = overlay.querySelector('.drawer-cancel');
+			const confirmBtn = overlay.querySelector('.drawer-confirm');
+
+			if (cancelBtn) cancelBtn.addEventListener('click', () => overlay.classList.remove('visible'));
+			if (confirmBtn) confirmBtn.addEventListener('click', () => {
+				window.open(url, '_blank', 'noopener');
+				overlay.classList.remove('visible');
+			});
+			overlay.addEventListener('click', (e) => {
+				if (e.target === overlay) overlay.classList.remove('visible');
+			});
+		}
+		// force visibility even if CSS not yet applied
+		overlay.style.display = 'flex';
+		overlay.style.opacity = '0';
+		overlay.style.pointerEvents = 'none';
+		// allow transition on next frame
+		requestAnimationFrame(() => {
+			overlay.classList.add('visible');
+			overlay.style.opacity = '';
+			overlay.style.pointerEvents = '';
+		});
+	}
 
 	function showGlyphDetail(cell) {
 		if (!cell || !detailModal) return;
@@ -294,22 +345,19 @@ document.addEventListener('DOMContentLoaded', () => {
 			detailCharFallback.classList.add('d-none');
 		}
 
-		detailHex.textContent = hex;
-		detailDec.textContent = decVal;
-		detailPos.textContent = pos;
-			detailCharText.textContent = char;
-		if (detailDim) {
-			detailDim.textContent = dimText || '-';
-		}
+		if (detailHex) detailHex.textContent = hex;
+		if (detailDec) detailDec.textContent = decVal;
+		if (detailPos) detailPos.textContent = pos;
+		if (detailCharText) detailCharText.textContent = char;
+		if (detailDim) detailDim.textContent = dimText || '-';
+		if (detailUnicode) detailUnicode.textContent = formatUnicodeEscape(hex);
 
 		if (detailCopyBtn) {
-			detailCopyBtn.disabled = !char;
-			detailCopyBtn.innerHTML = '<i class="far fa-copy me-1"></i> Copy glyph';
+			detailCopyBtn.disabled = false;
+			detailCopyBtn.innerHTML = '<i class="fas fa-pen-nib me-1"></i> Draw';
 			detailCopyBtn.onclick = () => {
-				if (!char) return;
-				navigator.clipboard.writeText(char).then(() => {
-					showToast('Copied glyph');
-				});
+				showToast('Opening drawer prompt…', 'success', 800);
+				ensureDrawerPrompt('https://nhanaz.github.io/glyph-drawer/');
 			};
 		}
 
@@ -375,6 +423,22 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		detailModal.show();
+	}
+
+	if (detailMeta) {
+		detailMeta.addEventListener('click', (event) => {
+			const field = event.target.closest('.detail-field');
+			if (!field) return;
+			const targetId = field.getAttribute('data-copy-target');
+			if (!targetId) return;
+			const targetEl = document.getElementById(targetId);
+			const value = targetEl ? targetEl.textContent.trim() : '';
+			if (!value) return;
+			navigator.clipboard.writeText(value).then(() => {
+				const label = field.getAttribute('data-label') || 'value';
+				showToast(`Copied ${label}`);
+			});
+		});
 	}
 
 	if (glyphGrid) {
