@@ -206,7 +206,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	const vanillaPickerModal = vanillaPickerModalEl ? new bootstrap.Modal(vanillaPickerModalEl) : null;
 	const vanillaSearchInput = document.getElementById('vanillaSearchInput');
 	const vanillaCategorySelect = document.getElementById('vanillaCategorySelect');
-	const vanillaPageSizeSelect = document.getElementById('vanillaPageSize');
+	const vanillaPageSizeBtn = document.getElementById('vanillaPageSizeBtn');
+	const vanillaPageSizeMenu = document.getElementById('vanillaPageSizeMenu');
 	const vanillaPrevPage = document.getElementById('vanillaPrevPage');
 	const vanillaNextPage = document.getElementById('vanillaNextPage');
 	const vanillaPageInfo = document.getElementById('vanillaPageInfo');
@@ -215,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	let vanillaCategories = ['all'];
 	let vanillaFiltered = [];
 	let vanillaPage = 1;
-	let vanillaPageSize = 200;
+	let vanillaPageSizeValue = '36';
 	let clearConfirmTimer = null;
 	let replacePending = null;
 	let currentDetailCell = null;
@@ -304,9 +305,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		const decVal = typeof codePoint === 'number' ? codePoint.toString(10) : '';
 		const bg = cell.style.backgroundImage;
 		const originalBg = (cell.dataset && cell.dataset.originalBg) ? cell.dataset.originalBg : '';
-		const widthAttr = cell.getAttribute('data-width');
-		const heightAttr = cell.getAttribute('data-height');
-		let dimText = '';
+		const widthAttr = parseInt(cell.getAttribute('data-width'), 10) || 16;
+		const heightAttr = parseInt(cell.getAttribute('data-height'), 10) || 16;
+		let dimText = `${widthAttr}px x ${heightAttr}px`;
 		let downloadUrl = '';
 		let currentPreviewUrl = '';
 
@@ -316,26 +317,15 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (detailPreview && isTransparentCell) detailPreview.classList.add('transparent-state');
 			downloadUrl = resolvedImageUrl;
 			currentPreviewUrl = resolvedImageUrl;
-			detailImg.src = resolvedImageUrl;
-			detailImg.classList.remove('d-none');
-			detailCharFallback.classList.add('d-none');
-			// If dimensions exist as attributes, use them; otherwise try to read image natural size later
-			if (widthAttr && heightAttr) {
-				dimText = `${widthAttr}px x ${heightAttr}px`;
-			} else {
-				const probe = new Image();
-				probe.onload = function () {
-					dimText = `${probe.naturalWidth}px x ${probe.naturalHeight}px`;
-					if (detailDim) detailDim.textContent = dimText;
-				};
-				probe.src = resolvedImageUrl;
-			}
+			if (detailImg && detailImg.src !== resolvedImageUrl) detailImg.src = resolvedImageUrl;
+			if (detailImg) detailImg.classList.remove('d-none');
+			if (detailCharFallback) detailCharFallback.classList.add('d-none');
 		} else {
 			// Transparent state: generate a fully transparent PNG at tile size (if known)
 			if (detailPreview) detailPreview.classList.add('transparent-state');
 			const transparentCanvas = document.createElement('canvas');
-			transparentCanvas.width = widthAttr ? parseInt(widthAttr, 10) || 220 : 220;
-			transparentCanvas.height = heightAttr ? parseInt(heightAttr, 10) || 220 : 220;
+			transparentCanvas.width = widthAttr || 220;
+			transparentCanvas.height = heightAttr || 220;
 			downloadUrl = transparentCanvas.toDataURL('image/png');
 			currentPreviewUrl = downloadUrl;
 			dimText = `${transparentCanvas.width}px x ${transparentCanvas.height}px`;
@@ -709,39 +699,44 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	// Vanilla texture helpers
-	function setVanillaStatus(text) {
-		if (vanillaStatus) vanillaStatus.textContent = text;
+	function setVanillaStatus(text = '') {
+		if (!vanillaStatus) return;
+		vanillaStatus.textContent = text || '';
+		vanillaStatus.classList.toggle('d-none', !text);
 	}
 
-	// Vanilla list loader (local manifest only, no remote API). Always refresh manifest on load.
-	async function fetchVanillaList() {
-		localStorage.removeItem('vanillaTexturesCache'); // force refresh to avoid stale prefixed paths
-		setVanillaStatus('Loading vanilla manifest…');
+	// Vanilla list loader (local manifest only, no remote API). Lazy + cached to avoid jank.
+	async function fetchVanillaList(forceReload = false) {
 		try {
-			const resp = await fetch('vanilla-textures/manifest.json', { cache: 'reload' });
+			if (window.__vanillaPaths && !forceReload) return window.__vanillaPaths;
+
+			const raw = localStorage.getItem('vanillaTexturesCache');
+			if (raw && !forceReload) {
+				const cached = JSON.parse(raw);
+				const maxAge = 1000 * 60 * 60 * 24; // 24h
+				if (cached.timestamp && Date.now() - cached.timestamp < maxAge && Array.isArray(cached.paths)) {
+					let paths = cached.paths.map(p => p.startsWith('resource_pack/textures/') ? p.replace('resource_pack/textures/', '') : p);
+					window.__vanillaPaths = paths;
+					vanillaCategories = Array.from(new Set(paths.map(p => p.split('/')[0]))).sort();
+					setVanillaStatus('');
+					return paths;
+				}
+			}
+		} catch {}
+
+		setVanillaStatus('Loading vanilla textures...');
+		try {
+			const resp = await fetch('vanilla-textures/manifest.json', { cache: forceReload ? 'reload' : 'default' });
 			const data = await resp.json();
 			let paths = data.paths || [];
-			// Migration: strip resource_pack/textures/ prefix if present in older cache
 			paths = paths.map(p => p.startsWith('resource_pack/textures/') ? p.replace('resource_pack/textures/', '') : p);
 			window.__vanillaPaths = paths;
 			localStorage.setItem('vanillaTexturesCache', JSON.stringify({ timestamp: Date.now(), paths }));
 			vanillaCategories = Array.from(new Set(paths.map(p => p.split('/')[0]))).sort();
-			setVanillaStatus(`Loaded ${paths.length} textures (local).`);
+			setVanillaStatus('');
 			return paths;
 		} catch (err) {
 			setVanillaStatus('Failed to load local manifest.');
-			try {
-				const raw = localStorage.getItem('vanillaTexturesCache');
-				if (raw) {
-					const cached = JSON.parse(raw);
-					let paths = cached.paths || [];
-					paths = paths.map(p => p.startsWith('resource_pack/textures/') ? p.replace('resource_pack/textures/', '') : p);
-					window.__vanillaPaths = paths;
-					vanillaCategories = Array.from(new Set(paths.map(p => p.split('/')[0]))).sort();
-					setVanillaStatus(`Using cached list (${paths.length}).`);
-					return paths;
-				}
-			} catch {}
 			return [];
 		}
 	}
@@ -796,12 +791,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	// Preload vanilla cache on first open (non-blocking)
-	fetchVanillaList(false).then(paths => {
-		vanillaPaths = paths || [];
-		populateCategories();
-	});
-
 	// Vanilla picker modal interactions
 	function populateCategories() {
 		if (!vanillaCategorySelect) return;
@@ -827,54 +816,83 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		// pagination
 		const total = vanillaFiltered.length;
-		let pageSize = vanillaPageSize;
-		if (vanillaPageSizeSelect && vanillaPageSizeSelect.value === 'all') {
-			pageSize = total || 1;
-		}
+		const requestedAll = vanillaPageSizeValue === 'all';
+		let pageSize = requestedAll ? (total || 1) : (parseInt(vanillaPageSizeValue, 10) || 36);
 		const totalPages = Math.max(1, Math.ceil(total / pageSize));
 		if (vanillaPage > totalPages) vanillaPage = totalPages;
 		const start = (vanillaPage - 1) * pageSize;
 		const pageItems = vanillaFiltered.slice(start, start + pageSize);
 
 		vanillaGrid.innerHTML = '';
-		if (vanillaPickerStatus) vanillaPickerStatus.textContent = `Showing ${pageItems.length} of ${total} textures`;
+		if (vanillaPickerStatus) vanillaPickerStatus.textContent = 'Rendering...';
 		if (vanillaPageInfo) vanillaPageInfo.textContent = `Page ${vanillaPage}/${totalPages}`;
 
-		pageItems.forEach(path => {
-			const card = document.createElement('div');
-			card.className = 'vanilla-tile';
-			card.dataset.path = path;
-			const img = document.createElement('img');
-			img.loading = 'lazy';
-			img.crossOrigin = 'anonymous';
-			img.src = `./vanilla-textures/${path}`;
-			const label = document.createElement('div');
-			label.className = 'vanilla-name';
-			label.textContent = path.split('/').slice(-1)[0].replace('.png','');
-			card.appendChild(img);
-			card.appendChild(label);
-			card.addEventListener('click', () => {
-				const previewSrc = img.src;
-				const previewImg = new Image();
-				previewImg.crossOrigin = 'anonymous';
-				previewImg.onload = function () {
-					queueReplaceCandidate(previewImg, previewSrc, detailImg && detailImg.src);
-					if (vanillaPickerModal) vanillaPickerModal.hide();
-				};
-				previewImg.onerror = function () {
-					if (vanillaPickerStatus) vanillaPickerStatus.textContent = 'Failed to load texture.';
-				};
-				previewImg.src = previewSrc;
-			});
-			vanillaGrid.appendChild(card);
-		});
+		const chunkSize = 40;
+		let i = 0;
+		const schedule = window.requestIdleCallback || window.requestAnimationFrame;
+
+		const renderChunk = () => {
+			const fragment = document.createDocumentFragment();
+			let count = 0;
+			while (i < pageItems.length && count < chunkSize) {
+				const path = pageItems[i++];
+				const card = document.createElement('div');
+				card.className = 'vanilla-tile';
+				card.dataset.path = path;
+				const img = document.createElement('img');
+				img.loading = 'lazy';
+				img.crossOrigin = 'anonymous';
+				img.src = `./vanilla-textures/${path}`;
+				const label = document.createElement('div');
+				label.className = 'vanilla-name';
+				label.textContent = path.split('/').slice(-1)[0].replace('.png','');
+				card.appendChild(img);
+				card.appendChild(label);
+				card.addEventListener('click', () => {
+					const previewSrc = img.src;
+					const previewImg = new Image();
+					previewImg.crossOrigin = 'anonymous';
+					previewImg.onload = function () {
+						queueReplaceCandidate(previewImg, previewSrc, detailImg && detailImg.src);
+						if (vanillaPickerModal) vanillaPickerModal.hide();
+					};
+					previewImg.onerror = function () {
+						if (vanillaPickerStatus) vanillaPickerStatus.textContent = 'Failed to load texture.';
+					};
+					previewImg.src = previewSrc;
+				});
+				fragment.appendChild(card);
+				count++;
+			}
+
+			if (count) vanillaGrid.appendChild(fragment);
+
+			if (vanillaPickerStatus) {
+				const done = Math.min(i, pageItems.length);
+				if (done >= pageItems.length) {
+					vanillaPickerStatus.textContent = `Showing ${pageItems.length} of ${total} textures`;
+				} else {
+					vanillaPickerStatus.textContent = `Loading ${done}/${pageItems.length}...`;
+				}
+			}
+
+			if (i < pageItems.length) {
+				schedule(renderChunk);
+			}
+		};
+
+		renderChunk();
 	}
 
 	if (vanillaOpenPickerBtn) {
 		vanillaOpenPickerBtn.addEventListener('click', async () => {
 			if (!vanillaPaths || !vanillaPaths.length) {
-				const list = await fetchVanillaList(false);
-				vanillaPaths = list || [];
+				if (window.__vanillaPaths && window.__vanillaPaths.length) {
+					vanillaPaths = window.__vanillaPaths;
+				} else {
+					const list = await fetchVanillaList(false);
+					vanillaPaths = list || [];
+				}
 				populateCategories();
 			}
 			vanillaPage = 1;
@@ -901,13 +919,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
-	if (vanillaPageSizeSelect) {
-		vanillaPageSizeSelect.addEventListener('change', () => {
-			const val = vanillaPageSizeSelect.value;
-			vanillaPageSize = val === 'all' ? Number.MAX_SAFE_INTEGER : parseInt(val, 10) || 200;
-			vanillaPage = 1;
-			const searchVal = vanillaSearchInput ? vanillaSearchInput.value : '';
-			renderVanillaGrid(searchVal);
+	if (vanillaPageSizeMenu && vanillaPageSizeBtn) {
+		vanillaPageSizeMenu.querySelectorAll('[data-size]').forEach(item => {
+			item.addEventListener('click', (e) => {
+				const val = e.currentTarget.getAttribute('data-size') || '36';
+				vanillaPageSizeValue = val;
+				const labelEl = vanillaPageSizeBtn.querySelector('.vanilla-page-size-label');
+				if (labelEl) labelEl.textContent = val === 'all' ? 'Show all' : val;
+				vanillaPage = 1;
+				const searchVal = vanillaSearchInput ? vanillaSearchInput.value : '';
+				renderVanillaGrid(searchVal);
+			});
 		});
 	}
 
@@ -920,9 +942,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		});
 		vanillaNextPage.addEventListener('click', () => {
-			const pageSize = vanillaPageSizeSelect && vanillaPageSizeSelect.value === 'all'
-				? Number.MAX_SAFE_INTEGER
-				: (parseInt(vanillaPageSizeSelect?.value || '200', 10) || 200);
+			const pageSize = (vanillaPageSizeValue === 'all')
+				? (vanillaFiltered.length || 1)
+				: (parseInt(vanillaPageSizeValue || '36', 10) || 36);
 			const totalPages = Math.max(1, Math.ceil((vanillaFiltered.length || 0) / pageSize));
 			if (vanillaPage < totalPages) {
 				vanillaPage++;

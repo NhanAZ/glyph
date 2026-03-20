@@ -75,16 +75,25 @@ function applyCachedGlyph(entry) {
 
 function renderGlyphs() {
 	const glyphOutput = document.getElementById('glyph-output');
-	const glyphs = glyphOutput.querySelectorAll('div');
+	if (!glyphOutput) return;
 
-	glyphs.forEach(glyph => {
-		const backgroundImage = glyph.style.backgroundImage;
-		if (backgroundImage) {
+	const glyphs = Array.from(glyphOutput.querySelectorAll('div'));
+	const themeKey = isDarkMode ? 'dark' : 'light';
+	const schedule = window.requestIdleCallback || window.requestAnimationFrame;
+	let index = 0;
+
+	const processChunk = () => {
+		const start = performance.now();
+		for (; index < glyphs.length && performance.now() - start < 8; index++) {
+			const glyph = glyphs[index];
+			const bgUrl = glyph.dataset.originalBg ||
+				(glyph.style.backgroundImage ? glyph.style.backgroundImage.slice(5, -2) : '');
+
+			// Skip if nothing to process or already tinted for the current theme
+			if (!bgUrl || (glyph.dataset.tintTheme === themeKey && glyph.dataset.displayBg)) continue;
+
 			const img = new Image();
 			img.onload = function () {
-				// Always keep a reference to the original (transparent) tile so downloads stay clean
-				const originalUrl = glyph.dataset.originalBg || backgroundImage.slice(5, -2); // strip url("")
-
 				const canvas = document.createElement('canvas');
 				const ctx = canvas.getContext('2d');
 				canvas.width = img.width;
@@ -95,32 +104,33 @@ function renderGlyphs() {
 				const data = imageData.data;
 
 				for (let i = 0; i < data.length; i += 4) {
-					if (data[i + 3] === 0) { // If pixel is transparent
-						if (isDarkMode) {
-							data[i] = 50;	 // R
-							data[i + 1] = 50; // G
-							data[i + 2] = 50; // B
-							data[i + 3] = 128; // A (semi-transparent)
-						} else {
-							data[i] = 200;	// R
-							data[i + 1] = 200; // G
-							data[i + 2] = 200; // B
-							data[i + 3] = 64;  // A (semi-transparent)
-						}
+					if (data[i + 3] === 0) {
+						const tint = isDarkMode ? 50 : 200;
+						const alpha = isDarkMode ? 128 : 64;
+						data[i] = tint;
+						data[i + 1] = tint;
+						data[i + 2] = tint;
+						data[i + 3] = alpha;
 					}
 				}
 
 				ctx.putImageData(imageData, 0, 0);
 				const processedUrl = canvas.toDataURL();
 				glyph.style.backgroundImage = `url(${processedUrl})`;
-				glyph.dataset.originalBg = originalUrl;
+				glyph.dataset.originalBg = bgUrl;
 				glyph.dataset.displayBg = processedUrl;
+				glyph.dataset.tintTheme = themeKey;
 			};
 			img.crossOrigin = 'anonymous';
-			// Use the unmodified tile when present to avoid baking the checker tint into downloads
-			img.src = glyph.dataset.originalBg || backgroundImage.slice(5, -2);
+			img.src = bgUrl;
 		}
-	});
+
+		if (index < glyphs.length) {
+			schedule(processChunk);
+		}
+	};
+
+	processChunk();
 }
 
 function processGlyph(img, hexValue, options = {}) {
@@ -191,6 +201,13 @@ function processGlyph(img, hexValue, options = {}) {
 			label,
 			atlasDataUrl: currentAtlasDataUrl
 		});
+
+		// Prevent unbounded memory growth when users load many atlases
+		const cacheLimit = (typeof GLYPH_CACHE_LIMIT !== 'undefined') ? GLYPH_CACHE_LIMIT : 6;
+		if (glyphCache.size > cacheLimit) {
+			const oldestKey = glyphCache.keys().next().value;
+			glyphCache.delete(oldestKey);
+		}
 	}
 }
 

@@ -296,12 +296,18 @@
 					</div>
 					<div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
 						<label class="form-label mb-0 small text-secondary">Page size:</label>
-						<select id="vanillaPageSize" class="form-select form-select-sm" style="width: 120px;">
-							<option value="100">100</option>
-							<option value="200" selected>200</option>
-							<option value="500">500</option>
-							<option value="all">Show all</option>
-						</select>
+						<div class="dropdown vanilla-page-size">
+							<button class="btn btn-light btn-sm dropdown-toggle" type="button" id="vanillaPageSizeBtn" data-bs-toggle="dropdown" aria-expanded="false">
+								<span class="vanilla-page-size-label">36</span>
+							</button>
+							<ul class="dropdown-menu shadow-sm border-0 rounded-3" aria-labelledby="vanillaPageSizeBtn" id="vanillaPageSizeMenu">
+								<li><button class="dropdown-item" type="button" data-size="36">36</button></li>
+								<li><button class="dropdown-item" type="button" data-size="100">100</button></li>
+								<li><button class="dropdown-item" type="button" data-size="200">200</button></li>
+								<li><button class="dropdown-item" type="button" data-size="500">500</button></li>
+								<li><button class="dropdown-item" type="button" data-size="all">Show all</button></li>
+							</ul>
+						</div>
 						<div class="ms-auto d-flex align-items-center gap-2">
 							<button class="btn btn-sm btn-outline-secondary" id="vanillaPrevPage">&lt;</button>
 							<span id="vanillaPageInfo" class="small text-secondary">Page 1/1</span>

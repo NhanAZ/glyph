@@ -1,5 +1,6 @@
 // Constants
 const GRID = 16;
+const GLYPH_CACHE_LIMIT = 6;
 
 // Global variables
 let zoomWindow = null;
