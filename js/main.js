@@ -55,15 +55,13 @@ listen(getElement('glyphUpload'), 'change', async function () {
 	const file = this.files && this.files[0];
 	if (!file) return;
 
-	const fileNameRegex = /^glyph_([0-9A-F]{2})\.png$/i;
-	const match = file.name.match(fileNameRegex);
-	if (!match) {
-		alert('Invalid file name. Please use the format glyph_XX.png where XX is a hex value from 00 to FF.');
+	const hexValue = getGlyphPrefixFromFileName(file.name);
+	if (!hexValue) {
+		alert('Invalid file name. Use glyph_<HEX>.png with a prefix from 0 to 10FF.');
 		this.value = '';
 		return;
 	}
 
-	const hexValue = match[1].toUpperCase();
 	const label = getElement('uploadLabel');
 
 	try {

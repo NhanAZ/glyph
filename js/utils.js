@@ -90,6 +90,16 @@ function getGlyphPrefix(value, fallback = 'E0') {
 	return isValidGlyphPrefix(normalized) ? normalized : fallback;
 }
 
+function getGlyphPrefixFromFileName(fileName) {
+	const normalizedName = String(fileName || '')
+		.normalize('NFKC')
+		.replace(/\p{Cf}|\p{Variation_Selector}/gu, '')
+		.trim();
+	const match = normalizedName.match(/^glyph\s*_\s*([0-9A-F]{1,4})\s*\.png$/i);
+
+	return match ? getGlyphPrefix(match[1], null) : null;
+}
+
 async function loadPngFile(file, options = {}) {
 	const {
 		minWidth = 1,

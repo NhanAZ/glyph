@@ -5,8 +5,9 @@
 	"description": "Static client-side tools for Minecraft glyph atlases.",
 	"scripts": {
 		"check:syntax": "node --check js/state.js && node --check js/defaults.js && node --check js/utils.js && node --check js/converter.js && node --check js/zoom.js && node --check js/glyph.js && node --check js/main.js && node --check scripts/fetch-vanilla.js",
-		"lint": "eslint js scripts",
-		"check": "npm run check:syntax && npm run lint"
+		"lint": "eslint js scripts tests",
+		"test": "node --test tests/*.test.js",
+		"check": "npm run check:syntax && npm run lint && npm test"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.39.1",

@@ -19,6 +19,7 @@ const sharedAppGlobals = {
 	getBackgroundImageUrl: 'readonly',
 	getElement: 'readonly',
 	getGlyphPrefix: 'readonly',
+	getGlyphPrefixFromFileName: 'readonly',
 	glyphCache: 'readonly',
 	hideZoomWindow: 'readonly',
 	initializeGlyph: 'readonly',
@@ -60,7 +61,7 @@ export default [
 		}
 	},
 	{
-		files: ['scripts/**/*.js'],
+		files: ['scripts/**/*.js', 'tests/**/*.js'],
 		languageOptions: {
 			ecmaVersion: 'latest',
 			sourceType: 'commonjs',
