@@ -1,6 +1,5 @@
-// Utility functions
 const PNG_SIGNATURE = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
-let actionToastTimer = null;
+let toastTimer = null;
 
 function getElement(id) {
 	return document.getElementById(id);
@@ -46,7 +45,7 @@ function toggleDarkMode() {
 		isDarkMode ? 'fas fa-sun text-warning' : 'fas fa-moon'
 	);
 
-	if (typeof renderGlyphs === 'function') renderGlyphs();
+	renderGlyphs();
 }
 
 function setButtonContent(button, iconClassName, label = '') {
@@ -58,11 +57,11 @@ function setButtonContent(button, iconClassName, label = '') {
 	if (label) button.appendChild(document.createTextNode(` ${label}`));
 }
 
-function showActionToast(message, variant = 'success', duration = 1500) {
-	let toast = document.querySelector('.smart-tooltip');
+function showToast(message, variant = 'success', duration = 1500) {
+	let toast = document.querySelector('.action-toast');
 	if (!toast) {
 		toast = document.createElement('div');
-		toast.className = 'smart-tooltip';
+		toast.className = 'action-toast';
 		document.body.appendChild(toast);
 	}
 
@@ -73,8 +72,8 @@ function showActionToast(message, variant = 'success', duration = 1500) {
 	toast.style.top = '50px';
 	toast.style.position = 'fixed';
 
-	if (actionToastTimer) clearTimeout(actionToastTimer);
-	actionToastTimer = setTimeout(() => {
+	if (toastTimer) clearTimeout(toastTimer);
+	toastTimer = setTimeout(() => {
 		toast.classList.remove('visible', 'success');
 		toast.style.position = 'absolute';
 	}, duration);
@@ -172,7 +171,7 @@ async function copyText(text) {
 			await navigator.clipboard.writeText(value);
 			return;
 		} catch {
-			// Fall back for browsers that expose Clipboard API but deny permission.
+			// Use the legacy copy command when clipboard permission is denied.
 		}
 	}
 
@@ -203,12 +202,6 @@ function downloadUrl(url, fileName) {
 	return true;
 }
 
-/**
- * Utility to download a file from the browser
- * @param {string} content - File content
- * @param {string} fileName - Name of the file
- * @param {string} contentType - MIME type
- */
 function downloadFile(content, fileName, contentType) {
 	const file = new Blob([content], { type: contentType });
 	const objectUrl = URL.createObjectURL(file);

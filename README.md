@@ -1,59 +1,66 @@
 # Glyph Tools
 
-Single-page, client-only utilities for creating, inspecting, and editing 16×16 glyph atlases (PUA E000–E0FF, etc.) for Minecraft resource packs. No backend required—open the page and start.
+Static, client-side tools for creating and editing 16x16 Minecraft glyph atlases. The app has no backend.
 
 ## Features
-- Generate 256 characters from a HEX prefix (default E0); quick presets for `glyph_E0`, template grid, empty grid, and an E1 example.
-- Upload a full atlas named `glyph_XX.png`, or click any cell to inspect, copy, download its PNG, clear to transparent, replace with another PNG, or swap in a bundled vanilla texture.
-- Smart Converter: HEX ⇄ character/emoji with one-click copy.
-- Smart Export: download the current atlas PNG; copy the 256-character string; copy a reference map (hex, position, char); export JSON font provider and JSON metadata.
-- Quality-of-life: dark mode, mobile warning, adaptive vs fixed 16×16 grid, action tooltips/mini toasts.
-- Vanilla Texture Picker: reads a local manifest so you can drop in official textures quickly.
 
-## Quick start
-1) Use any modern browser.  
-2) Serve the folder statically to avoid CORS when loading `vanilla-textures/manifest.json`:
+- Generate a 256-character grid from a hexadecimal prefix such as `E0`.
+- Load the included template, empty atlas, or example atlas.
+- Upload a `glyph_XX.png` atlas and inspect, clear, replace, copy, or download individual cells.
+- Convert between hexadecimal code points and characters.
+- Export the current atlas, character rows, reference text, font JSON, or metadata JSON.
+- Replace a glyph with a bundled Minecraft texture.
+
+## Run locally
+
+Serve the repository over HTTP so the browser can load `vanilla-textures/manifest.json`.
+
 ```bash
 cd glyph
 python -m http.server 8000
-# or: npx serve .
 ```
-3) Open http://localhost:8000/ and enter a HEX prefix or upload `glyph_XX.png`.
 
-## Suggested workflow
-- Type HEX (E0, E1, …) to build the 256-cell grid; use **Grid Template**, **E1 Example**, or **Empty Grid** for quick presets.
-- Upload `glyph_XX.png` to replace the whole atlas (expects a 16×16 tile sheet).
-- Click a grid cell to open the detail modal: copy the character, download that PNG, clear to transparent, upload a replacement PNG, or pick a vanilla texture and apply immediately.
-- Use **Smart Export** to grab the atlas, the character string, or JSON outputs (`glyph_<hex>.json` and `glyph_<hex>_metadata.json`) for your resource pack.
+Open `http://localhost:8000/`.
 
-## Refreshing vanilla textures (optional)
-`scripts/fetch-vanilla.js` performs a shallow clone of `mojang/bedrock-samples`, sparsely checks out `resource_pack/textures`, and rebuilds `vanilla-textures/` plus `manifest.json`.
+You can also use another static file server, for example:
 
-Requirements: Node.js ≥ 18 and Git. Run:
+```bash
+npx serve .
+```
+
+## Refresh vanilla textures
+
+The repository already contains the texture files required by the picker. To refresh them, install Node.js 18 or newer and Git, then run:
+
 ```bash
 node scripts/fetch-vanilla.js
 ```
-This overwrites `vanilla-textures/` with the latest textures and regenerates the manifest for the picker.
 
-## Directory layout
-- `index.html` — main page wiring Bootstrap + Font Awesome + scripts.
-- `assets/css/` — application styling.
-- `assets/icons/` — favicon and web app manifest assets.
-- `assets/glyphs/` — preset atlases (`glyph_E0`, `glyph_E1_modified`, empty grid, template).
-- `js/` — logic: `main.js` (UI/exports/modal), `glyph.js` (atlas processing/cache), `converter.js`, `zoom.js`, `defaults.js`, `utils.js`, `state.js`.
-- `vanilla-textures/` — bundled vanilla textures + `manifest.json` for the picker; rebuildable via the script above.
-- `tests/fixtures/` — sample PNGs for manual testing.
-- `LICENSE` — GPL-3.0.
-
-## Deployment
-Static site: host the folder on GitHub Pages, Vercel static, S3, etc. Ensure `vanilla-textures/manifest.json` is served over HTTP(S) so the picker can load it.
+The script replaces `vanilla-textures/` with PNG files from
+[`Mojang/bedrock-samples`](https://github.com/Mojang/bedrock-samples/tree/main/resource_pack/textures)
+and regenerates `manifest.json`.
 
 ## Development checks
-Install the lightweight development dependencies and run syntax plus ESLint checks:
+
 ```bash
 npm install
 npm run check
 ```
 
+## Project layout
+
+- `index.html`: page markup and script loading order.
+- `assets/css/`: application styles.
+- `assets/icons/`: favicon and web app manifest files.
+- `assets/glyphs/`: built-in atlas presets.
+- `js/`: application code.
+- `scripts/`: maintenance scripts.
+- `tests/fixtures/`: PNG files for manual testing.
+- `vanilla-textures/`: bundled texture PNGs and the picker manifest.
+
 ## License
-GPL-3.0 (see `LICENSE`).
+
+The application source is licensed under GPL-3.0. See `LICENSE`.
+
+Files under `vanilla-textures/` come from Mojang's `bedrock-samples` repository and remain subject to the
+[Minecraft EULA](https://www.minecraft.net/eula).

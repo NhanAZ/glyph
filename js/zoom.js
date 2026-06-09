@@ -1,4 +1,3 @@
-// Zoom related functions
 function removeZoomEvents() {
 	const glyphOutput = getElement('glyph-output');
 	if (glyphOutput && glyphOutput.zoomHandlers) {
@@ -74,9 +73,7 @@ function updateZoomWindowContent(target, unicodeSize) {
 
 	const hexCode = target.getAttribute('data-hex');
 	const position = target.getAttribute('data-position');
-	const backgroundImageUrl = typeof getBackgroundImageUrl === 'function'
-		? getBackgroundImageUrl(target)
-		: '';
+	const backgroundImageUrl = getBackgroundImageUrl(target);
 
 	const zoomCanvas = zoomWindow.querySelector('canvas');
 	if (!zoomCanvas || !Number.isFinite(unicodeSize) || unicodeSize < 1) return;

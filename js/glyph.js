@@ -1,4 +1,3 @@
-// Glyph related functions
 function createGlyphCell({
 	char,
 	hexCode,
@@ -74,7 +73,7 @@ function setAtlasInfo(width, height, label) {
 	}
 }
 
-function Glyph(glyph = "E0") {
+function Glyph(glyph = 'E0') {
 	const normalizedGlyph = getGlyphPrefix(glyph, null);
 	const glyphOutput = getElement('glyph-output');
 	if (!normalizedGlyph || !glyphOutput) return false;
@@ -97,11 +96,9 @@ function Glyph(glyph = "E0") {
 
 	glyphOutput.replaceChildren(fragment);
 
-	if (typeof removeZoomEvents === 'function') {
-		removeZoomEvents();
-		zoomEnabled = false;
-		if (typeof hideZoomWindow === 'function') hideZoomWindow();
-	}
+	removeZoomEvents();
+	zoomEnabled = false;
+	hideZoomWindow();
 
 	setAtlasInfo(null, null, `${filename}.png`);
 	return true;
@@ -112,22 +109,21 @@ function initializeGlyph() {
 	if (!glyphOutput) return;
 
 	if (!glyphOutput.hasChildNodes()) {
-		if (typeof DEFAULT_GLYPHS !== 'undefined' && DEFAULT_GLYPHS["E0"]) {
+		if (DEFAULT_GLYPHS.E0) {
 			const img = new Image();
 			img.crossOrigin = 'anonymous';
-			img.onload = function() {
-				processGlyph(img, "E0", { cacheKey: "E0_DEFAULT", label: "glyph_E0.png" });
+			img.onload = function () {
+				processGlyph(img, 'E0', { cacheKey: 'E0_DEFAULT', label: 'glyph_E0.png' });
 			};
-			img.onerror = function() {
-				Glyph("E0");
+			img.onerror = function () {
+				Glyph('E0');
 			};
-			img.src = DEFAULT_GLYPHS["E0"];
+			img.src = DEFAULT_GLYPHS.E0;
 		} else {
-			Glyph("E0");
+			Glyph('E0');
 		}
 	}
 }
-
 
 function applyCachedGlyph(entry) {
 	const glyphOutput = getElement('glyph-output');
@@ -135,11 +131,9 @@ function applyCachedGlyph(entry) {
 
 	const cells = entry.cells.map(cell => cell.cloneNode(true));
 	glyphOutput.replaceChildren(...cells);
-	if (typeof removeZoomEvents === 'function') removeZoomEvents();
+	removeZoomEvents();
 	zoomEnabled = false;
-	if (typeof hideZoomWindow === 'function') {
-		hideZoomWindow();
-	}
+	hideZoomWindow();
 
 	currentAtlasDataUrl = entry.atlasDataUrl || null;
 	currentAtlasLabel = entry.label || currentAtlasLabel;
@@ -163,7 +157,6 @@ function renderGlyphs() {
 			const glyph = glyphs[index];
 			const bgUrl = getBackgroundImageUrl(glyph);
 
-			// Skip if nothing to process or already tinted for the current theme
 			if (!bgUrl || (glyph.dataset.tintTheme === themeKey && glyph.dataset.displayBg)) continue;
 
 			const img = new Image();
@@ -299,9 +292,9 @@ function processGlyph(img, hexValue, options = {}) {
 		}));
 	}
 
-	if (typeof removeZoomEvents === 'function') removeZoomEvents();
+	removeZoomEvents();
 	zoomEnabled = false;
-	if (typeof hideZoomWindow === 'function') hideZoomWindow();
+	hideZoomWindow();
 
 	glyphOutput.replaceChildren(fragment);
 	renderGlyphs();
@@ -320,9 +313,7 @@ function processGlyph(img, hexValue, options = {}) {
 			atlasDataUrl: currentAtlasDataUrl
 		});
 
-		// Prevent unbounded memory growth when users load many atlases
-		const cacheLimit = (typeof GLYPH_CACHE_LIMIT !== 'undefined') ? GLYPH_CACHE_LIMIT : 6;
-		if (glyphCache.size > cacheLimit) {
+		if (glyphCache.size > GLYPH_CACHE_LIMIT) {
 			const oldestKey = glyphCache.keys().next().value;
 			glyphCache.delete(oldestKey);
 		}
@@ -331,7 +322,6 @@ function processGlyph(img, hexValue, options = {}) {
 	return true;
 }
 
-// Clear a single glyph cell from the current atlas (makes it transparent) and update the cached atlas DataURL
 function clearAtlasTile(cell) {
 	return new Promise((resolve) => {
 		if (!currentAtlasDataUrl || !cell) {
@@ -352,7 +342,7 @@ function clearAtlasTile(cell) {
 			ctx.clearRect(tile.x, tile.y, tile.tileW, tile.tileH);
 
 			currentAtlasDataUrl = canvas.toDataURL('image/png');
-			glyphCache.clear(); // force regen next time to reflect cleared tile
+			glyphCache.clear();
 			setAtlasInfo(img.width, img.height, currentAtlasLabel || 'Atlas');
 			resolve(currentAtlasDataUrl);
 		};
@@ -361,7 +351,6 @@ function clearAtlasTile(cell) {
 	});
 }
 
-// Replace a single glyph cell with a provided image; updates atlas and cache
 function replaceAtlasTile(cell, newImage) {
 	return new Promise((resolve) => {
 		if (!currentAtlasDataUrl || !cell || !newImage) {

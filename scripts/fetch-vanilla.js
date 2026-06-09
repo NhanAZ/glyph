@@ -1,73 +1,84 @@
 #!/usr/bin/env node
-/**
- * Fetch Bedrock vanilla textures from mojang/bedrock-samples and generate a local manifest.
- * Strategy: shallow clone with sparse checkout of resource_pack/textures, then copy into
- * ./vanilla-textures preserving relative paths (e.g., blocks/stone.png). Produces manifest.json
- * with { paths: [ "blocks/stone.png", ... ] } for the picker.
- */
+
 const fs = require('fs');
-const path = require('path');
 const os = require('os');
-const { execSync } = require('child_process');
+const path = require('path');
+const { execFileSync } = require('child_process');
 
-const REPO = 'https://github.com/Mojang/bedrock-samples.git';
-const TEXTURE_DIR = 'resource_pack/textures';
-const OUTPUT_DIR = path.resolve(__dirname, '..', 'vanilla-textures');
-const MANIFEST = path.join(OUTPUT_DIR, 'manifest.json');
+const REPOSITORY = 'https://github.com/Mojang/bedrock-samples.git';
+const TEXTURE_DIRECTORY = 'resource_pack/textures';
+const OUTPUT_DIRECTORY = path.resolve(__dirname, '..', 'vanilla-textures');
+const MANIFEST_PATH = path.join(OUTPUT_DIRECTORY, 'manifest.json');
 
-function run(cmd, cwd) {
-  execSync(cmd, { stdio: 'inherit', cwd });
+function runGit(args, cwd) {
+	execFileSync('git', args, { cwd, stdio: 'inherit' });
 }
 
-function rimraf(target) {
-  if (fs.existsSync(target)) {
-    fs.rmSync(target, { recursive: true, force: true });
-  }
+function copyPngFiles(source, destination) {
+	fs.mkdirSync(destination, { recursive: true });
+
+	for (const entry of fs.readdirSync(source, { withFileTypes: true })) {
+		const sourcePath = path.join(source, entry.name);
+		const destinationPath = path.join(destination, entry.name);
+
+		if (entry.isDirectory()) {
+			copyPngFiles(sourcePath, destinationPath);
+		} else if (entry.isFile() && entry.name.toLowerCase().endsWith('.png')) {
+			fs.copyFileSync(sourcePath, destinationPath);
+		}
+	}
 }
 
-function copyDir(src, dest) {
-  fs.mkdirSync(dest, { recursive: true });
-  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-    const s = path.join(src, entry.name);
-    const d = path.join(dest, entry.name);
-    if (entry.isDirectory()) {
-      copyDir(s, d);
-    } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.png')) {
-      fs.copyFileSync(s, d);
-    }
-  }
-}
+function collectPngPaths(directory, baseDirectory) {
+	const paths = [];
 
-function collectPaths(dir, base) {
-  const results = [];
-  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    const full = path.join(dir, entry.name);
-    const rel = path.relative(base, full).replace(/\\/g, '/');
-    if (entry.isDirectory()) {
-      results.push(...collectPaths(full, base));
-    } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.png')) {
-      results.push(rel);
-    }
-  }
-  return results;
+	for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+		const fullPath = path.join(directory, entry.name);
+
+		if (entry.isDirectory()) {
+			paths.push(...collectPngPaths(fullPath, baseDirectory));
+		} else if (entry.isFile() && entry.name.toLowerCase().endsWith('.png')) {
+			paths.push(path.relative(baseDirectory, fullPath).replace(/\\/g, '/'));
+		}
+	}
+
+	return paths;
 }
 
 function main() {
-  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'vanilla-'));
-  console.log('Cloning textures to', temp);
-  run(`git clone --depth 1 --filter=blob:none --no-checkout ${REPO} .`, temp);
-  run(`git sparse-checkout init --cone`, temp);
-  run(`git sparse-checkout set ${TEXTURE_DIR}`, temp);
-  run(`git checkout`, temp);
+	const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'vanilla-textures-'));
 
-  const srcTextures = path.join(temp, TEXTURE_DIR);
-  rimraf(OUTPUT_DIR);
-  copyDir(srcTextures, OUTPUT_DIR);
+	try {
+		console.log('Downloading textures from Mojang/bedrock-samples...');
+		runGit(
+			['clone', '--depth', '1', '--filter=blob:none', '--no-checkout', REPOSITORY, '.'],
+			temporaryDirectory
+		);
+		runGit(['sparse-checkout', 'init', '--cone'], temporaryDirectory);
+		runGit(['sparse-checkout', 'set', TEXTURE_DIRECTORY], temporaryDirectory);
+		runGit(['checkout'], temporaryDirectory);
 
-  const paths = collectPaths(OUTPUT_DIR, OUTPUT_DIR).sort();
-  fs.writeFileSync(MANIFEST, JSON.stringify({ paths }, null, 2), 'utf8');
+		const sourceDirectory = path.join(temporaryDirectory, TEXTURE_DIRECTORY);
+		const revision = execFileSync('git', ['rev-parse', 'HEAD'], {
+			cwd: temporaryDirectory,
+			encoding: 'utf8'
+		}).trim();
 
-  console.log(`Copied ${paths.length} textures into ${OUTPUT_DIR}`);
+		fs.rmSync(OUTPUT_DIRECTORY, { recursive: true, force: true });
+		copyPngFiles(sourceDirectory, OUTPUT_DIRECTORY);
+
+		const paths = collectPngPaths(OUTPUT_DIRECTORY, OUTPUT_DIRECTORY).sort();
+		const manifest = {
+			source: REPOSITORY,
+			revision,
+			paths
+		};
+		fs.writeFileSync(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+
+		console.log(`Copied ${paths.length} textures into ${OUTPUT_DIRECTORY}`);
+	} finally {
+		fs.rmSync(temporaryDirectory, { recursive: true, force: true });
+	}
 }
 
 main();

@@ -1,6 +1,5 @@
-/* Apple-inspired Modern Design Variables */
+/* Theme variables */
 :root {
-	/* Light Mode */
 	--bg-app: #f6f7fb;
 	--bg-card: #ffffff;
 	--bg-plate: #eef1f7;
@@ -22,7 +21,6 @@
 }
 
 .dark-mode {
-	/* Dark Mode */
 	--bg-app: #0b1020;
 	--bg-card: #111827;
 	--bg-plate: #0f1624;
@@ -39,7 +37,7 @@
 	--glow-accent: 0 18px 48px rgba(96, 165, 250, 0.35);
 }
 
-/* Global Styles */
+/* Base */
 body {
 	background-color: var(--bg-app);
 	color: var(--text-primary);
@@ -133,8 +131,8 @@ h1, h2, h3, h4, h5 {
 	gap: 0.5rem;
 }
 
-/* Apple Cards */
-.apple-card {
+/* Cards */
+.app-card {
 	background: var(--bg-card);
 	border-radius: var(--radius-card);
 	box-shadow: var(--shadow-card);
@@ -145,7 +143,7 @@ h1, h2, h3, h4, h5 {
 	overflow: hidden;
 }
 
-.apple-card:hover {
+.app-card:hover {
 	box-shadow: var(--shadow-flyout);
 	border-color: rgba(59, 130, 246, 0.22);
 }
@@ -210,8 +208,8 @@ h1, h2, h3, h4, h5 {
 	color: #c1162d;
 }
 
-/* Smart Export */
-.smart-export-btn {
+/* Export menu */
+.export-btn {
 	background: rgba(255,255,255,0.9);
 	border: 1px solid var(--border-light);
 	box-shadow: none;
@@ -219,12 +217,12 @@ h1, h2, h3, h4, h5 {
 	backdrop-filter: blur(10px);
 }
 
-.dark-mode .smart-export-btn {
+.dark-mode .export-btn {
 	background: linear-gradient(135deg, rgba(40,40,42,0.9), rgba(32,32,34,0.9));
 	box-shadow: 0 10px 34px rgba(0,0,0,0.45);
 }
 
-.smart-export-btn:hover {
+.export-btn:hover {
 	color: var(--text-primary);
 	box-shadow: 0 16px 48px rgba(0,0,0,0.1);
 }
@@ -280,7 +278,7 @@ h1, h2, h3, h4, h5 {
 }
 
 /* Inputs */
-.apple-input {
+.app-input {
 	width: 100%;
 	background-color: var(--bg-input);
 	border: 1.5px solid transparent;
@@ -294,27 +292,27 @@ h1, h2, h3, h4, h5 {
 	box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
 }
 
-.apple-input::placeholder {
+.app-input::placeholder {
 	color: var(--text-secondary);
 	opacity: 0.7;
 }
 
-.apple-input:hover {
+.app-input:hover {
 	background-color: var(--bg-input-hover);
 }
 
-.apple-input:focus {
+.app-input:focus {
 	background-color: var(--bg-card);
 	border-color: var(--accent);
 	box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.16);
 	transform: translateY(-1px);
 }
 
-.dark-mode .apple-input:focus {
+.dark-mode .app-input:focus {
 	box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.2);
 }
 
-.output-wrapper .apple-input {
+.output-wrapper .app-input {
 	padding-right: 3.1rem;
 }
 
@@ -324,7 +322,7 @@ h1, h2, h3, h4, h5 {
 	transform: translateY(-50%);
 }
 
-/* Segmented Control */
+/* Segmented control */
 .segmented-control {
 	display: flex;
 	background-color: var(--bg-input);
@@ -354,7 +352,7 @@ h1, h2, h3, h4, h5 {
 	box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-/* Upload Zone */
+/* Upload area */
 .upload-zone {
 	background: rgba(255, 255, 255, 0.75);
 	border: 1.5px dashed var(--border-light);
@@ -409,7 +407,7 @@ h1, h2, h3, h4, h5 {
 	white-space: nowrap;
 }
 
-/* Icon Buttons */
+/* Icon buttons */
 .icon-button {
 	background: var(--bg-input);
 	color: var(--text-primary);
@@ -496,7 +494,7 @@ h1, h2, h3, h4, h5 {
 	display: none;
 }
 
-/* Glyph Output Styles */
+/* Glyph grid */
 #glyph-output {
 	--glyph-columns: 16;
 	display: grid;
@@ -541,7 +539,7 @@ h1, h2, h3, h4, h5 {
 	border: 1px dashed var(--border-light);
 }
 
-/* Fix: Do not clip corners if an image is loaded (to preserve pixel art accuracy) */
+/* Preserve pixel-art corners when a cell contains an image. */
 #glyph-output div[style*="background-image"] {
     border-radius: 0 !important;
 }
@@ -549,8 +547,8 @@ h1, h2, h3, h4, h5 {
     border-radius: 4px !important;
 }
 
-/* Smart Global Tooltip */
-.smart-tooltip {
+/* Toast */
+.action-toast {
 	position: absolute;
 	background-color: rgba(0, 0, 0, 0.78);
 	backdrop-filter: blur(6px);
@@ -570,18 +568,18 @@ h1, h2, h3, h4, h5 {
     line-height: 1.4;
 }
 
-.smart-tooltip.visible {
+.action-toast.visible {
 	opacity: 1;
 	transform: translate(-50%, 0) scale(1);
 }
 
-.smart-tooltip.success {
+.action-toast.success {
 	background-color: var(--accent);
 	color: white;
 	transform: translate(-50%, 0) scale(1.05);
 }
 
-/* Footer Links */
+/* Footer links */
 .footer-links a {
 	color: var(--text-secondary);
 	text-decoration: none;
@@ -594,7 +592,7 @@ h1, h2, h3, h4, h5 {
 	color: var(--accent);
 }
 
-/* Zoom Window */
+/* Zoom window */
 .zoom-window {
 	border-radius: 12px;
 	background: var(--bg-card);
@@ -625,7 +623,7 @@ h1, h2, h3, h4, h5 {
 	border: 1px solid var(--border-light);
 }
 
-/* Glyph Detail Modal */
+/* Glyph detail */
 .detail-preview {
 	background: var(--bg-card);
 	width: 100%;
@@ -788,7 +786,7 @@ h1, h2, h3, h4, h5 {
 	word-break: break-word;
 }
 
-/* Modal polish */
+/* Glyph detail dialog */
 .modal-content {
 	background: var(--bg-card);
 	border: 1px solid var(--border-light);
@@ -1068,7 +1066,7 @@ h1, h2, h3, h4, h5 {
 	width: calc(100% - 2rem);
 }
 
-.dark-mode .apple-card {
+.dark-mode .app-card {
 	background: var(--bg-card);
 }
 
@@ -1106,7 +1104,7 @@ h1, h2, h3, h4, h5 {
 	border-color: var(--border-light);
 }
 
-/* Responsive Adjustments */
+/* Responsive layout */
 @media (max-width: 1023px) {
 	.app-container {
 		padding-inline: clamp(1rem, 5vw, 2rem);
@@ -1124,7 +1122,7 @@ h1, h2, h3, h4, h5 {
 		font-size: clamp(0.95rem, 1.4vw, 1.05rem);
 	}
 
-	.apple-card {
+	.app-card {
 		padding: clamp(1.05rem, 3vw, 1.35rem);
 	}
 
@@ -1157,7 +1155,7 @@ h1, h2, h3, h4, h5 {
 		margin-top: 0.25rem;
 	}
 
-	.apple-card {
+	.app-card {
 		padding: 1rem 1.1rem;
 	}
 

@@ -23,7 +23,7 @@
 	<header class="d-flex justify-content-between align-items-center mb-5 mt-2 header-bar">
 		<div>
 			<h1 class="fw-bold mb-0 title-text">Glyph Tools 🇻🇳</h1>
-			<p class="text-secondary subtitle-text mb-0 mt-1">Smart, intelligent character tools</p>
+			<p class="text-secondary subtitle-text mb-0 mt-1">Minecraft glyph atlas tools</p>
 		</div>
 		<div class="d-flex align-items-center gap-2 header-actions">
 			<button class="icon-button glass-btn d-md-none nav-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,7 +36,7 @@
 	</header>
 
 	<div class="collapse d-md-none mobile-nav" id="mobileNav">
-		<div class="apple-card p-3 mobile-nav-card">
+		<div class="app-card p-3 mobile-nav-card">
 			<nav class="mobile-nav-links">
 				<a href="https://github.com/NhanAZ/glyph" target="_blank" rel="noopener noreferrer" class="d-flex align-items-center gap-2">
 					<i class="fab fa-github"></i> GitHub
@@ -59,7 +59,7 @@
 		<div class="row g-4 mb-4">
 			<!-- Glyph Generator Card -->
 			<div class="col-md-6">
-				<div class="apple-card h-100 p-4">
+				<div class="app-card h-100 p-4">
 					<h2 class="h5 fw-bold mb-4">Glyph Generator</h2>
 					
 					<div class="mb-4">
@@ -68,7 +68,7 @@
 							<span id="inputValidation" class="text-danger small d-none">Invalid hex</span>
 						</label>
 						<div class="input-wrapper">
-							<input type="text" id="glyph-input" class="apple-input text-uppercase font-monospace fw-bold" placeholder="E0 used by default" maxlength="4">
+							<input type="text" id="glyph-input" class="app-input text-uppercase font-monospace fw-bold" placeholder="E0 used by default" maxlength="4">
 						</div>
 						<div id="defaultImageHint" class="text-primary fw-medium mt-2 d-none hint-link">
 							<i class="fas fa-download me-1"></i> Load default <span id="hintHex">E0</span> image
@@ -99,20 +99,20 @@
 
 			<!-- Converter Card -->
 			<div class="col-md-6">
-				<div class="apple-card h-100 p-4">
-					<h2 class="h5 fw-bold mb-4">Smart Converter</h2>
+				<div class="app-card h-100 p-4">
+					<h2 class="h5 fw-bold mb-4">Converter</h2>
 					
 					<div class="mb-4">
 						<label class="form-label detail-text mb-2 d-flex justify-content-between">
 							<span>INPUT</span>
 						</label>
-						<input type="text" id="converterInput" class="apple-input" placeholder="Paste hex or emoji here...">
+						<input type="text" id="converterInput" class="app-input" placeholder="Paste hex or emoji here...">
 					</div>
 					
 					<div class="mb-3 position-relative">
 						<label class="form-label detail-text mb-2">OUTPUT</label>
 						<div class="output-wrapper position-relative">
-							<input type="text" id="converterOutput" class="apple-input" readonly placeholder="Result appears here">
+							<input type="text" id="converterOutput" class="app-input" readonly placeholder="Result appears here">
 							<button id="copyButton" class="icon-button position-absolute copy-button" title="Copy to clipboard">
 								<i class="far fa-copy"></i>
 							</button>
@@ -128,7 +128,7 @@
 		<!-- Grid Card -->
 		<div class="row">
 			<div class="col-12">
-				<div class="apple-card p-4">
+				<div class="app-card p-4">
 					<div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-4">
 						<div class="d-flex align-items-center gap-2 flex-wrap">
 							<h2 class="h5 fw-bold mb-0">Generated Output</h2>
@@ -138,8 +138,8 @@
 							</button>
 						</div>
 						<div class="dropdown">
-							<button class="btn btn-sm smart-export-btn rounded-pill px-3 py-2 fw-medium dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-								<i class="fas fa-file-export me-1"></i> Smart Export
+							<button class="btn btn-sm export-btn rounded-pill px-3 py-2 fw-medium dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+								<i class="fas fa-file-export me-1"></i> Export
 							</button>
 							<ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2" aria-labelledby="exportDropdown">
 								<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadAtlas"><i class="fas fa-image me-2 text-primary"></i> Download Atlas PNG</button></li>

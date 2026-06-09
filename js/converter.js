@@ -1,4 +1,3 @@
-// Conversion functions
 function convertHexToEmoji(input) {
 	const output = getElement('converterOutput');
 	const successMsg = getElement('successMsg');
@@ -11,7 +10,7 @@ function convertHexToEmoji(input) {
 			throw new RangeError('Invalid Unicode code point.');
 		}
 		output.value = String.fromCodePoint(codePoint);
-		successMsg.textContent = 'Converted successfully!';
+		successMsg.textContent = 'Converted successfully.';
 		successMsg.classList.remove('d-none');
 	} catch {
 		errorMsg.textContent = 'Invalid Unicode code point.';
@@ -26,7 +25,7 @@ function convertEmojiToHex(input) {
 
 	const hexValue = input.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
 	output.value = `0x${hexValue}`;
-	successMsg.textContent = 'Converted successfully!';
+	successMsg.textContent = 'Converted successfully.';
 	successMsg.classList.remove('d-none');
 }
 
@@ -47,7 +46,6 @@ function convert() {
 		return;
 	}
 
-	// 1. Explicit hex prefix
 	let isExplicitHex = false;
 	if (/^(0x|u\+|U\+)/i.test(input)) {
 		isExplicitHex = true;

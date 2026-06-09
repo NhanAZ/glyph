@@ -1,4 +1,3 @@
-// Event listeners
 window.addEventListener('load', initializeGlyph);
 
 const glyphInputElement = getElement('glyph-input');
@@ -11,7 +10,6 @@ listen(glyphInputElement, 'input', function () {
 	const hintHex = getElement('hintHex');
 	if (!glyphSuccessMsg || !glyphErrorMsg) return;
 
-	// Clear upload input when hex changes manually.
 	const glyphUpload = getElement('glyphUpload');
 	if (glyphUpload) glyphUpload.value = '';
 	const label = getElement('uploadLabel');
@@ -24,14 +22,13 @@ listen(glyphInputElement, 'input', function () {
 
 	if (isValidGlyphPrefix(glyphInput)) {
 		Glyph(glyphInput);
-		glyphSuccessMsg.textContent = 'Glyph generated successfully!';
+		glyphSuccessMsg.textContent = 'Glyph generated successfully.';
 		glyphSuccessMsg.classList.remove('d-none');
 		glyphErrorMsg.classList.add('d-none');
 		if (validationMsg) validationMsg.classList.add('d-none');
 		this.classList.remove('is-invalid');
 		renderGlyphs();
 
-		// Detect E0 or E1 to offer default image load.
 		if ((glyphInput === 'E0' || glyphInput === 'E1') && hintMsg && hintHex) {
 			hintHex.textContent = glyphInput;
 			hintMsg.classList.remove('d-none');
@@ -51,7 +48,6 @@ listen(glyphInputElement, 'input', function () {
 listen(getElement('copyButton'), 'click', copyOutput);
 listen(getElement('converterInput'), 'input', convert);
 
-// Optional: auto copy when clicking the output text box directly (low friction).
 listen(getElement('converterOutput'), 'click', copyOutput);
 listen(getElement('darkModeToggle'), 'click', toggleDarkMode);
 
@@ -77,7 +73,7 @@ listen(getElement('glyphUpload'), 'change', async function () {
 			requireSquare: true,
 			dimensionMultiple: GRID
 		});
-		if (typeof updateTimer !== 'undefined') clearTimeout(updateTimer);
+		clearTimeout(updateTimer);
 		if (!processGlyph(image, hexValue, { label: file.name })) {
 			throw new Error('The atlas could not be processed.');
 		}
@@ -90,7 +86,7 @@ listen(getElement('glyphUpload'), 'change', async function () {
 
 		const hintMsg = getElement('defaultImageHint');
 		if (hintMsg) hintMsg.classList.add('d-none');
-		showActionToast('Grid Updated!', 'success', 2000);
+		showToast('Grid updated', 'success', 2000);
 	} catch (error) {
 		this.value = '';
 		if (label) {
@@ -108,7 +104,6 @@ window.addEventListener('scroll', function () {
 	}
 });
 
-// Smart Tooltip & Copy Logic
 document.addEventListener('DOMContentLoaded', () => {
 	const mobileAlert = getElement('mobileAlert');
 	const glyphGrid = getElement('glyph-output');
@@ -158,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
-	// Glyph detail modal (click to inspect + copy)
+	// Glyph detail dialog.
 	const modalApi = window.bootstrap && window.bootstrap.Modal;
 	const detailModalEl = getElement('glyphDetailModal');
 	const detailModal = detailModalEl && modalApi ? new modalApi(detailModalEl) : null;
@@ -200,10 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	let vanillaRenderId = 0;
 	let replacePending = null;
 	let currentDetailCell = null;
-
-	function showToast(message, variant = 'success', duration = 1500) {
-		showActionToast(message, variant, duration);
-	}
+	const vanillaCacheTtl = 24 * 60 * 60 * 1000;
 
 	function formatUnicodeEscape(hexValue) {
 		if (!hexValue) return '-';
@@ -252,15 +244,8 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (e.target === overlay) overlay.classList.remove('visible');
 			});
 		}
-		// force visibility even if CSS not yet applied
-		overlay.style.display = 'flex';
-		overlay.style.opacity = '0';
-		overlay.style.pointerEvents = 'none';
-		// allow transition on next frame
 		requestAnimationFrame(() => {
 			overlay.classList.add('visible');
-			overlay.style.opacity = '';
-			overlay.style.pointerEvents = '';
 		});
 	}
 
@@ -295,7 +280,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (detailImg) detailImg.classList.remove('d-none');
 			if (detailCharFallback) detailCharFallback.classList.add('d-none');
 		} else {
-			// Transparent state: generate a fully transparent PNG at tile size (if known)
 			if (detailPreview) detailPreview.classList.add('transparent-state');
 			const transparentCanvas = document.createElement('canvas');
 			transparentCanvas.width = widthAttr || 220;
@@ -321,7 +305,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			detailCopyBtn.disabled = false;
 			setButtonContent(detailCopyBtn, 'fas fa-pen-nib me-1', 'Draw');
 			detailCopyBtn.onclick = () => {
-				showToast('Opening drawer prompt…', 'success', 800);
 				ensureDrawerPrompt('https://nhanaz.github.io/glyph-drawer/');
 			};
 		}
@@ -339,24 +322,19 @@ document.addEventListener('DOMContentLoaded', () => {
 			detailClearBtn.disabled = false;
 			setButtonContent(detailClearBtn, 'fas fa-eraser me-1', 'Clear to transparent');
 			detailClearBtn.onclick = () => {
-				// perform clear immediately
 				cell.style.backgroundImage = '';
 				cell.style.backgroundSize = '';
 				cell.classList.add('transparent');
-				if (cell.dataset) {
-					cell.dataset.originalBg = '';
-					cell.dataset.displayBg = '';
-					delete cell.dataset.pendingTintTheme;
-					delete cell.dataset.tintTheme;
-				}
-				// keep width/height attributes so we can map back to atlas
-				// update modal view
+				cell.dataset.originalBg = '';
+				cell.dataset.displayBg = '';
+				delete cell.dataset.pendingTintTheme;
+				delete cell.dataset.tintTheme;
+
 				const clearedCanvas = document.createElement('canvas');
 				const tileW = widthAttr || 220;
 				const tileH = heightAttr || 220;
 				clearedCanvas.width = tileW;
 				clearedCanvas.height = tileH;
-				// leave fully transparent; no glyph drawing to avoid tofu box
 				const clearedUrl = clearedCanvas.toDataURL('image/png');
 				if (detailImg) {
 					detailImg.src = clearedUrl;
@@ -378,10 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 				showToast('Cleared to transparent');
 
-				// update atlas source (if any) to keep Download Atlas in sync
-				if (typeof clearAtlasTile === 'function') {
-					clearAtlasTile(cell).then(() => {});
-				}
+				void clearAtlasTile(cell);
 			};
 		}
 
@@ -421,10 +396,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function loadPreset(assetKey, hex, cacheKey, labelText) {
-		const source = typeof DEFAULT_GLYPHS !== 'undefined' ? DEFAULT_GLYPHS[assetKey] : '';
+		const source = DEFAULT_GLYPHS[assetKey];
 		if (!source || !isValidGlyphPrefix(hex)) return false;
 
-		if (typeof updateTimer !== 'undefined') clearTimeout(updateTimer);
+		clearTimeout(updateTimer);
 		const image = new Image();
 		image.crossOrigin = 'anonymous';
 		image.onload = () => {
@@ -445,7 +420,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		return true;
 	}
 
-	// Hint click logic
 	const hintMsg = getElement('defaultImageHint');
 	if (hintMsg) {
 		hintMsg.addEventListener('click', () => {
@@ -459,7 +433,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
-	// Quick Load Template & Example logic
 	const btnLoadTemplate = getElement('btnLoadTemplate');
 	if (btnLoadTemplate) {
 		btnLoadTemplate.addEventListener('click', () => {
@@ -509,7 +482,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		return rows;
 	}
 
-	// Smart Export Logic
 	const btnCopyAll = getElement('btnCopyAll');
 	if (btnCopyAll) {
 		btnCopyAll.addEventListener('click', () => {
@@ -520,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 
 			copyText(rows.join('\n')).then(() => {
-				showToast(`Copied ${getGlyphCells().length} Glyphs!`, 'success', 2000);
+				showToast(`Copied ${getGlyphCells().length} glyphs`, 'success', 2000);
 			}).catch(() => {
 				showToast('Unable to access the clipboard.', 'error');
 			});
@@ -530,11 +502,11 @@ document.addEventListener('DOMContentLoaded', () => {
 	const btnDownloadAtlas = getElement('btnDownloadAtlas');
 	if (btnDownloadAtlas) {
 		btnDownloadAtlas.addEventListener('click', () => {
-			if (typeof currentAtlasDataUrl !== 'undefined' && currentAtlasDataUrl) {
+			if (currentAtlasDataUrl) {
 				const startHex = getCurrentGlyphPrefix();
 				const fileName = `glyph_${startHex.toLowerCase()}.png`;
 				downloadUrl(currentAtlasDataUrl, fileName);
-				showToast('Atlas downloaded!');
+				showToast('Atlas downloaded');
 			} else {
 				showToast('No atlas image loaded', 'error');
 			}
@@ -580,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			});
 
 			copyText(result.trim()).then(() => {
-				showToast('Reference Copied!', 'success', 2000);
+				showToast('Reference copied', 'success', 2000);
 			}).catch(() => {
 				showToast('Unable to access the clipboard.', 'error');
 			});
@@ -614,7 +586,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
-	// Vanilla texture helpers
 	function setVanillaStatus(text = '') {
 		if (!vanillaStatus) return;
 		vanillaStatus.textContent = text || '';
@@ -652,7 +623,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		return normalizedPaths;
 	}
 
-	// Vanilla list loader (local manifest only, no remote API). Lazy + cached to avoid jank.
 	async function fetchVanillaList(forceReload = false) {
 		try {
 			if (Array.isArray(window.__vanillaPaths) && !forceReload) {
@@ -663,9 +633,8 @@ document.addEventListener('DOMContentLoaded', () => {
 			const raw = localStorage.getItem('vanillaTexturesCache');
 			if (raw && !forceReload) {
 				const cached = JSON.parse(raw);
-				const maxAge = 1000 * 60 * 60 * 24; // 24h
 				const age = Date.now() - Number(cached.timestamp);
-				if (age >= 0 && age < maxAge && Array.isArray(cached.paths)) {
+				if (age >= 0 && age < vanillaCacheTtl && Array.isArray(cached.paths)) {
 					const paths = updateVanillaPathState(cached.paths);
 					if (paths.length) {
 						setVanillaStatus('');
@@ -710,51 +679,48 @@ document.addEventListener('DOMContentLoaded', () => {
 		const { img } = replacePending;
 		const cell = currentDetailCell;
 		const hex = cell.getAttribute('data-hex') || '';
-		if (typeof replaceAtlasTile === 'function') {
-			replaceAtlasTile(cell, img).then((res) => {
-				const tileUrl = res && res.tileUrl;
-				const tileW = res && res.tileW;
-				const tileH = res && res.tileH;
-				if (tileUrl) {
-					cell.style.backgroundImage = `url("${tileUrl}")`;
-					cell.style.backgroundSize = '100% 100%';
-					cell.classList.remove('transparent');
-					if (cell.dataset) {
-						cell.dataset.originalBg = tileUrl;
-						cell.dataset.displayBg = '';
-						delete cell.dataset.pendingTintTheme;
-						delete cell.dataset.tintTheme;
-					}
-					if (detailPreview) detailPreview.classList.remove('transparent-state');
-					if (tileW) cell.setAttribute('data-width', tileW);
-					if (tileH) cell.setAttribute('data-height', tileH);
-					// refresh modal preview
-					if (detailImg) {
-						detailImg.src = tileUrl;
-						detailImg.classList.remove('d-none');
-					}
-					if (detailCharFallback) detailCharFallback.classList.add('d-none');
-					if (detailDim) detailDim.textContent = tileW && tileH ? `${tileW}px x ${tileH}px` : detailDim.textContent;
-					// update download button to new tile
-					if (detailDownloadBtn) {
-						const fileName = `glyph_${hex.replace(/^0x/i, '').toLowerCase() || 'char'}.png`;
-						detailDownloadBtn.disabled = false;
-						detailDownloadBtn.onclick = () => {
-							downloadUrl(tileUrl, fileName);
-						};
-					}
-					showToast('Glyph replaced');
-				} else {
-					showToast('Load an atlas before replacing a glyph.', 'error');
+		replaceAtlasTile(cell, img).then((result) => {
+			const tileUrl = result && result.tileUrl;
+			const tileW = result && result.tileW;
+			const tileH = result && result.tileH;
+			if (tileUrl) {
+				cell.style.backgroundImage = `url("${tileUrl}")`;
+				cell.style.backgroundSize = '100% 100%';
+				cell.classList.remove('transparent');
+				cell.dataset.originalBg = tileUrl;
+				cell.dataset.displayBg = '';
+				delete cell.dataset.pendingTintTheme;
+				delete cell.dataset.tintTheme;
+				if (detailPreview) detailPreview.classList.remove('transparent-state');
+				if (tileW) cell.setAttribute('data-width', tileW);
+				if (tileH) cell.setAttribute('data-height', tileH);
+				if (detailImg) {
+					detailImg.src = tileUrl;
+					detailImg.classList.remove('d-none');
 				}
-				replacePending = null;
-				if (beforeAfterWrap) beforeAfterWrap.classList.add('d-none');
-				if (detailImg) detailImg.classList.remove('d-none');
-			});
-		}
+				if (detailCharFallback) detailCharFallback.classList.add('d-none');
+				if (detailDim) {
+					detailDim.textContent = tileW && tileH
+						? `${tileW}px x ${tileH}px`
+						: detailDim.textContent;
+				}
+				if (detailDownloadBtn) {
+					const fileName = `glyph_${hex.replace(/^0x/i, '').toLowerCase() || 'char'}.png`;
+					detailDownloadBtn.disabled = false;
+					detailDownloadBtn.onclick = () => {
+						downloadUrl(tileUrl, fileName);
+					};
+				}
+				showToast('Glyph replaced');
+			} else {
+				showToast('Load an atlas before replacing a glyph.', 'error');
+			}
+			replacePending = null;
+			if (beforeAfterWrap) beforeAfterWrap.classList.add('d-none');
+			if (detailImg) detailImg.classList.remove('d-none');
+		});
 	}
 
-	// Vanilla picker modal interactions
 	function populateCategories() {
 		if (!vanillaCategorySelect) return;
 		const cats = ['all', ...vanillaCategories];
@@ -777,7 +743,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			return matchText && matchCat;
 		});
 
-		// pagination
 		const total = vanillaFiltered.length;
 		const requestedAll = vanillaPageSizeValue === 'all';
 		const pageSize = requestedAll
@@ -867,12 +832,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	if (vanillaOpenPickerBtn) {
 		vanillaOpenPickerBtn.addEventListener('click', async () => {
-			if (!vanillaPaths || !vanillaPaths.length) {
+			if (!vanillaPaths.length) {
 				if (Array.isArray(window.__vanillaPaths) && window.__vanillaPaths.length) {
 					vanillaPaths = updateVanillaPathState(window.__vanillaPaths);
 				} else {
-					const list = await fetchVanillaList(false);
-					vanillaPaths = list || [];
+					vanillaPaths = await fetchVanillaList(false);
 				}
 				populateCategories();
 			}
@@ -882,7 +846,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 			vanillaPage = 1;
 			renderVanillaGrid('');
-			if (vanillaPickerStatus) vanillaPickerStatus.textContent = 'Click a texture to apply immediately.';
+			if (vanillaPickerStatus) vanillaPickerStatus.textContent = 'Click a texture to apply it.';
 			if (vanillaPickerModal) vanillaPickerModal.show();
 		});
 	}
@@ -929,7 +893,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		vanillaNextPage.addEventListener('click', () => {
 			const pageSize = (vanillaPageSizeValue === 'all')
 				? (vanillaFiltered.length || 1)
-				: (parseInt(vanillaPageSizeValue || '36', 10) || 36);
+				: (Number.parseInt(vanillaPageSizeValue || '36', 10) || 36);
 			const totalPages = Math.max(1, Math.ceil((vanillaFiltered.length || 0) / pageSize));
 			if (vanillaPage < totalPages) {
 				vanillaPage++;
@@ -939,7 +903,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
-	// Upload PNG action (from unified dropdown)
 	if (actionUploadPng && detailReplaceInput) {
 		actionUploadPng.addEventListener('click', () => {
 			detailReplaceInput.value = '';

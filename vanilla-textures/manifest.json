@@ -1,4 +1,6 @@
 {
+  "source": "https://github.com/Mojang/bedrock-samples.git",
+  "revision": "46d817108cc218bfb4f6e8b93debf4d438eacadb",
   "paths": [
     "blocks/acacia_shelf.png",
     "blocks/acacia_trapdoor.png",
