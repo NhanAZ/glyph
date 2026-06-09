@@ -37,11 +37,12 @@ This overwrites `vanilla-textures/` with the latest textures and regenerates the
 
 ## Directory layout
 - `index.html` — main page wiring Bootstrap + Font Awesome + scripts.
-- `styles.css` — Apple-inspired styling with dark mode.
+- `assets/css/` — application styling.
+- `assets/icons/` — favicon and web app manifest assets.
+- `assets/glyphs/` — preset atlases (`glyph_E0`, `glyph_E1_modified`, empty grid, template).
 - `js/` — logic: `main.js` (UI/exports/modal), `glyph.js` (atlas processing/cache), `converter.js`, `zoom.js`, `defaults.js`, `utils.js`, `state.js`.
-- `RP/font/` — preset atlases (`glyph_E0`, `glyph_E1_modified`, empty grid, template).
 - `vanilla-textures/` — bundled vanilla textures + `manifest.json` for the picker; rebuildable via the script above.
-- `glyph-for-test/` — sample PNGs for quick testing.
+- `tests/fixtures/` — sample PNGs for manual testing.
 - `LICENSE` — GPL-3.0.
 
 ## Deployment
