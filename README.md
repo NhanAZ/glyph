@@ -47,5 +47,12 @@ This overwrites `vanilla-textures/` with the latest textures and regenerates the
 ## Deployment
 Static site: host the folder on GitHub Pages, Vercel static, S3, etc. Ensure `vanilla-textures/manifest.json` is served over HTTP(S) so the picker can load it.
 
+## Development checks
+Install the lightweight development dependencies and run syntax plus ESLint checks:
+```bash
+npm install
+npm run check
+```
+
 ## License
 GPL-3.0 (see `LICENSE`).

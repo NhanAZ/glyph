@@ -1,7 +1,7 @@
 // Zoom related functions
 function removeZoomEvents() {
-	const glyphOutput = document.getElementById('glyph-output');
-	if (glyphOutput.zoomHandlers) {
+	const glyphOutput = getElement('glyph-output');
+	if (glyphOutput && glyphOutput.zoomHandlers) {
 		glyphOutput.removeEventListener('mouseover', glyphOutput.zoomHandlers.mouseover);
 		glyphOutput.removeEventListener('mousemove', glyphOutput.zoomHandlers.mousemove);
 		glyphOutput.removeEventListener('mouseout', glyphOutput.zoomHandlers.mouseout);
@@ -10,10 +10,12 @@ function removeZoomEvents() {
 }
 
 function addZoomEvents(unicodeSize) {
-	const glyphOutput = document.getElementById('glyph-output');
+	const glyphOutput = getElement('glyph-output');
+	if (!glyphOutput || !Number.isFinite(unicodeSize) || unicodeSize < 1) return;
+	removeZoomEvents();
 
 	function zoomMouseoverHandler(e) {
-		const target = e.target.closest('div[data-hex]');
+		const target = e.target instanceof Element ? e.target.closest('div[data-hex]') : null;
 		if (target && zoomEnabled) {
 			showZoomWindow(unicodeSize);
 			updateZoomWindowContent(target, unicodeSize);
@@ -21,7 +23,7 @@ function addZoomEvents(unicodeSize) {
 	}
 
 	function zoomMousemoveHandler(e) {
-		const target = e.target.closest('div[data-hex]');
+		const target = e.target instanceof Element ? e.target.closest('div[data-hex]') : null;
 		if (target && zoomWindow && zoomEnabled) {
 			clearTimeout(updateTimer);
 			updateTimer = setTimeout(() => {
@@ -31,7 +33,8 @@ function addZoomEvents(unicodeSize) {
 	}
 
 	function zoomMouseoutHandler(e) {
-		if (!e.relatedTarget || !e.relatedTarget.closest('#glyph-output')) {
+		const relatedTarget = e.relatedTarget instanceof Element ? e.relatedTarget : null;
+		if (!relatedTarget || !relatedTarget.closest('#glyph-output')) {
 			hideZoomWindow();
 		}
 	}
@@ -48,6 +51,7 @@ function addZoomEvents(unicodeSize) {
 }
 
 function updateZoomWindowPosition(e) {
+	if (!zoomWindow || !e) return;
 	const padding = 20;
 	let left = e.pageX + padding;
 	let top = e.pageY + padding;
@@ -70,15 +74,19 @@ function updateZoomWindowContent(target, unicodeSize) {
 
 	const hexCode = target.getAttribute('data-hex');
 	const position = target.getAttribute('data-position');
-	const backgroundImage = target.style.backgroundImage;
+	const backgroundImageUrl = typeof getBackgroundImageUrl === 'function'
+		? getBackgroundImageUrl(target)
+		: '';
 
 	const zoomCanvas = zoomWindow.querySelector('canvas');
+	if (!zoomCanvas || !Number.isFinite(unicodeSize) || unicodeSize < 1) return;
 	const zoomCtx = zoomCanvas.getContext('2d');
+	if (!zoomCtx) return;
 	zoomCtx.imageSmoothingEnabled = false;
 
 	zoomCtx.clearRect(0, 0, zoomCanvas.width, zoomCanvas.height);
 
-	if (backgroundImage) {
+	if (backgroundImageUrl) {
 		const img = new Image();
 		img.onload = function () {
 			const scale = Math.min(zoomCanvas.width / unicodeSize, zoomCanvas.height / unicodeSize);
@@ -92,11 +100,11 @@ function updateZoomWindowContent(target, unicodeSize) {
 			zoomCtx.drawImage(img, 0, 0, unicodeSize, unicodeSize,
 				offsetX, offsetY, scaledWidth, scaledHeight);
 		};
-		img.src = backgroundImage.slice(5, -2);
+		img.src = backgroundImageUrl;
 	}
 
 	const info = zoomWindow.querySelector('.zoom-info');
-	info.textContent = `Hex: ${hexCode} - Position: ${position}`;
+	if (info) info.textContent = `Hex: ${hexCode} - Position: ${position}`;
 }
 
 function showZoomWindow(unicodeSize) {
@@ -113,7 +121,7 @@ function hideZoomWindow() {
 	}
 }
 
-function createZoomWindow(unicodeSize) {
+function createZoomWindow() {
 	const zoomWindow = document.createElement('div');
 	zoomWindow.className = 'zoom-window';
 	zoomWindow.style.position = 'fixed';

@@ -1,8 +1,16 @@
-// Constants
-const GRID = 16;
-const GLYPH_CACHE_LIMIT = 6;
+// Shared configuration for the classic scripts loaded by index.html.
+const APP_CONFIG = Object.freeze({
+	gridSize: 16,
+	glyphCacheLimit: 6,
+	maxPngBytes: 16 * 1024 * 1024,
+	maxImageDimension: 8192,
+	maxImagePixels: 64 * 1024 * 1024
+});
 
-// Global variables
+const GRID = APP_CONFIG.gridSize;
+const GLYPH_CACHE_LIMIT = APP_CONFIG.glyphCacheLimit;
+
+// Shared runtime state. Keep cross-file globals declared here so ownership is clear.
 let zoomWindow = null;
 let updateTimer = null;
 let zoomEnabled = false;

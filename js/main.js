@@ -1,29 +1,28 @@
 // Event listeners
-window.onload = () => {
-	initializeGlyph();
-};
+window.addEventListener('load', initializeGlyph);
 
-document.getElementById('glyph-input').addEventListener('input', function () {
+const glyphInputElement = getElement('glyph-input');
+listen(glyphInputElement, 'input', function () {
 	let glyphInput = this.value.trim().toUpperCase();
-	const glyphSuccessMsg = document.getElementById('glyphSuccessMsg');
-	const glyphErrorMsg = document.getElementById('glyphErrorMsg');
-	const validationMsg = document.getElementById('inputValidation');
-	const hintMsg = document.getElementById('defaultImageHint');
-	const hintHex = document.getElementById('hintHex');
+	const glyphSuccessMsg = getElement('glyphSuccessMsg');
+	const glyphErrorMsg = getElement('glyphErrorMsg');
+	const validationMsg = getElement('inputValidation');
+	const hintMsg = getElement('defaultImageHint');
+	const hintHex = getElement('hintHex');
+	if (!glyphSuccessMsg || !glyphErrorMsg) return;
 
-	// Clear upload input when hex changes manually
-	document.getElementById('glyphUpload').value = '';
-	const label = document.getElementById('uploadLabel');
+	// Clear upload input when hex changes manually.
+	const glyphUpload = getElement('glyphUpload');
+	if (glyphUpload) glyphUpload.value = '';
+	const label = getElement('uploadLabel');
 	if (label) {
-		label.textContent = "Upload glyph_XX.png";
-		label.className = "text-secondary";
+		label.textContent = 'Upload glyph_XX.png';
+		label.className = 'text-secondary upload-label-text';
 	}
 
-	if (glyphInput === '') {
-		glyphInput = 'E0';
-	}
+	if (glyphInput === '') glyphInput = 'E0';
 
-	if (/^[A-F0-9]{1,4}$/.test(glyphInput)) {
+	if (isValidGlyphPrefix(glyphInput)) {
 		Glyph(glyphInput);
 		glyphSuccessMsg.textContent = 'Glyph generated successfully!';
 		glyphSuccessMsg.classList.remove('d-none');
@@ -32,15 +31,15 @@ document.getElementById('glyph-input').addEventListener('input', function () {
 		this.classList.remove('is-invalid');
 		renderGlyphs();
 
-		// Detect E0 or E1 to offer default image load
-		if ((glyphInput === "E0" || glyphInput === "E1") && hintMsg && hintHex) {
+		// Detect E0 or E1 to offer default image load.
+		if ((glyphInput === 'E0' || glyphInput === 'E1') && hintMsg && hintHex) {
 			hintHex.textContent = glyphInput;
 			hintMsg.classList.remove('d-none');
 		} else if (hintMsg) {
 			hintMsg.classList.add('d-none');
 		}
 	} else {
-		glyphErrorMsg.textContent = 'Please enter a valid hex value.';
+		glyphErrorMsg.textContent = 'Please enter a hex prefix from 0 to 10FF.';
 		glyphErrorMsg.classList.remove('d-none');
 		glyphSuccessMsg.classList.add('d-none');
 		if (validationMsg) validationMsg.classList.remove('d-none');
@@ -49,18 +48,15 @@ document.getElementById('glyph-input').addEventListener('input', function () {
 	}
 });
 
+listen(getElement('copyButton'), 'click', copyOutput);
+listen(getElement('converterInput'), 'input', convert);
 
+// Optional: auto copy when clicking the output text box directly (low friction).
+listen(getElement('converterOutput'), 'click', copyOutput);
+listen(getElement('darkModeToggle'), 'click', toggleDarkMode);
 
-document.getElementById('copyButton').addEventListener('click', copyOutput);
-document.getElementById('converterInput').addEventListener('input', convert);
-
-// Optional: auto copy when clicking the output text box directly (low friction)
-document.getElementById('converterOutput').addEventListener('click', copyOutput);
-
-document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
-
-document.getElementById('glyphUpload').addEventListener('change', function (e) {
-	const file = e.target.files[0];
+listen(getElement('glyphUpload'), 'change', async function () {
+	const file = this.files && this.files[0];
 	if (!file) return;
 
 	const fileNameRegex = /^glyph_([0-9A-F]{2})\.png$/i;
@@ -72,40 +68,37 @@ document.getElementById('glyphUpload').addEventListener('change', function (e) {
 	}
 
 	const hexValue = match[1].toUpperCase();
-	const label = document.getElementById('uploadLabel');
-	if (label) {
-		label.textContent = file.name;
-		label.className = "text-primary fw-bold";
-	}
+	const label = getElement('uploadLabel');
 
-	const reader = new FileReader();
-	reader.onload = function (event) {
-		const img = new Image();
-		img.onload = function () {
-			if (typeof updateTimer !== 'undefined') clearTimeout(updateTimer);
-			processGlyph(img, hexValue, { label: file.name });
-			
-			const hintMsg = document.getElementById('defaultImageHint');
-			if (hintMsg) hintMsg.classList.add('d-none');
-			
-			// Show success tooltip
-			const tooltip = document.querySelector('.smart-tooltip');
-			if (tooltip) {
-				tooltip.innerHTML = "Grid Updated!";
-				tooltip.classList.add('success', 'visible');
-				tooltip.style.left = "50%";
-				tooltip.style.top = "50px";
-				tooltip.style.position = "fixed";
-				
-				setTimeout(() => {
-					tooltip.classList.remove('success', 'visible');
-					tooltip.style.position = "absolute";
-				}, 2000);
-			}
-		};
-		img.src = event.target.result;
-	};
-	reader.readAsDataURL(file);
+	try {
+		const image = await loadPngFile(file, {
+			minWidth: GRID,
+			minHeight: GRID,
+			requireSquare: true,
+			dimensionMultiple: GRID
+		});
+		if (typeof updateTimer !== 'undefined') clearTimeout(updateTimer);
+		if (!processGlyph(image, hexValue, { label: file.name })) {
+			throw new Error('The atlas could not be processed.');
+		}
+
+		if (glyphInputElement) glyphInputElement.value = hexValue;
+		if (label) {
+			label.textContent = file.name;
+			label.className = 'text-primary fw-bold upload-label-text';
+		}
+
+		const hintMsg = getElement('defaultImageHint');
+		if (hintMsg) hintMsg.classList.add('d-none');
+		showActionToast('Grid Updated!', 'success', 2000);
+	} catch (error) {
+		this.value = '';
+		if (label) {
+			label.textContent = 'Upload glyph_XX.png';
+			label.className = 'text-secondary upload-label-text';
+		}
+		alert(error instanceof Error ? error.message : 'Unable to load the PNG atlas.');
+	}
 });
 
 window.addEventListener('scroll', function () {
@@ -117,17 +110,12 @@ window.addEventListener('scroll', function () {
 
 // Smart Tooltip & Copy Logic
 document.addEventListener('DOMContentLoaded', () => {
-	const mobileAlert = document.getElementById('mobileAlert');
-	const glyphGrid = document.getElementById('glyph-output');
-	const gridModeToggle = document.getElementById('gridModeToggle');
+	const mobileAlert = getElement('mobileAlert');
+	const glyphGrid = getElement('glyph-output');
+	const gridModeToggle = getElement('gridModeToggle');
 	const gridToggleLabel = gridModeToggle ? gridModeToggle.querySelector('.grid-toggle-label') : null;
-	const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
 	let gridMode = 'adaptive';
 	let mobileAlertTimer = null;
-	const themeVar = (name, fallback) => {
-		const val = getComputedStyle(document.body).getPropertyValue(name);
-		return val && val.trim() ? val.trim() : fallback;
-	};
 
 	function applyGridMode(mode) {
 		if (!glyphGrid) return;
@@ -141,12 +129,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function checkScreenSize() {
+		if (!mobileAlert) return;
 		if (window.innerWidth < 768) {
 			mobileAlert.style.display = 'block';
 			if (mobileAlertTimer) clearTimeout(mobileAlertTimer);
 			mobileAlertTimer = setTimeout(() => {
-				if (window.bootstrap && bootstrap.Alert) {
-					const alertInstance = bootstrap.Alert.getOrCreateInstance(mobileAlert);
+				if (window.bootstrap && window.bootstrap.Alert) {
+					const alertInstance = window.bootstrap.Alert.getOrCreateInstance(mobileAlert);
 					alertInstance.close();
 				} else {
 					mobileAlert.style.display = 'none';
@@ -161,14 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	window.addEventListener('resize', checkScreenSize);
 	applyGridMode(gridMode);
 
-	// Minimal tooltip container (used only for action confirmations)
-	let smartTooltip = document.querySelector('.smart-tooltip');
-	if (!smartTooltip) {
-		smartTooltip = document.createElement('div');
-		smartTooltip.className = 'smart-tooltip';
-		document.body.appendChild(smartTooltip);
-	}
-
 	if (gridModeToggle && glyphGrid) {
 		gridModeToggle.addEventListener('click', () => {
 			gridMode = gridMode === 'adaptive' ? 'fixed' : 'adaptive';
@@ -178,95 +159,92 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	// Glyph detail modal (click to inspect + copy)
-	const detailModalEl = document.getElementById('glyphDetailModal');
-	const detailModal = detailModalEl ? new bootstrap.Modal(detailModalEl) : null;
-	const detailImg = document.getElementById('glyphDetailImage');
-	const detailCharFallback = document.getElementById('glyphDetailChar');
-	const detailHex = document.getElementById('glyphDetailHex');
-	const detailDec = document.getElementById('glyphDetailDec');
-	const detailPos = document.getElementById('glyphDetailPos');
-	const detailCharText = document.getElementById('glyphDetailCharText');
-	const detailDim = document.getElementById('glyphDetailDim');
-	const detailUnicode = document.getElementById('glyphDetailUnicode');
+	const modalApi = window.bootstrap && window.bootstrap.Modal;
+	const detailModalEl = getElement('glyphDetailModal');
+	const detailModal = detailModalEl && modalApi ? new modalApi(detailModalEl) : null;
+	const detailImg = getElement('glyphDetailImage');
+	const detailCharFallback = getElement('glyphDetailChar');
+	const detailHex = getElement('glyphDetailHex');
+	const detailDec = getElement('glyphDetailDec');
+	const detailPos = getElement('glyphDetailPos');
+	const detailCharText = getElement('glyphDetailCharText');
+	const detailDim = getElement('glyphDetailDim');
+	const detailUnicode = getElement('glyphDetailUnicode');
 	const detailPreview = document.querySelector('.detail-preview');
-	const detailCopyBtn = document.getElementById('glyphDetailCopyBtn');
-	const detailDownloadBtn = document.getElementById('glyphDetailDownloadBtn');
-	const detailClearBtn = document.getElementById('glyphDetailClearBtn');
-	const detailReplaceInput = document.getElementById('glyphDetailReplaceInput');
-	const actionUploadPng = document.getElementById('actionUploadPng');
-	const actionVanillaPicker = document.getElementById('actionVanillaPicker');
-	const beforeAfterWrap = document.getElementById('glyphBeforeAfter');
-	const beforeImg = document.getElementById('glyphBeforeImg');
-	const afterImg = document.getElementById('glyphAfterImg');
-	const vanillaStatus = document.getElementById('vanillaStatus');
+	const detailCopyBtn = getElement('glyphDetailCopyBtn');
+	const detailDownloadBtn = getElement('glyphDetailDownloadBtn');
+	const detailClearBtn = getElement('glyphDetailClearBtn');
+	const detailReplaceInput = getElement('glyphDetailReplaceInput');
+	const actionUploadPng = getElement('actionUploadPng');
+	const actionVanillaPicker = getElement('actionVanillaPicker');
+	const beforeAfterWrap = getElement('glyphBeforeAfter');
+	const vanillaStatus = getElement('vanillaStatus');
 	const vanillaOpenPickerBtn = actionVanillaPicker;
-	const vanillaPickerStatus = document.getElementById('vanillaPickerStatus');
-	const vanillaGrid = document.getElementById('vanillaGrid');
-	const vanillaPickerModalEl = document.getElementById('vanillaPickerModal');
-	const vanillaPickerModal = vanillaPickerModalEl ? new bootstrap.Modal(vanillaPickerModalEl) : null;
-	const vanillaSearchInput = document.getElementById('vanillaSearchInput');
-	const vanillaCategorySelect = document.getElementById('vanillaCategorySelect');
-	const vanillaPageSizeBtn = document.getElementById('vanillaPageSizeBtn');
-	const vanillaPageSizeMenu = document.getElementById('vanillaPageSizeMenu');
-	const vanillaPrevPage = document.getElementById('vanillaPrevPage');
-	const vanillaNextPage = document.getElementById('vanillaNextPage');
-	const vanillaPageInfo = document.getElementById('vanillaPageInfo');
+	const vanillaPickerStatus = getElement('vanillaPickerStatus');
+	const vanillaGrid = getElement('vanillaGrid');
+	const vanillaPickerModalEl = getElement('vanillaPickerModal');
+	const vanillaPickerModal = vanillaPickerModalEl && modalApi ? new modalApi(vanillaPickerModalEl) : null;
+	const vanillaSearchInput = getElement('vanillaSearchInput');
+	const vanillaCategorySelect = getElement('vanillaCategorySelect');
+	const vanillaPageSizeBtn = getElement('vanillaPageSizeBtn');
+	const vanillaPageSizeMenu = getElement('vanillaPageSizeMenu');
+	const vanillaPrevPage = getElement('vanillaPrevPage');
+	const vanillaNextPage = getElement('vanillaNextPage');
+	const vanillaPageInfo = getElement('vanillaPageInfo');
 	const detailMeta = document.querySelector('.detail-meta');
 	let vanillaPaths = [];
 	let vanillaCategories = ['all'];
 	let vanillaFiltered = [];
 	let vanillaPage = 1;
 	let vanillaPageSizeValue = '36';
-	let clearConfirmTimer = null;
+	let vanillaRenderId = 0;
 	let replacePending = null;
 	let currentDetailCell = null;
 
 	function showToast(message, variant = 'success', duration = 1500) {
-		if (!smartTooltip) return;
-		smartTooltip.innerHTML = message;
-		smartTooltip.classList.toggle('success', variant === 'success');
-		smartTooltip.classList.add('visible');
-		smartTooltip.style.left = "50%";
-		smartTooltip.style.top = "50px";
-		smartTooltip.style.position = "fixed";
-		setTimeout(() => {
-			smartTooltip.classList.remove('visible', 'success');
-			smartTooltip.style.position = "absolute";
-		}, duration);
+		showActionToast(message, variant, duration);
 	}
-
-	function resetReplaceButton() {}
 
 	function formatUnicodeEscape(hexValue) {
 		if (!hexValue) return '-';
 		const clean = hexValue.toString().trim().replace(/^0x/i, '');
 		if (!clean || !/^[0-9A-Fa-f]+$/.test(clean)) return '-';
-		return `\\u{0x${clean.toUpperCase()}}`;
+		return `\\u{${clean.toUpperCase()}}`;
 	}
 
 	function ensureDrawerPrompt(url) {
-		let overlay = document.getElementById('drawerRedirectPrompt');
+		let overlay = getElement('drawerRedirectPrompt');
 		if (!overlay) {
 			overlay = document.createElement('div');
 			overlay.id = 'drawerRedirectPrompt';
 			overlay.className = 'drawer-redirect-overlay';
-			overlay.innerHTML = `
-				<div class="drawer-redirect-card">
-					<h6 class="mb-2 fw-bold">Open glyph drawer?</h6>
-					<p class="mb-3 text-secondary">You are about to open the dedicated glyph drawing page in a new tab.</p>
-					<div class="d-flex gap-2 flex-wrap">
-						<button type="button" class="btn btn-outline-secondary flex-fill drawer-cancel">Cancel</button>
-						<button type="button" class="btn btn-primary flex-fill drawer-confirm">Open drawer</button>
-					</div>
-				</div>
-			`;
+
+			const card = document.createElement('div');
+			card.className = 'drawer-redirect-card';
+			const title = document.createElement('h6');
+			title.className = 'mb-2 fw-bold';
+			title.textContent = 'Open glyph drawer?';
+			const description = document.createElement('p');
+			description.className = 'mb-3 text-secondary';
+			description.textContent = 'You are about to open the dedicated glyph drawing page in a new tab.';
+			const actions = document.createElement('div');
+			actions.className = 'd-flex gap-2 flex-wrap';
+			const cancelButton = document.createElement('button');
+			cancelButton.type = 'button';
+			cancelButton.className = 'btn btn-outline-secondary flex-fill drawer-cancel';
+			cancelButton.textContent = 'Cancel';
+			const confirmButton = document.createElement('button');
+			confirmButton.type = 'button';
+			confirmButton.className = 'btn btn-primary flex-fill drawer-confirm';
+			confirmButton.textContent = 'Open drawer';
+
+			actions.append(cancelButton, confirmButton);
+			card.append(title, description, actions);
+			overlay.appendChild(card);
 			document.body.appendChild(overlay);
 
-			const cancelBtn = overlay.querySelector('.drawer-cancel');
-			const confirmBtn = overlay.querySelector('.drawer-confirm');
-
-			if (cancelBtn) cancelBtn.addEventListener('click', () => overlay.classList.remove('visible'));
-			if (confirmBtn) confirmBtn.addEventListener('click', () => {
+			cancelButton.addEventListener('click', () => overlay.classList.remove('visible'));
+			confirmButton.addEventListener('click', () => {
 				window.open(url, '_blank', 'noopener');
 				overlay.classList.remove('visible');
 			});
@@ -301,22 +279,18 @@ document.addEventListener('DOMContentLoaded', () => {
 		const hex = cell.getAttribute('data-hex') || '';
 		const pos = cell.getAttribute('data-position') || '';
 		const char = cell.getAttribute('data-char') || '';
-		const codePoint = char.codePointAt(0);
+		const codePoint = char ? char.codePointAt(0) : null;
 		const decVal = typeof codePoint === 'number' ? codePoint.toString(10) : '';
-		const bg = cell.style.backgroundImage;
-		const originalBg = (cell.dataset && cell.dataset.originalBg) ? cell.dataset.originalBg : '';
-		const widthAttr = parseInt(cell.getAttribute('data-width'), 10) || 16;
-		const heightAttr = parseInt(cell.getAttribute('data-height'), 10) || 16;
+		const widthAttr = Number.parseInt(cell.getAttribute('data-width'), 10) || 16;
+		const heightAttr = Number.parseInt(cell.getAttribute('data-height'), 10) || 16;
 		let dimText = `${widthAttr}px x ${heightAttr}px`;
-		let downloadUrl = '';
-		let currentPreviewUrl = '';
+		let glyphDownloadUrl = '';
 
-		const resolvedImageUrl = originalBg || (bg ? bg.slice(5, -2) : '');
+		const resolvedImageUrl = getBackgroundImageUrl(cell);
 
 		if (resolvedImageUrl) {
 			if (detailPreview && isTransparentCell) detailPreview.classList.add('transparent-state');
-			downloadUrl = resolvedImageUrl;
-			currentPreviewUrl = resolvedImageUrl;
+			glyphDownloadUrl = resolvedImageUrl;
 			if (detailImg && detailImg.src !== resolvedImageUrl) detailImg.src = resolvedImageUrl;
 			if (detailImg) detailImg.classList.remove('d-none');
 			if (detailCharFallback) detailCharFallback.classList.add('d-none');
@@ -326,13 +300,14 @@ document.addEventListener('DOMContentLoaded', () => {
 			const transparentCanvas = document.createElement('canvas');
 			transparentCanvas.width = widthAttr || 220;
 			transparentCanvas.height = heightAttr || 220;
-			downloadUrl = transparentCanvas.toDataURL('image/png');
-			currentPreviewUrl = downloadUrl;
+			glyphDownloadUrl = transparentCanvas.toDataURL('image/png');
 			dimText = `${transparentCanvas.width}px x ${transparentCanvas.height}px`;
 
-			detailImg.src = downloadUrl;
-			detailImg.classList.remove('d-none');
-			detailCharFallback.classList.add('d-none');
+			if (detailImg) {
+				detailImg.src = glyphDownloadUrl;
+				detailImg.classList.remove('d-none');
+			}
+			if (detailCharFallback) detailCharFallback.classList.add('d-none');
 		}
 
 		if (detailHex) detailHex.textContent = hex;
@@ -344,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		if (detailCopyBtn) {
 			detailCopyBtn.disabled = false;
-			detailCopyBtn.innerHTML = '<i class="fas fa-pen-nib me-1"></i> Draw';
+			setButtonContent(detailCopyBtn, 'fas fa-pen-nib me-1', 'Draw');
 			detailCopyBtn.onclick = () => {
 				showToast('Opening drawer prompt…', 'success', 800);
 				ensureDrawerPrompt('https://nhanaz.github.io/glyph-drawer/');
@@ -352,21 +327,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
 		if (detailDownloadBtn) {
-			detailDownloadBtn.disabled = !downloadUrl;
+			detailDownloadBtn.disabled = !glyphDownloadUrl;
 			detailDownloadBtn.setAttribute('title', 'Download glyph');
 			const fileName = `glyph_${hex.replace(/^0x/i, '').toLowerCase() || 'char'}.png`;
 			detailDownloadBtn.onclick = () => {
-				if (!downloadUrl) return;
-				const a = document.createElement('a');
-				a.href = downloadUrl;
-				a.download = fileName;
-				a.click();
+				downloadUrl(glyphDownloadUrl, fileName);
 			};
 		}
 
 		if (detailClearBtn) {
 			detailClearBtn.disabled = false;
-			detailClearBtn.innerHTML = '<i class="fas fa-eraser me-1"></i> Clear to transparent';
+			setButtonContent(detailClearBtn, 'fas fa-eraser me-1', 'Clear to transparent');
 			detailClearBtn.onclick = () => {
 				// perform clear immediately
 				cell.style.backgroundImage = '';
@@ -375,12 +346,14 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (cell.dataset) {
 					cell.dataset.originalBg = '';
 					cell.dataset.displayBg = '';
+					delete cell.dataset.pendingTintTheme;
+					delete cell.dataset.tintTheme;
 				}
 				// keep width/height attributes so we can map back to atlas
 				// update modal view
 				const clearedCanvas = document.createElement('canvas');
-				const tileW = widthAttr ? parseInt(widthAttr, 10) || 220 : 220;
-				const tileH = heightAttr ? parseInt(heightAttr, 10) || 220 : 220;
+				const tileW = widthAttr || 220;
+				const tileH = heightAttr || 220;
 				clearedCanvas.width = tileW;
 				clearedCanvas.height = tileH;
 				// leave fully transparent; no glyph drawing to avoid tofu box
@@ -397,10 +370,10 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (detailDownloadBtn) {
 					detailDownloadBtn.disabled = false;
 					detailDownloadBtn.onclick = () => {
-						const a = document.createElement('a');
-						a.href = clearedUrl;
-						a.download = `glyph_${hex.replace(/^0x/i, '').toLowerCase() || 'char'}.png`;
-						a.click();
+						downloadUrl(
+							clearedUrl,
+							`glyph_${hex.replace(/^0x/i, '').toLowerCase() || 'char'}.png`
+						);
 					};
 				}
 				showToast('Cleared to transparent');
@@ -417,23 +390,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	if (detailMeta) {
 		detailMeta.addEventListener('click', (event) => {
-			const field = event.target.closest('.detail-field');
+			const field = event.target instanceof Element
+				? event.target.closest('.detail-field')
+				: null;
 			if (!field) return;
 			const targetId = field.getAttribute('data-copy-target');
 			if (!targetId) return;
-			const targetEl = document.getElementById(targetId);
+			const targetEl = getElement(targetId);
 			const value = targetEl ? targetEl.textContent.trim() : '';
 			if (!value) return;
-			navigator.clipboard.writeText(value).then(() => {
+			copyText(value).then(() => {
 				const label = field.getAttribute('data-label') || 'value';
 				showToast(`Copied ${label}`);
+			}).catch(() => {
+				showToast('Unable to access the clipboard.', 'error');
 			});
 		});
 	}
 
 	if (glyphGrid) {
 		glyphGrid.addEventListener('click', (e) => {
-			const cell = e.target.closest('#glyph-output div[data-hex]');
+			const cell = e.target instanceof Element
+				? e.target.closest('#glyph-output div[data-hex]')
+				: null;
 			if (cell) {
 				e.preventDefault();
 				showGlyphDetail(cell);
@@ -441,22 +420,39 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
+	function loadPreset(assetKey, hex, cacheKey, labelText) {
+		const source = typeof DEFAULT_GLYPHS !== 'undefined' ? DEFAULT_GLYPHS[assetKey] : '';
+		if (!source || !isValidGlyphPrefix(hex)) return false;
+
+		if (typeof updateTimer !== 'undefined') clearTimeout(updateTimer);
+		const image = new Image();
+		image.crossOrigin = 'anonymous';
+		image.onload = () => {
+			if (!processGlyph(image, hex, { cacheKey, label: labelText })) {
+				showToast('Unable to process the preset image.', 'error');
+				return;
+			}
+
+			if (hintMsg) hintMsg.classList.add('d-none');
+			const uploadLabel = getElement('uploadLabel');
+			if (uploadLabel) {
+				uploadLabel.textContent = `Loaded: ${labelText}`;
+				uploadLabel.className = 'text-primary fw-bold upload-label-text';
+			}
+		};
+		image.onerror = () => showToast('Unable to load the preset image.', 'error');
+		image.src = source;
+		return true;
+	}
+
 	// Hint click logic
-	const hintMsg = document.getElementById('defaultImageHint');
+	const hintMsg = getElement('defaultImageHint');
 	if (hintMsg) {
 		hintMsg.addEventListener('click', () => {
-			const hex = document.getElementById('hintHex').textContent;
-			
-			if (typeof DEFAULT_GLYPHS !== 'undefined' && DEFAULT_GLYPHS[hex]) {
-				const img = new Image();
-				img.crossOrigin = 'anonymous';
-				img.onload = function() {
-					processGlyph(img, hex, { cacheKey: `${hex}_DEFAULT`, label: `glyph_${hex}.png` });
-					hintMsg.classList.add('d-none');
-				};
-				img.src = DEFAULT_GLYPHS[hex];
-			} else {
-				// Fallback mechanism
+			const hintHex = getElement('hintHex');
+			const hex = getGlyphPrefix(hintHex ? hintHex.textContent : '', 'E0');
+
+			if (!loadPreset(hex, hex, `${hex}_DEFAULT`, `glyph_${hex}.png`)) {
 				Glyph(hex);
 				hintMsg.classList.add('d-none');
 			}
@@ -464,190 +460,118 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	// Quick Load Template & Example logic
-	const btnLoadTemplate = document.getElementById('btnLoadTemplate');
+	const btnLoadTemplate = getElement('btnLoadTemplate');
 	if (btnLoadTemplate) {
 		btnLoadTemplate.addEventListener('click', () => {
-			const glyphInput = document.getElementById('glyph-input');
-			const current = glyphInput ? glyphInput.value.trim().toUpperCase() : "";
-			const hex = /^[A-F0-9]{1,4}$/.test(current) ? current : "E0";
-			
-			if (typeof DEFAULT_GLYPHS !== 'undefined' && DEFAULT_GLYPHS['TEMPLATE']) {
-				if (typeof updateTimer !== 'undefined') clearTimeout(updateTimer);
-				const img = new Image();
-				img.crossOrigin = 'anonymous';
-				img.onload = function() {
-					processGlyph(img, hex, { cacheKey: 'TEMPLATE', label: 'glyph_grid.png' });
-					
-					if (hintMsg) hintMsg.classList.add('d-none');
-					const label = document.getElementById('uploadLabel');
-					if (label) {
-						label.textContent = "Loaded: glyph_grid.png";
-						label.className = "text-primary fw-bold";
-					}
-				};
-				img.src = DEFAULT_GLYPHS['TEMPLATE'];
-			}
+			const glyphInput = getElement('glyph-input');
+			const hex = getGlyphPrefix(glyphInput ? glyphInput.value : '', 'E0');
+			loadPreset('TEMPLATE', hex, `TEMPLATE_${hex}`, 'glyph_grid.png');
 		});
 	}
 
-	const btnLoadExample = document.getElementById('btnLoadExample');
+	const btnLoadExample = getElement('btnLoadExample');
 	if (btnLoadExample) {
 		btnLoadExample.addEventListener('click', () => {
-			const hex = "E1"; 
-			
-			if (typeof DEFAULT_GLYPHS !== 'undefined' && DEFAULT_GLYPHS['E1_MOD']) {
-				if (typeof updateTimer !== 'undefined') clearTimeout(updateTimer);
-				const img = new Image();
-				img.crossOrigin = 'anonymous';
-				img.onload = function() {
-					processGlyph(img, hex, { cacheKey: 'E1_MOD', label: 'glyph_E1_modified.png' });
-					
-					if (hintMsg) hintMsg.classList.add('d-none');
-					const label = document.getElementById('uploadLabel');
-					if (label) {
-						label.textContent = "Loaded: glyph_E1_modified.png";
-						label.className = "text-primary fw-bold";
-					}
-				};
-				img.src = DEFAULT_GLYPHS['E1_MOD'];
-			}
+			const glyphInput = getElement('glyph-input');
+			if (glyphInput) glyphInput.value = 'E1';
+			loadPreset('E1_MOD', 'E1', 'E1_MOD', 'glyph_E1_modified.png');
 		});
 	}
 
-	const btnLoadEmpty = document.getElementById('btnLoadEmpty');
+	const btnLoadEmpty = getElement('btnLoadEmpty');
 	if (btnLoadEmpty) {
 		btnLoadEmpty.addEventListener('click', () => {
-			const glyphInput = document.getElementById('glyph-input');
-			const current = glyphInput ? glyphInput.value.trim().toUpperCase() : "E0";
-			const hex = /^[A-F0-9]{1,4}$/.test(current) ? current : "E0";
-
-			if (typeof DEFAULT_GLYPHS !== 'undefined' && DEFAULT_GLYPHS['EMPTY']) {
-				if (typeof updateTimer !== 'undefined') clearTimeout(updateTimer);
-				const img = new Image();
-				img.crossOrigin = 'anonymous';
-				img.onload = function() {
-					processGlyph(img, hex, { cacheKey: 'EMPTY', label: 'glyph_empty.png' });
-					const hintMsg = document.getElementById('defaultImageHint');
-					if (hintMsg) hintMsg.classList.add('d-none');
-					const label = document.getElementById('uploadLabel');
-					if (label) {
-						label.textContent = "Loaded: glyph_empty.png";
-						label.className = "text-primary fw-bold";
-					}
-				};
-				img.src = DEFAULT_GLYPHS['EMPTY'];
-			}
+			const glyphInput = getElement('glyph-input');
+			const hex = getGlyphPrefix(glyphInput ? glyphInput.value : '', 'E0');
+			loadPreset('EMPTY', hex, `EMPTY_${hex}`, 'glyph_empty.png');
 		});
+	}
+
+	function getGlyphCells() {
+		return glyphGrid ? Array.from(glyphGrid.querySelectorAll('div[data-char]')) : [];
+	}
+
+	function getCurrentGlyphPrefix() {
+		const glyphInput = getElement('glyph-input');
+		return getGlyphPrefix(glyphInput ? glyphInput.value : '', 'E0');
+	}
+
+	function getGlyphRows(cells = getGlyphCells()) {
+		const rows = [];
+		for (let index = 0; index < cells.length; index += GRID) {
+			rows.push(
+				cells
+					.slice(index, index + GRID)
+					.map(cell => cell.getAttribute('data-char') || '')
+					.join('')
+			);
+		}
+		return rows;
 	}
 
 	// Smart Export Logic
-	const btnCopyAll = document.getElementById('btnCopyAll');
+	const btnCopyAll = getElement('btnCopyAll');
 	if (btnCopyAll) {
 		btnCopyAll.addEventListener('click', () => {
-			const cells = document.querySelectorAll('#glyph-output div[data-char]');
-			const tooltip = document.querySelector('.smart-tooltip');
-			let result = '';
-			let row = '';
-			cells.forEach((cell, index) => {
-				row += cell.getAttribute('data-char');
-				if ((index + 1) % 16 === 0) {
-					result += row + '\n';
-					row = '';
-				}
-			});
+			const rows = getGlyphRows();
+			if (!rows.length) {
+				showToast('No glyphs to copy.', 'error');
+				return;
+			}
 
-			navigator.clipboard.writeText(result.trim()).then(() => {
-				if (tooltip) {
-					tooltip.innerHTML = "Copied 256 Glyphs!";
-					tooltip.classList.add('success', 'visible');
-					tooltip.style.left = "50%";
-					tooltip.style.top = "50px";
-					tooltip.style.position = "fixed";
-					
-					setTimeout(() => {
-						tooltip.classList.remove('success', 'visible');
-						tooltip.style.position = "absolute";
-					}, 2000);
-				}
+			copyText(rows.join('\n')).then(() => {
+				showToast(`Copied ${getGlyphCells().length} Glyphs!`, 'success', 2000);
+			}).catch(() => {
+				showToast('Unable to access the clipboard.', 'error');
 			});
-	});
-}
+		});
+	}
 
-	const btnDownloadAtlas = document.getElementById('btnDownloadAtlas');
+	const btnDownloadAtlas = getElement('btnDownloadAtlas');
 	if (btnDownloadAtlas) {
 		btnDownloadAtlas.addEventListener('click', () => {
 			if (typeof currentAtlasDataUrl !== 'undefined' && currentAtlasDataUrl) {
-				const glyphInput = document.getElementById('glyph-input');
-				const startHex = (glyphInput && glyphInput.value.trim()) ? glyphInput.value.trim().toUpperCase() : "E0";
+				const startHex = getCurrentGlyphPrefix();
 				const fileName = `glyph_${startHex.toLowerCase()}.png`;
-				const a = document.createElement('a');
-				a.href = currentAtlasDataUrl;
-				a.download = fileName;
-				a.click();
-				if (smartTooltip) {
-					smartTooltip.innerHTML = "Atlas downloaded!";
-					smartTooltip.classList.add('success', 'visible');
-					smartTooltip.style.left = "50%";
-					smartTooltip.style.top = "50px";
-					smartTooltip.style.position = "fixed";
-					setTimeout(() => {
-						smartTooltip.classList.remove('success', 'visible');
-						smartTooltip.style.position = "absolute";
-					}, 1500);
-				}
-			} else if (smartTooltip) {
-				smartTooltip.innerHTML = "No atlas image loaded";
-				smartTooltip.classList.add('visible');
-				smartTooltip.style.left = "50%";
-				smartTooltip.style.top = "50px";
-				smartTooltip.style.position = "fixed";
-				setTimeout(() => {
-					smartTooltip.classList.remove('visible', 'success');
-					smartTooltip.style.position = "absolute";
-				}, 1500);
+				downloadUrl(currentAtlasDataUrl, fileName);
+				showToast('Atlas downloaded!');
+			} else {
+				showToast('No atlas image loaded', 'error');
 			}
 		});
 	}
 
-	const btnDownloadJson = document.getElementById('btnDownloadJson');
+	const btnDownloadJson = getElement('btnDownloadJson');
 	if (btnDownloadJson) {
 		btnDownloadJson.addEventListener('click', () => {
-			const cells = document.querySelectorAll('#glyph-output div[data-char]');
-			const glyphInput = document.getElementById('glyph-input');
-			const startHex = (glyphInput && glyphInput.value.trim()) ? glyphInput.value.trim().toUpperCase() : "E0";
-			
-			const rows = [];
-			let currentRow = "";
-			cells.forEach((cell, index) => {
-				currentRow += cell.getAttribute('data-char');
-				if ((index + 1) % 16 === 0) {
-					rows.push(currentRow);
-					currentRow = "";
-				}
-			});
+			const startHex = getCurrentGlyphPrefix();
+			const rows = getGlyphRows();
 
 			const json = {
-				"providers": [
+				providers: [
 					{
-						"type": "bitmap",
-						"file": `minecraft:font/glyph_${startHex.toLowerCase()}.png`,
-						"ascent": 7,
-						"chars": rows
+						type: 'bitmap',
+						file: `minecraft:font/glyph_${startHex.toLowerCase()}.png`,
+						ascent: 7,
+						chars: rows
 					}
 				]
 			};
 
-			downloadFile(JSON.stringify(json, null, 2), `glyph_${startHex.toLowerCase()}.json`, "application/json");
+			downloadFile(
+				JSON.stringify(json, null, 2),
+				`glyph_${startHex.toLowerCase()}.json`,
+				'application/json'
+			);
 		});
 	}
 
-	const btnCopyReference = document.getElementById('btnCopyReference');
+	const btnCopyReference = getElement('btnCopyReference');
 	if (btnCopyReference) {
 		btnCopyReference.addEventListener('click', () => {
-			const cells = document.querySelectorAll('#glyph-output div[data-char]');
-			const tooltip = document.querySelector('.smart-tooltip');
+			const cells = getGlyphCells();
 			let result = 'GLYPH REFERENCE MAP\n====================\n';
-			
+
 			cells.forEach((cell) => {
 				const hex = cell.getAttribute('data-hex');
 				const pos = cell.getAttribute('data-position');
@@ -655,31 +579,19 @@ document.addEventListener('DOMContentLoaded', () => {
 				result += `${hex}: ${pos} - ${char}\n`;
 			});
 
-			navigator.clipboard.writeText(result.trim()).then(() => {
-				if (tooltip) {
-					tooltip.innerHTML = "Reference Copied!";
-					tooltip.classList.add('success', 'visible');
-					tooltip.style.left = "50%";
-					tooltip.style.top = "50px";
-					tooltip.style.position = "fixed";
-					
-					setTimeout(() => {
-						tooltip.classList.remove('success', 'visible');
-						tooltip.style.position = "absolute";
-					}, 2000);
-				}
+			copyText(result.trim()).then(() => {
+				showToast('Reference Copied!', 'success', 2000);
+			}).catch(() => {
+				showToast('Unable to access the clipboard.', 'error');
 			});
 		});
 	}
 
-	const btnDownloadFullJson = document.getElementById('btnDownloadFullJson');
+	const btnDownloadFullJson = getElement('btnDownloadFullJson');
 	if (btnDownloadFullJson) {
 		btnDownloadFullJson.addEventListener('click', () => {
-			const cells = document.querySelectorAll('#glyph-output div[data-char]');
-			const glyphInput = document.getElementById('glyph-input');
-			const startHex = (glyphInput && glyphInput.value.trim()) ? glyphInput.value.trim().toUpperCase() : "E0";
-			
-			const data = Array.from(cells).map(cell => ({
+			const startHex = getCurrentGlyphPrefix();
+			const data = getGlyphCells().map(cell => ({
 				hex: cell.getAttribute('data-hex'),
 				pos: cell.getAttribute('data-position'),
 				char: cell.getAttribute('data-char')
@@ -687,14 +599,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			const json = {
 				metadata: {
-					generator: "Glyph Tools",
+					generator: 'Glyph Tools',
 					hex_range: `${startHex}00 - ${startHex}FF`,
 					total: data.length
 				},
 				glyphs: data
 			};
 
-			downloadFile(JSON.stringify(json, null, 2), `glyph_${startHex.toLowerCase()}_metadata.json`, "application/json");
+			downloadFile(
+				JSON.stringify(json, null, 2),
+				`glyph_${startHex.toLowerCase()}_metadata.json`,
+				'application/json'
+			);
 		});
 	}
 
@@ -705,43 +621,86 @@ document.addEventListener('DOMContentLoaded', () => {
 		vanillaStatus.classList.toggle('d-none', !text);
 	}
 
+	function normalizeVanillaPaths(value) {
+		if (!Array.isArray(value)) return [];
+
+		return value
+			.filter(path => typeof path === 'string')
+			.map(path => path.startsWith('resource_pack/textures/')
+				? path.slice('resource_pack/textures/'.length)
+				: path)
+			.filter(path => {
+				const segments = path.split('/');
+				return (
+					path.length > 0 &&
+					path.length <= 512 &&
+					path.toLowerCase().endsWith('.png') &&
+					!path.startsWith('/') &&
+					!path.includes('\\') &&
+					!path.includes(':') &&
+					segments.every(segment => segment && segment !== '.' && segment !== '..')
+				);
+			});
+	}
+
+	function updateVanillaPathState(paths) {
+		const normalizedPaths = normalizeVanillaPaths(paths);
+		window.__vanillaPaths = normalizedPaths;
+		vanillaCategories = Array.from(
+			new Set(normalizedPaths.map(path => path.split('/')[0]))
+		).sort();
+		return normalizedPaths;
+	}
+
 	// Vanilla list loader (local manifest only, no remote API). Lazy + cached to avoid jank.
 	async function fetchVanillaList(forceReload = false) {
 		try {
-			if (window.__vanillaPaths && !forceReload) return window.__vanillaPaths;
+			if (Array.isArray(window.__vanillaPaths) && !forceReload) {
+				const paths = updateVanillaPathState(window.__vanillaPaths);
+				if (paths.length) return paths;
+			}
 
 			const raw = localStorage.getItem('vanillaTexturesCache');
 			if (raw && !forceReload) {
 				const cached = JSON.parse(raw);
 				const maxAge = 1000 * 60 * 60 * 24; // 24h
-				if (cached.timestamp && Date.now() - cached.timestamp < maxAge && Array.isArray(cached.paths)) {
-					let paths = cached.paths.map(p => p.startsWith('resource_pack/textures/') ? p.replace('resource_pack/textures/', '') : p);
-					window.__vanillaPaths = paths;
-					vanillaCategories = Array.from(new Set(paths.map(p => p.split('/')[0]))).sort();
-					setVanillaStatus('');
-					return paths;
+				const age = Date.now() - Number(cached.timestamp);
+				if (age >= 0 && age < maxAge && Array.isArray(cached.paths)) {
+					const paths = updateVanillaPathState(cached.paths);
+					if (paths.length) {
+						setVanillaStatus('');
+						return paths;
+					}
 				}
 			}
-		} catch {}
+		} catch {
+			try {
+				localStorage.removeItem('vanillaTexturesCache');
+			} catch {}
+		}
 
 		setVanillaStatus('Loading vanilla textures...');
 		try {
 			const resp = await fetch('vanilla-textures/manifest.json', { cache: forceReload ? 'reload' : 'default' });
+			if (!resp.ok) throw new Error(`Manifest request failed with status ${resp.status}.`);
 			const data = await resp.json();
-			let paths = data.paths || [];
-			paths = paths.map(p => p.startsWith('resource_pack/textures/') ? p.replace('resource_pack/textures/', '') : p);
-			window.__vanillaPaths = paths;
-			localStorage.setItem('vanillaTexturesCache', JSON.stringify({ timestamp: Date.now(), paths }));
-			vanillaCategories = Array.from(new Set(paths.map(p => p.split('/')[0]))).sort();
+			const paths = updateVanillaPathState(data.paths);
+			if (!paths.length) throw new Error('Manifest does not contain valid PNG paths.');
+			try {
+				localStorage.setItem(
+					'vanillaTexturesCache',
+					JSON.stringify({ timestamp: Date.now(), paths })
+				);
+			} catch {}
 			setVanillaStatus('');
 			return paths;
-		} catch (err) {
+		} catch {
 			setVanillaStatus('Failed to load local manifest.');
 			return [];
 		}
 	}
 
-	function queueReplaceCandidate(imgObj, imgSrc, currentPreviewUrl) {
+	function queueReplaceCandidate(imgObj) {
 		replacePending = { img: imgObj };
 		applyPendingReplace();
 	}
@@ -757,32 +716,36 @@ document.addEventListener('DOMContentLoaded', () => {
 				const tileW = res && res.tileW;
 				const tileH = res && res.tileH;
 				if (tileUrl) {
-					cell.style.backgroundImage = `url(${tileUrl})`;
+					cell.style.backgroundImage = `url("${tileUrl}")`;
 					cell.style.backgroundSize = '100% 100%';
 					cell.classList.remove('transparent');
 					if (cell.dataset) {
 						cell.dataset.originalBg = tileUrl;
 						cell.dataset.displayBg = '';
+						delete cell.dataset.pendingTintTheme;
+						delete cell.dataset.tintTheme;
 					}
 					if (detailPreview) detailPreview.classList.remove('transparent-state');
 					if (tileW) cell.setAttribute('data-width', tileW);
 					if (tileH) cell.setAttribute('data-height', tileH);
 					// refresh modal preview
-					detailImg.src = tileUrl;
-					detailImg.classList.remove('d-none');
-					detailCharFallback.classList.add('d-none');
+					if (detailImg) {
+						detailImg.src = tileUrl;
+						detailImg.classList.remove('d-none');
+					}
+					if (detailCharFallback) detailCharFallback.classList.add('d-none');
 					if (detailDim) detailDim.textContent = tileW && tileH ? `${tileW}px x ${tileH}px` : detailDim.textContent;
 					// update download button to new tile
 					if (detailDownloadBtn) {
 						const fileName = `glyph_${hex.replace(/^0x/i, '').toLowerCase() || 'char'}.png`;
 						detailDownloadBtn.disabled = false;
 						detailDownloadBtn.onclick = () => {
-							const a = document.createElement('a');
-							a.href = tileUrl;
-							a.download = fileName;
-							a.click();
+							downloadUrl(tileUrl, fileName);
 						};
 					}
+					showToast('Glyph replaced');
+				} else {
+					showToast('Load an atlas before replacing a glyph.', 'error');
 				}
 				replacePending = null;
 				if (beforeAfterWrap) beforeAfterWrap.classList.add('d-none');
@@ -795,7 +758,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	function populateCategories() {
 		if (!vanillaCategorySelect) return;
 		const cats = ['all', ...vanillaCategories];
-		vanillaCategorySelect.innerHTML = '';
+		vanillaCategorySelect.replaceChildren();
 		cats.forEach(c => {
 			const opt = document.createElement('option');
 			opt.value = c;
@@ -817,21 +780,27 @@ document.addEventListener('DOMContentLoaded', () => {
 		// pagination
 		const total = vanillaFiltered.length;
 		const requestedAll = vanillaPageSizeValue === 'all';
-		let pageSize = requestedAll ? (total || 1) : (parseInt(vanillaPageSizeValue, 10) || 36);
+		const pageSize = requestedAll
+			? (total || 1)
+			: (Number.parseInt(vanillaPageSizeValue, 10) || 36);
 		const totalPages = Math.max(1, Math.ceil(total / pageSize));
 		if (vanillaPage > totalPages) vanillaPage = totalPages;
 		const start = (vanillaPage - 1) * pageSize;
 		const pageItems = vanillaFiltered.slice(start, start + pageSize);
+		const renderId = ++vanillaRenderId;
 
-		vanillaGrid.innerHTML = '';
+		vanillaGrid.replaceChildren();
 		if (vanillaPickerStatus) vanillaPickerStatus.textContent = 'Rendering...';
 		if (vanillaPageInfo) vanillaPageInfo.textContent = `Page ${vanillaPage}/${totalPages}`;
+		if (vanillaPrevPage) vanillaPrevPage.disabled = vanillaPage <= 1;
+		if (vanillaNextPage) vanillaNextPage.disabled = vanillaPage >= totalPages;
 
 		const chunkSize = 40;
 		let i = 0;
 		const schedule = window.requestIdleCallback || window.requestAnimationFrame;
 
 		const renderChunk = () => {
+			if (renderId !== vanillaRenderId) return;
 			const fragment = document.createDocumentFragment();
 			let count = 0;
 			while (i < pageItems.length && count < chunkSize) {
@@ -839,32 +808,44 @@ document.addEventListener('DOMContentLoaded', () => {
 				const card = document.createElement('div');
 				card.className = 'vanilla-tile';
 				card.dataset.path = path;
+				card.tabIndex = 0;
+				card.setAttribute('role', 'button');
 				const img = document.createElement('img');
 				img.loading = 'lazy';
 				img.crossOrigin = 'anonymous';
 				img.src = `./vanilla-textures/${path}`;
+				img.alt = '';
 				const label = document.createElement('div');
 				label.className = 'vanilla-name';
-				label.textContent = path.split('/').slice(-1)[0].replace('.png','');
+				label.textContent = path.split('/').slice(-1)[0].replace(/\.png$/i, '');
+				card.setAttribute('aria-label', `Use texture ${label.textContent}`);
 				card.appendChild(img);
 				card.appendChild(label);
-				card.addEventListener('click', () => {
+				const selectTexture = () => {
 					const previewSrc = img.src;
 					const previewImg = new Image();
 					previewImg.crossOrigin = 'anonymous';
 					previewImg.onload = function () {
-						queueReplaceCandidate(previewImg, previewSrc, detailImg && detailImg.src);
+						queueReplaceCandidate(previewImg);
 						if (vanillaPickerModal) vanillaPickerModal.hide();
 					};
 					previewImg.onerror = function () {
 						if (vanillaPickerStatus) vanillaPickerStatus.textContent = 'Failed to load texture.';
 					};
 					previewImg.src = previewSrc;
+				};
+				card.addEventListener('click', selectTexture);
+				card.addEventListener('keydown', event => {
+					if (event.key === 'Enter' || event.key === ' ') {
+						event.preventDefault();
+						selectTexture();
+					}
 				});
 				fragment.appendChild(card);
 				count++;
 			}
 
+			if (renderId !== vanillaRenderId) return;
 			if (count) vanillaGrid.appendChild(fragment);
 
 			if (vanillaPickerStatus) {
@@ -887,13 +868,17 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (vanillaOpenPickerBtn) {
 		vanillaOpenPickerBtn.addEventListener('click', async () => {
 			if (!vanillaPaths || !vanillaPaths.length) {
-				if (window.__vanillaPaths && window.__vanillaPaths.length) {
-					vanillaPaths = window.__vanillaPaths;
+				if (Array.isArray(window.__vanillaPaths) && window.__vanillaPaths.length) {
+					vanillaPaths = updateVanillaPathState(window.__vanillaPaths);
 				} else {
 					const list = await fetchVanillaList(false);
 					vanillaPaths = list || [];
 				}
 				populateCategories();
+			}
+			if (!vanillaPaths.length) {
+				showToast('Vanilla textures are unavailable.', 'error');
+				return;
 			}
 			vanillaPage = 1;
 			renderVanillaGrid('');
@@ -961,23 +946,16 @@ document.addEventListener('DOMContentLoaded', () => {
 			detailReplaceInput.click();
 		});
 
-		detailReplaceInput.onchange = (ev) => {
-			const file = ev.target.files && ev.target.files[0];
+		detailReplaceInput.onchange = async (event) => {
+			const file = event.target.files && event.target.files[0];
 			if (!file) return;
-			if (!file.type || !file.type.includes('png')) {
-				alert('Please select a PNG file.');
-				return;
-			}
 
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				const newImg = new Image();
-				newImg.onload = function () {
-					queueReplaceCandidate(newImg, e.target.result, detailImg && detailImg.src);
-				};
-				newImg.src = e.target.result;
-			};
-			reader.readAsDataURL(file);
+			try {
+				const image = await loadPngFile(file);
+				queueReplaceCandidate(image);
+			} catch (error) {
+				alert(error instanceof Error ? error.message : 'Unable to load the PNG image.');
+			}
 		};
 	}
 });
