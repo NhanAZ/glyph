@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		return `\\u{${clean.toUpperCase()}}`;
 	}
 
-	function ensureDrawerPrompt(url) {
+	function ensureDrawerPrompt() {
 		let overlay = getElement('drawerRedirectPrompt');
 		if (!overlay) {
 			overlay = document.createElement('div');
@@ -211,31 +211,51 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			const card = document.createElement('div');
 			card.className = 'drawer-redirect-card';
-			const title = document.createElement('h6');
-			title.className = 'mb-2 fw-bold';
-			title.textContent = 'Open glyph drawer?';
+			
+			const title = document.createElement('h5');
+			title.className = 'mb-3 fw-bold text-center';
+			title.textContent = 'Choose a Drawing Tool';
+			
 			const description = document.createElement('p');
-			description.className = 'mb-3 text-secondary';
-			description.textContent = 'You are about to open the dedicated glyph drawing page in a new tab.';
+			description.className = 'mb-4 text-secondary text-center';
+			description.textContent = 'Where would you like to draw this glyph?';
+			
 			const actions = document.createElement('div');
-			actions.className = 'd-flex gap-2 flex-wrap';
+			actions.className = 'd-flex flex-column gap-2 mb-3';
+			
+			const webDrawerBtn = document.createElement('button');
+			webDrawerBtn.type = 'button';
+			webDrawerBtn.className = 'btn btn-outline-primary w-100 py-2';
+			webDrawerBtn.innerHTML = '<i class="fas fa-globe me-2"></i>Web Glyph Drawer (by NhanAZ)';
+			
+			const asepriteBtn = document.createElement('button');
+			asepriteBtn.type = 'button';
+			asepriteBtn.className = 'btn btn-primary w-100 py-2 position-relative';
+			asepriteBtn.innerHTML = '<i class="fas fa-paint-brush me-2"></i>Aseprite <span class="badge bg-warning text-dark position-absolute top-50 end-0 translate-middle-y me-3 rounded-pill" style="font-size: 0.65rem;">Recommended</span>';
+			
+			const jokeText = document.createElement('small');
+			jokeText.className = 'text-muted text-center d-block mb-3 mt-1';
+			jokeText.style.fontSize = '0.75rem';
+			jokeText.style.fontStyle = 'italic';
+			jokeText.innerHTML = '(Dear Aseprite team, I am a huge fan! If you happen to see this little shoutout, a Pro license would be a dream come true for me at <a href="mailto:itsnhanaz@gmail.com" class="text-muted text-decoration-none">itsnhanaz@gmail.com</a>. Thank you so much! 😊)';
+
 			const cancelButton = document.createElement('button');
 			cancelButton.type = 'button';
-			cancelButton.className = 'btn btn-outline-secondary flex-fill drawer-cancel';
+			cancelButton.className = 'btn btn-outline-secondary w-100 py-2 drawer-cancel mt-2';
 			cancelButton.textContent = 'Cancel';
-			const confirmButton = document.createElement('button');
-			confirmButton.type = 'button';
-			confirmButton.className = 'btn btn-primary flex-fill drawer-confirm';
-			confirmButton.textContent = 'Open drawer';
 
-			actions.append(cancelButton, confirmButton);
-			card.append(title, description, actions);
+			actions.append(asepriteBtn, webDrawerBtn);
+			card.append(title, description, actions, jokeText, cancelButton);
 			overlay.appendChild(card);
 			document.body.appendChild(overlay);
 
 			cancelButton.addEventListener('click', () => overlay.classList.remove('visible'));
-			confirmButton.addEventListener('click', () => {
-				window.open(url, '_blank', 'noopener');
+			webDrawerBtn.addEventListener('click', () => {
+				window.open('https://nhanaz-web.github.io/glyph-drawer/', '_blank', 'noopener');
+				overlay.classList.remove('visible');
+			});
+			asepriteBtn.addEventListener('click', () => {
+				window.open('https://www.aseprite.org/', '_blank', 'noopener');
 				overlay.classList.remove('visible');
 			});
 			overlay.addEventListener('click', (e) => {
@@ -303,7 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			detailCopyBtn.disabled = false;
 			setButtonContent(detailCopyBtn, 'fas fa-pen-nib me-1', 'Draw');
 			detailCopyBtn.onclick = () => {
-				ensureDrawerPrompt('https://nhanaz.github.io/glyph-drawer/');
+				ensureDrawerPrompt();
 			};
 		}
 
