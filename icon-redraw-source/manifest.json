@@ -1,0 +1,275 @@
+[
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fab fa-discord",
+        "style":  "brands",
+        "sourceName":  "discord",
+        "file":  "fontawesome-svg/fab_fa-discord.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fab fa-github",
+        "style":  "brands",
+        "sourceName":  "github",
+        "file":  "fontawesome-svg/fab_fa-github.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "far fa-copy",
+        "style":  "regular",
+        "sourceName":  "copy",
+        "file":  "fontawesome-svg/far_fa-copy.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "far fa-file-code",
+        "style":  "regular",
+        "sourceName":  "file-code",
+        "file":  "fontawesome-svg/far_fa-file-code.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-bars",
+        "style":  "solid",
+        "sourceName":  "bars",
+        "file":  "fontawesome-svg/fas_fa-bars.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-book",
+        "style":  "solid",
+        "sourceName":  "book",
+        "file":  "fontawesome-svg/fas_fa-book.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-border-all",
+        "style":  "solid",
+        "sourceName":  "border-all",
+        "file":  "fontawesome-svg/fas_fa-border-all.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-check",
+        "style":  "solid",
+        "sourceName":  "check",
+        "file":  "fontawesome-svg/fas_fa-check.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-cloud-upload-alt",
+        "style":  "solid",
+        "sourceName":  "cloud-arrow-up",
+        "file":  "fontawesome-svg/fas_fa-cloud-upload-alt.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-database",
+        "style":  "solid",
+        "sourceName":  "database",
+        "file":  "fontawesome-svg/fas_fa-database.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-download",
+        "style":  "solid",
+        "sourceName":  "download",
+        "file":  "fontawesome-svg/fas_fa-download.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-eraser",
+        "style":  "solid",
+        "sourceName":  "eraser",
+        "file":  "fontawesome-svg/fas_fa-eraser.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-file-export",
+        "style":  "solid",
+        "sourceName":  "file-export",
+        "file":  "fontawesome-svg/fas_fa-file-export.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-globe",
+        "style":  "solid",
+        "sourceName":  "globe",
+        "file":  "fontawesome-svg/fas_fa-globe.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-image",
+        "style":  "solid",
+        "sourceName":  "image",
+        "file":  "fontawesome-svg/fas_fa-image.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-images",
+        "style":  "solid",
+        "sourceName":  "images",
+        "file":  "fontawesome-svg/fas_fa-images.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-list-ul",
+        "style":  "solid",
+        "sourceName":  "list-ul",
+        "file":  "fontawesome-svg/fas_fa-list-ul.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-moon",
+        "style":  "solid",
+        "sourceName":  "moon",
+        "file":  "fontawesome-svg/fas_fa-moon.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-paint-brush",
+        "style":  "solid",
+        "sourceName":  "paintbrush",
+        "file":  "fontawesome-svg/fas_fa-paint-brush.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-palette",
+        "style":  "solid",
+        "sourceName":  "palette",
+        "file":  "fontawesome-svg/fas_fa-palette.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-pen-nib",
+        "style":  "solid",
+        "sourceName":  "pen-nib",
+        "file":  "fontawesome-svg/fas_fa-pen-nib.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-sun",
+        "style":  "solid",
+        "sourceName":  "sun",
+        "file":  "fontawesome-svg/fas_fa-sun.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-th-large",
+        "style":  "solid",
+        "sourceName":  "table-cells-large",
+        "file":  "fontawesome-svg/fas_fa-th-large.svg"
+    },
+    {
+        "type":  "fontawesome-svg",
+        "class":  "fas fa-upload",
+        "style":  "solid",
+        "sourceName":  "upload",
+        "file":  "fontawesome-svg/fas_fa-upload.svg"
+    },
+    {
+        "type":  "app-asset",
+        "class":  "",
+        "style":  "",
+        "sourceName":  "android-chrome-192x192.png",
+        "file":  "app-png/android-chrome-192x192.png"
+    },
+    {
+        "type":  "app-asset",
+        "class":  "",
+        "style":  "",
+        "sourceName":  "android-chrome-512x512.png",
+        "file":  "app-png/android-chrome-512x512.png"
+    },
+    {
+        "type":  "app-asset",
+        "class":  "",
+        "style":  "",
+        "sourceName":  "apple-touch-icon.png",
+        "file":  "app-png/apple-touch-icon.png"
+    },
+    {
+        "type":  "app-asset",
+        "class":  "",
+        "style":  "",
+        "sourceName":  "favicon.ico",
+        "file":  "app-png/favicon.ico"
+    },
+    {
+        "type":  "app-asset",
+        "class":  "",
+        "style":  "",
+        "sourceName":  "favicon-16x16.png",
+        "file":  "app-png/favicon-16x16.png"
+    },
+    {
+        "type":  "app-asset",
+        "class":  "",
+        "style":  "",
+        "sourceName":  "favicon-32x32.png",
+        "file":  "app-png/favicon-32x32.png"
+    },
+    {
+        "type":  "app-asset",
+        "class":  "",
+        "style":  "",
+        "sourceName":  "site.webmanifest",
+        "file":  "app-png/site.webmanifest"
+    },
+    {
+        "type":  "ui-asset",
+        "class":  "",
+        "style":  "",
+        "sourceName":  "bedrock.png",
+        "file":  "ui-png/bedrock.png"
+    },
+    {
+        "type":  "ui-asset",
+        "class":  "",
+        "style":  "",
+        "sourceName":  "cell_image.png",
+        "file":  "ui-png/cell_image.png"
+    },
+    {
+        "type":  "ui-asset",
+        "class":  "",
+        "style":  "",
+        "sourceName":  "cell_image_selected.png",
+        "file":  "ui-png/cell_image_selected.png"
+    },
+    {
+        "type":  "ui-asset",
+        "class":  "",
+        "style":  "",
+        "sourceName":  "container.png",
+        "file":  "ui-png/container.png"
+    },
+    {
+        "type":  "ui-asset",
+        "class":  "",
+        "style":  "",
+        "sourceName":  "input2.png",
+        "file":  "ui-png/input2.png"
+    },
+    {
+        "type":  "ui-asset",
+        "class":  "",
+        "style":  "",
+        "sourceName":  "normal_button.png",
+        "file":  "ui-png/normal_button.png"
+    },
+    {
+        "type":  "ui-asset",
+        "class":  "",
+        "style":  "",
+        "sourceName":  "normal_button_active.png",
+        "file":  "ui-png/normal_button_active.png"
+    },
+    {
+        "type":  "ui-asset",
+        "class":  "",
+        "style":  "",
+        "sourceName":  "normal_button_hover.png",
+        "file":  "ui-png/normal_button_hover.png"
+    }
+]
