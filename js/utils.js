@@ -1,5 +1,42 @@
 const PNG_SIGNATURE = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
 let toastTimer = null;
+const noSelectControlSelector = [
+	'button',
+	'[role="button"]',
+	'.btn',
+	'.dropdown-item',
+	'.detail-field',
+	'.vanilla-tile',
+	'.footer-links a',
+	'.mobile-nav-card a',
+	'.hint-link'
+].join(',');
+
+if (typeof document !== 'undefined' && typeof Element !== 'undefined') {
+	document.addEventListener('selectstart', event => {
+		if (event.target instanceof Element && event.target.closest(noSelectControlSelector)) {
+			event.preventDefault();
+		}
+	}, true);
+
+	document.addEventListener('dragstart', event => {
+		if (event.target instanceof Element && event.target.closest(noSelectControlSelector)) {
+			event.preventDefault();
+		}
+	}, true);
+
+	document.addEventListener('mousedown', event => {
+		if (
+			event.button === 0 &&
+			event.target instanceof Element &&
+			event.target.closest(noSelectControlSelector) &&
+			!event.target.closest('input, textarea, select')
+		) {
+			if (window.getSelection) window.getSelection().removeAllRanges();
+			event.preventDefault();
+		}
+	}, true);
+}
 
 function getElement(id) {
 	return document.getElementById(id);
@@ -40,42 +77,55 @@ function toggleDarkMode() {
 	document.body.classList.toggle('dark-mode', isDarkMode);
 
 	const darkModeToggle = getElement('darkModeToggle');
-	setButtonContent(
-		darkModeToggle,
-		isDarkMode ? 'fas fa-sun text-warning' : 'fas fa-moon'
-	);
+	setButtonContent(darkModeToggle, isDarkMode ? 'Light' : 'Dark');
 
 	renderGlyphs();
 }
 
-function setButtonContent(button, iconClassName, label = '') {
+function setButtonContent(button, label = '') {
 	if (!button) return;
-
-	const icon = document.createElement('i');
-	icon.className = iconClassName;
-	button.replaceChildren(icon);
-	if (label) button.appendChild(document.createTextNode(` ${label}`));
+	button.textContent = label;
 }
 
 function showToast(message, variant = 'success', duration = 1500) {
-	let toast = document.querySelector('.action-toast');
+	let toastLayer = document.querySelector('.toast-layer');
+	if (!toastLayer) {
+		toastLayer = document.createElement('div');
+		toastLayer.className = 'toast-layer';
+		document.body.appendChild(toastLayer);
+	}
+	document.body.appendChild(toastLayer);
+
+	let toast = toastLayer.querySelector('.action-toast');
 	if (!toast) {
 		toast = document.createElement('div');
 		toast.className = 'action-toast';
-		document.body.appendChild(toast);
+		toastLayer.appendChild(toast);
 	}
 
 	toast.textContent = String(message);
 	toast.classList.toggle('success', variant === 'success');
 	toast.classList.add('visible');
-	toast.style.left = '50%';
-	toast.style.top = '50px';
-	toast.style.position = 'fixed';
+	Object.assign(toastLayer.style, {
+		position: 'fixed',
+		top: '0',
+		left: '0',
+		right: '0',
+		height: '0',
+		zIndex: '2147483647',
+		overflow: 'visible',
+		pointerEvents: 'none'
+	});
+	Object.assign(toast.style, {
+		position: 'absolute',
+		top: '12px',
+		left: '50%',
+		zIndex: '1'
+	});
 
 	if (toastTimer) clearTimeout(toastTimer);
 	toastTimer = setTimeout(() => {
 		toast.classList.remove('visible', 'success');
-		toast.style.position = 'absolute';
 	}, duration);
 }
 

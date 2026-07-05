@@ -6,14 +6,13 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Glyph Tools</title>
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 	<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 	<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
 	<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png">
 	<link rel="shortcut icon" href="assets/icons/favicon.ico">
 	<link rel="manifest" href="assets/icons/site.webmanifest">
 	<meta name="theme-color" content="#1e1e1f">
-	<link href="assets/css/styles.css" rel="stylesheet">
+	<link href="assets/css/styles.css?v=20260705g" rel="stylesheet">
 </head>
 
 <body>
@@ -25,25 +24,21 @@
 				<p class="subtitle-text">Textures to Glyph workspace</p>
 			</div>
 			<div class="header-actions">
-				<button class="icon-button glass-btn d-md-none nav-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false" aria-label="Toggle navigation">
-					<i class="fas fa-bars"></i>
-				</button>
-				<button id="darkModeToggle" class="icon-button glass-btn" title="Toggle Dark Mode">
-					<i class="fas fa-moon"></i>
-				</button>
+				<button class="icon-button text-icon-button glass-btn d-md-none nav-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false">Menu</button>
+				<button id="darkModeToggle" class="icon-button text-icon-button glass-btn" title="Toggle Dark Mode">Dark</button>
 			</div>
 		</header>
 
 		<div class="collapse d-md-none mobile-nav" id="mobileNav">
 			<nav class="app-card mobile-nav-card">
 				<a href="https://github.com/NhanAZ/glyph" target="_blank" rel="noopener noreferrer">
-					<i class="fab fa-github"></i> GitHub
+					GitHub
 				</a>
 				<a href="https://wiki.bedrock.dev/text/custom-emojis" target="_blank" rel="noopener noreferrer">
-					<i class="fas fa-book"></i> Docs
+					Docs
 				</a>
 				<a href="https://discord.gg/j2X83ujT6c" target="_blank" rel="noopener noreferrer">
-					<i class="fab fa-discord"></i> Discord
+					Discord
 				</a>
 			</nav>
 		</div>
@@ -64,7 +59,7 @@
 						<label class="form-label detail-text" for="glyph-input">HEX CODE</label>
 						<input type="text" id="glyph-input" class="app-input text-uppercase font-monospace fw-bold" placeholder="E0 used by default" maxlength="4">
 						<div id="defaultImageHint" class="text-primary fw-medium d-none hint-link">
-							<i class="fas fa-download me-1"></i> Load default <span id="hintHex">E0</span> image
+							Load default <span id="hintHex">E0</span> image
 						</div>
 					</div>
 
@@ -73,18 +68,16 @@
 						<div class="upload-zone">
 							<input type="file" id="glyphUpload" accept="image/png,.png" class="file-input opacity-0 position-absolute w-100 h-100">
 							<div class="upload-zone-label">
-								<i class="fas fa-image text-secondary opacity-75"></i>
 								<span id="uploadLabel" class="text-secondary upload-label-text">Upload glyph_XX.png</span>
 							</div>
-							<i class="fas fa-cloud-upload-alt text-primary upload-zone-icon"></i>
 						</div>
 					</div>
 
 					<div class="preset-actions">
 						<span class="form-label detail-text preset-label">PRESETS</span>
-						<button id="btnLoadTemplate" class="btn btn-sm btn-outline-secondary fw-medium pill-action"><i class="fas fa-border-all me-1"></i> Grid Template</button>
-						<button id="btnLoadExample" class="btn btn-sm btn-outline-secondary fw-medium pill-action"><i class="fas fa-palette me-1"></i> E1 Example</button>
-						<button id="btnLoadEmpty" class="btn btn-sm btn-outline-secondary fw-medium pill-action"><i class="fas fa-eraser me-1"></i> Empty Grid</button>
+						<button id="btnLoadTemplate" class="btn btn-sm btn-outline-secondary fw-medium pill-action">Grid Template</button>
+						<button id="btnLoadExample" class="btn btn-sm btn-outline-secondary fw-medium pill-action">E1 Example</button>
+						<button id="btnLoadEmpty" class="btn btn-sm btn-outline-secondary fw-medium pill-action">Empty Grid</button>
 					</div>
 				</div>
 
@@ -107,9 +100,7 @@
 						<label class="form-label detail-text" for="converterOutput">OUTPUT</label>
 						<div class="output-wrapper position-relative">
 							<input type="text" id="converterOutput" class="app-input" readonly placeholder="Result appears here">
-							<button id="copyButton" class="icon-button position-absolute copy-button" title="Copy to clipboard">
-								<i class="far fa-copy"></i>
-							</button>
+							<button id="copyButton" class="icon-button position-absolute copy-button" title="Copy to clipboard">Copy</button>
 						</div>
 					</div>
 				</div>
@@ -125,21 +116,21 @@
 					<h2>Generated Output</h2>
 					<span id="atlasInfo" class="atlas-info text-secondary small">Atlas: not loaded</span>
 					<button id="gridModeToggle" class="btn btn-outline-secondary btn-sm fw-medium grid-toggle d-lg-none" type="button">
-						<i class="fas fa-th-large me-1"></i><span class="grid-toggle-label">Adaptive grid</span>
+						<span class="grid-toggle-label">Adaptive grid</span>
 					</button>
 				</div>
 				<div class="dropdown">
 					<button class="btn btn-sm export-btn px-3 py-2 fw-medium dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-						<i class="fas fa-file-export me-1"></i> Export
+						Export
 					</button>
 					<ul class="dropdown-menu dropdown-menu-end mt-2" aria-labelledby="exportDropdown">
-						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadAtlas"><i class="fas fa-image me-2 text-primary"></i> Download Atlas PNG</button></li>
+						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadAtlas">Download Atlas PNG</button></li>
 						<li><hr class="dropdown-divider opacity-50"></li>
-						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnCopyAll"><i class="far fa-copy me-2 text-primary"></i> Copy All (Minecraft String)</button></li>
-						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnCopyReference"><i class="fas fa-list-ul me-2 text-primary"></i> Copy Reference (Text Map)</button></li>
+						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnCopyAll">Copy All (Minecraft String)</button></li>
+						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnCopyReference">Copy Reference (Text Map)</button></li>
 						<li><hr class="dropdown-divider opacity-50"></li>
-						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadJson"><i class="far fa-file-code me-2 text-primary"></i> Download JSON (Pack)</button></li>
-						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadFullJson"><i class="fas fa-database me-2 text-primary"></i> Download JSON (Metadata)</button></li>
+						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadJson">Download JSON (Pack)</button></li>
+						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadFullJson">Download JSON (Metadata)</button></li>
 					</ul>
 				</div>
 			</div>
@@ -150,13 +141,13 @@
 
 		<footer class="footer-links">
 			<a href="https://github.com/NhanAZ/glyph" target="_blank" rel="noopener noreferrer">
-				<i class="fab fa-github me-1"></i> GitHub
+				GitHub
 			</a>
 			<a href="https://wiki.bedrock.dev/text/custom-emojis" target="_blank" rel="noopener noreferrer">
-				<i class="fas fa-book me-1"></i> Docs
+				Docs
 			</a>
 			<a href="https://discord.gg/j2X83ujT6c" target="_blank" rel="noopener noreferrer">
-				<i class="fab fa-discord me-1"></i> Discord
+				Discord
 			</a>
 		</footer>
 	</div>
@@ -167,15 +158,13 @@
 			<div class="modal-content rounded-4 border-0 shadow-lg detail-modal">
 				<div class="modal-header detail-header">
 					<h5 class="modal-title">Glyph Details</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					<button type="button" class="btn btn-sm modal-close-btn" data-bs-dismiss="modal" aria-label="Close">X</button>
 				</div>
 				<div class="modal-body detail-body">
 					<div class="row g-4 align-items-center">
 						<div class="col-md-5 detail-preview-col">
 							<div class="detail-preview p-3 text-center">
-								<button type="button" class="preview-download-btn" id="glyphDetailDownloadBtn" title="Download glyph">
-									<i class="fas fa-download"></i>
-								</button>
+								<button type="button" class="preview-download-btn" id="glyphDetailDownloadBtn" title="Download glyph">Download</button>
 								<img id="glyphDetailImage" alt="Glyph preview" class="img-fluid glyph-preview-img d-none" />
 								<div id="glyphDetailChar" class="glyph-preview-char d-none"></div>
 								<div id="glyphBeforeAfter" class="replace-preview d-none">
@@ -196,46 +185,47 @@
 									<span class="text-secondary">Character</span>
 									<div class="detail-value">
 										<span id="glyphDetailCharText" class="fw-bold"></span>
-										<i class="far fa-copy detail-copy-icon" aria-hidden="true"></i>
+										<span class="detail-copy-text">Copy</span>
 									</div>
 								</li>
 								<li class="list-group-item detail-field" data-copy-target="glyphDetailHex" data-label="hex">
 									<span class="text-secondary">Hex</span>
 									<div class="detail-value">
 										<span id="glyphDetailHex" class="fw-bold"></span>
-										<i class="far fa-copy detail-copy-icon" aria-hidden="true"></i>
+										<span class="detail-copy-text">Copy</span>
 									</div>
 								</li>
 								<li class="list-group-item detail-field" data-copy-target="glyphDetailDec" data-label="decimal">
 									<span class="text-secondary">Decimal</span>
 									<div class="detail-value">
 										<span id="glyphDetailDec" class="fw-bold"></span>
-										<i class="far fa-copy detail-copy-icon" aria-hidden="true"></i>
+										<span class="detail-copy-text">Copy</span>
 									</div>
 								</li>
 								<li class="list-group-item detail-field" data-copy-target="glyphDetailPos" data-label="position">
 									<span class="text-secondary">Position</span>
 									<div class="detail-value">
 										<span id="glyphDetailPos" class="fw-bold"></span>
-										<i class="far fa-copy detail-copy-icon" aria-hidden="true"></i>
+										<span class="detail-copy-text">Copy</span>
 									</div>
 								</li>
 								<li class="list-group-item detail-field" data-copy-target="glyphDetailDim" data-label="dimensions">
 									<span class="text-secondary">Dimensions</span>
 									<div class="detail-value">
 										<span id="glyphDetailDim" class="fw-bold"></span>
-										<i class="far fa-copy detail-copy-icon" aria-hidden="true"></i>
+										<span class="detail-copy-text">Copy</span>
 									</div>
 								</li>
 								<li class="list-group-item detail-field" data-copy-target="glyphDetailUnicode" data-label="unicode escape">
 									<span class="text-secondary">Unicode Esc.</span>
 									<div class="detail-value">
 										<span id="glyphDetailUnicode" class="fw-bold"></span>
-										<i class="far fa-copy detail-copy-icon" aria-hidden="true"></i>
+										<span class="detail-copy-text">Copy</span>
 									</div>
 								</li>
 							</ul>
 
+							<div id="glyphDetailNotice" class="detail-notice" role="status" aria-live="polite"></div>
 							<small id="vanillaStatus" class="text-secondary d-block mt-3"></small>
 						</div>
 					</div>
@@ -244,16 +234,16 @@
 					<div class="d-flex gap-2 align-items-center detail-actions">
 						<input type="file" id="glyphDetailReplaceInput" accept="image/png,.png" class="d-none">
 						<button type="button" class="btn btn-primary" id="actionUploadPng">
-							<i class="fas fa-upload me-1"></i> Upload PNG
+							Upload PNG
 						</button>
 						<button type="button" class="btn btn-primary" id="actionVanillaPicker">
-							<i class="fas fa-images me-1"></i> Pick from Vanilla
+							Pick from Vanilla
 						</button>
 						<button type="button" class="btn btn-outline-danger" id="glyphDetailClearBtn">
-							<i class="fas fa-eraser me-1"></i> Clear to transparent
+							Clear to transparent
 						</button>
 						<button type="button" class="btn btn-primary" id="glyphDetailCopyBtn">
-							<i class="fas fa-pen-nib me-1"></i> Draw
+							Draw
 						</button>
 					</div>
 				</div>
@@ -267,7 +257,7 @@
 			<div class="modal-content rounded-4 border-0 shadow-lg">
 				<div class="modal-header">
 					<h5 class="modal-title">Select Vanilla Texture</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					<button type="button" class="btn btn-sm modal-close-btn" data-bs-dismiss="modal" aria-label="Close">X</button>
 				</div>
 				<div class="modal-body">
 					<div class="row g-2 mb-3 align-items-center">
@@ -311,13 +301,13 @@
 	</div>
 
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-	<script src="js/state.js"></script>
-	<script src="js/defaults.js"></script>
-	<script src="js/utils.js"></script>
-	<script src="js/converter.js"></script>
-	<script src="js/zoom.js"></script>
-	<script src="js/glyph.js"></script>
-	<script src="js/main.js"></script>
+	<script src="js/state.js?v=20260705g"></script>
+	<script src="js/defaults.js?v=20260705g"></script>
+	<script src="js/utils.js?v=20260705g"></script>
+	<script src="js/converter.js?v=20260705g"></script>
+	<script src="js/zoom.js?v=20260705g"></script>
+	<script src="js/glyph.js?v=20260705g"></script>
+	<script src="js/main.js?v=20260705g"></script>
 </body>
 
 </html>

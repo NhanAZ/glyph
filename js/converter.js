@@ -72,11 +72,11 @@ function copyOutput() {
 	if (!output || !copyButton || output.value.trim() === '') return;
 
 	copyText(output.value).then(() => {
-		setButtonContent(copyButton, 'fas fa-check text-primary');
+		setButtonContent(copyButton, 'Copied');
 		copyButton.disabled = true;
 
 		setTimeout(() => {
-			setButtonContent(copyButton, 'far fa-copy');
+			setButtonContent(copyButton, 'Copy');
 			copyButton.disabled = false;
 		}, 2000);
 	}).catch(() => {

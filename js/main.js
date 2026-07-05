@@ -163,6 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const detailCharText = getElement('glyphDetailCharText');
 	const detailDim = getElement('glyphDetailDim');
 	const detailUnicode = getElement('glyphDetailUnicode');
+	const detailNotice = getElement('glyphDetailNotice');
 	const detailPreview = document.querySelector('.detail-preview');
 	const detailCopyBtn = getElement('glyphDetailCopyBtn');
 	const detailDownloadBtn = getElement('glyphDetailDownloadBtn');
@@ -193,13 +194,33 @@ document.addEventListener('DOMContentLoaded', () => {
 	let vanillaRenderId = 0;
 	let replacePending = null;
 	let currentDetailCell = null;
+	let detailNoticeTimer = null;
 	const vanillaCacheTtl = 24 * 60 * 60 * 1000;
+
+	function showDetailNotice(message, variant = 'success') {
+		if (!detailNotice) return;
+		if (detailNoticeTimer) clearTimeout(detailNoticeTimer);
+		detailNotice.textContent = message;
+		detailNotice.classList.toggle('error', variant === 'error');
+		detailNotice.classList.add('visible');
+		detailNoticeTimer = setTimeout(() => {
+			detailNotice.classList.remove('visible', 'error');
+		}, 1500);
+	}
 
 	function formatUnicodeEscape(hexValue) {
 		if (!hexValue) return '-';
 		const clean = hexValue.toString().trim().replace(/^0x/i, '');
 		if (!clean || !/^[0-9A-Fa-f]+$/.test(clean)) return '-';
 		return `\\u{${clean.toUpperCase()}}`;
+	}
+
+	function isPrivateUseCharacter(codePoint) {
+		return Number.isInteger(codePoint) && (
+			(codePoint >= 0xE000 && codePoint <= 0xF8FF) ||
+			(codePoint >= 0xF0000 && codePoint <= 0xFFFFD) ||
+			(codePoint >= 0x100000 && codePoint <= 0x10FFFD)
+		);
 	}
 
 	function ensureDrawerPrompt() {
@@ -226,18 +247,18 @@ document.addEventListener('DOMContentLoaded', () => {
 			const webDrawerBtn = document.createElement('button');
 			webDrawerBtn.type = 'button';
 			webDrawerBtn.className = 'btn btn-outline-primary w-100 py-2';
-			webDrawerBtn.innerHTML = '<i class="fas fa-globe me-2"></i>Web Glyph Drawer (by NhanAZ)';
+			webDrawerBtn.textContent = 'Web Glyph Drawer (by NhanAZ)';
 			
 			const asepriteBtn = document.createElement('button');
 			asepriteBtn.type = 'button';
-			asepriteBtn.className = 'btn btn-primary w-100 py-2 position-relative';
-			asepriteBtn.innerHTML = '<i class="fas fa-paint-brush me-2"></i>Aseprite <span class="badge bg-warning text-dark position-absolute top-50 end-0 translate-middle-y me-3 rounded-pill" style="font-size: 0.65rem;">Recommended</span>';
+			asepriteBtn.className = 'btn btn-primary w-100 py-2';
+			asepriteBtn.textContent = 'Aseprite (Recommend)';
 			
 			const jokeText = document.createElement('small');
 			jokeText.className = 'text-muted text-center d-block mb-3 mt-1';
 			jokeText.style.fontSize = '0.75rem';
 			jokeText.style.fontStyle = 'italic';
-			jokeText.innerHTML = '(Dear Aseprite team, I am a huge fan! If you happen to see this little shoutout, a Pro license would be a dream come true for me at <a href="mailto:itsnhanaz@gmail.com" class="text-muted text-decoration-none">itsnhanaz@gmail.com</a>. Thank you so much! 😊)';
+			jokeText.innerHTML = '(Dear Aseprite team, I am a huge fan! If you happen to see this little shoutout, a Pro license would be a dream come true for me at <a href="mailto:itsnhanaz@gmail.com" class="text-muted text-decoration-none">itsnhanaz@gmail.com</a>. Thank you so much!)';
 
 			const cancelButton = document.createElement('button');
 			cancelButton.type = 'button';
@@ -315,13 +336,19 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (detailHex) detailHex.textContent = hex;
 		if (detailDec) detailDec.textContent = decVal;
 		if (detailPos) detailPos.textContent = pos;
-		if (detailCharText) detailCharText.textContent = char;
+		if (detailCharText) {
+			const usesPlaceholder = isPrivateUseCharacter(codePoint);
+			detailCharText.textContent = usesPlaceholder ? '\u25A1' : (char || '-');
+			detailCharText.dataset.copyValue = char;
+			detailCharText.classList.toggle('private-use-placeholder', usesPlaceholder);
+			detailCharText.title = usesPlaceholder ? 'Private Use character' : '';
+		}
 		if (detailDim) detailDim.textContent = dimText || '-';
 		if (detailUnicode) detailUnicode.textContent = formatUnicodeEscape(hex);
 
 		if (detailCopyBtn) {
 			detailCopyBtn.disabled = false;
-			setButtonContent(detailCopyBtn, 'fas fa-pen-nib me-1', 'Draw');
+			setButtonContent(detailCopyBtn, 'Draw');
 			detailCopyBtn.onclick = () => {
 				ensureDrawerPrompt();
 			};
@@ -338,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		if (detailClearBtn) {
 			detailClearBtn.disabled = false;
-			setButtonContent(detailClearBtn, 'fas fa-eraser me-1', 'Clear to transparent');
+			setButtonContent(detailClearBtn, 'Clear to transparent');
 			detailClearBtn.onclick = () => {
 				cell.style.backgroundImage = '';
 				cell.style.backgroundSize = '';
@@ -390,13 +417,15 @@ document.addEventListener('DOMContentLoaded', () => {
 			const targetId = field.getAttribute('data-copy-target');
 			if (!targetId) return;
 			const targetEl = getElement(targetId);
-			const value = targetEl ? targetEl.textContent.trim() : '';
+			const value = targetEl
+				? (targetEl.dataset.copyValue ?? targetEl.textContent.trim())
+				: '';
 			if (!value) return;
 			copyText(value).then(() => {
 				const label = field.getAttribute('data-label') || 'value';
-				showToast(`Copied ${label}`);
+				showDetailNotice(`Copied ${label} to clipboard`);
 			}).catch(() => {
-				showToast('Unable to access the clipboard.', 'error');
+				showDetailNotice('Clipboard access failed. Try copying again.', 'error');
 			});
 		});
 	}
