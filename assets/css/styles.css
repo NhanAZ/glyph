@@ -890,6 +890,8 @@ small {
 	margin: 2px;
 	border-width: 4px 4px 8px;
 	box-shadow: none;
+	white-space: normal;
+	overflow-wrap: anywhere;
 }
 
 .dropdown-divider {
@@ -1101,7 +1103,8 @@ small {
 	font-weight: 900;
 	line-height: 1.25;
 	text-align: center;
-	white-space: nowrap;
+	white-space: normal;
+	overflow-wrap: anywhere;
 	pointer-events: none;
 	opacity: 0;
 	text-shadow: 1px 1px 0 #ffffff;
@@ -1256,6 +1259,7 @@ small {
 	grid-template-columns: repeat(4, minmax(0, 1fr));
 	gap: 8px;
 	width: 100%;
+	align-items: stretch;
 }
 
 .detail-actions .btn {
@@ -1264,7 +1268,10 @@ small {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	white-space: nowrap;
+	padding-inline: 8px;
+	text-align: center;
+	white-space: normal;
+	overflow-wrap: anywhere;
 }
 
 .detail-meta {
