@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			const webDrawerBtn = document.createElement('button');
 			webDrawerBtn.type = 'button';
 			webDrawerBtn.className = 'btn btn-outline-primary w-100 py-2';
-			webDrawerBtn.textContent = 'Web Glyph Drawer (by NhanAZ)';
+			webDrawerBtn.textContent = 'Web Glyph Drawer (Experiment)';
 			
 			const asepriteBtn = document.createElement('button');
 			asepriteBtn.type = 'button';
