@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /glyph/
+
+Sitemap: https://nhanaz.github.io/glyph/sitemap.xml

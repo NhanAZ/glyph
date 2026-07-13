@@ -1,6 +1,14 @@
 {
+	"id": "/glyph/",
 	"name": "Glyph Tools",
-	"short_name": "GlyphTools",
+	"short_name": "Glyph Tools",
+	"description": "Create, inspect, replace, and export Minecraft Bedrock glyph atlases in your browser.",
+	"lang": "en",
+	"dir": "ltr",
+	"start_url": "/glyph/",
+	"scope": "/glyph/",
+	"display": "standalone",
+	"categories": ["utilities", "productivity"],
 	"icons": [
 		{
 			"src": "android-chrome-192x192.png",
@@ -13,7 +21,6 @@
 			"type": "image/png"
 		}
 	],
-	"theme_color": "#f5f5f7",
-	"background_color": "#f5f5f7",
-	"display": "standalone"
+	"theme_color": "#060606",
+	"background_color": "#060606"
 }

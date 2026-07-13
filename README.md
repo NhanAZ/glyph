@@ -2,6 +2,8 @@
 
 A Minecraft Bedrock resource pack often reaches a point where ordinary text is no longer enough. Controller buttons, menu symbols, status marks, and custom artwork need stable code points and a predictable place inside a glyph atlas. Glyph Tools brings that work into one focused workspace.
 
+Open the live app at [nhanaz.github.io/glyph](https://nhanaz.github.io/glyph/).
+
 ![Glyph Tools workspace](docs/glyph-tools-preview.png)
 
 ## A glyph page starts as a picture
