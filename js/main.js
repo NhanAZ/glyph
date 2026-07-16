@@ -54,7 +54,8 @@ function loadPreset(assetKey, hex, cacheKey, labelText, options = {}) {
 
 const glyphInputElement = getElement('glyph-input');
 listen(glyphInputElement, 'input', function () {
-	let glyphInput = this.value.trim().toUpperCase();
+	const rawGlyphInput = this.value.trim().toUpperCase();
+	let glyphInput = rawGlyphInput;
 	const requestId = ++glyphInputRequestId;
 	const glyphSuccessMsg = getElement('glyphSuccessMsg');
 	const glyphErrorMsg = getElement('glyphErrorMsg');
@@ -95,8 +96,13 @@ listen(glyphInputElement, 'input', function () {
 			renderGlyphs();
 		}
 
-		glyphSuccessMsg.textContent = 'Glyph generated successfully.';
-		glyphSuccessMsg.classList.remove('d-none');
+		if (rawGlyphInput) {
+			glyphSuccessMsg.textContent = 'Glyph generated successfully.';
+			glyphSuccessMsg.classList.remove('d-none');
+		} else {
+			glyphSuccessMsg.textContent = '';
+			glyphSuccessMsg.classList.add('d-none');
+		}
 		glyphErrorMsg.classList.add('d-none');
 		if (validationMsg) validationMsg.classList.add('d-none');
 		this.classList.remove('is-invalid');
