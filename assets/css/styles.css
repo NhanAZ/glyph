@@ -1023,12 +1023,14 @@ small {
 	transform: translateY(-50%) !important;
 }
 
-.copy-button:active {
+.copy-button:active,
+.copy-button:active:hover,
+.copy-button:active:focus {
 	margin-top: 0 !important;
-	border-width: 3px 3px 4px !important;
-	border-image-source: var(--ui-button-active-border) !important;
-	border-image-slice: 2 fill !important;
-	transform: translateY(calc(-50% + 2px)) !important;
+	border-width: 3px 3px 6px !important;
+	border-image-source: var(--ui-button-hover-border) !important;
+	border-image-slice: 2 2 4 2 fill !important;
+	transform: translateY(-50%) !important;
 }
 
 .atlas-card {
