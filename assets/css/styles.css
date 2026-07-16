@@ -648,6 +648,32 @@ button:focus-visible,
 	align-content: space-between;
 }
 
+.converter-card {
+	padding-bottom: 54px;
+}
+
+.converter-status {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+	left: 10px;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	min-height: 36px;
+	margin: 0 !important;
+	padding: 5px 9px !important;
+	border-width: 4px 3px;
+	border-image-slice: 2 1 2 1 fill;
+	border-image-width: 4px 3px;
+	font-size: 0.78rem;
+	line-height: 1.1;
+}
+
+.converter-status.d-none {
+	display: none !important;
+}
+
 .preset-actions {
 	grid-column: 1 / -1;
 	align-self: end;
@@ -1183,6 +1209,20 @@ small {
 .alert-warning {
 	color: #2e220b;
 	background: #d7b55c;
+}
+
+.converter-card .converter-status {
+	min-height: 36px;
+	padding: 5px 9px !important;
+	border: 3px solid #1f1f1f;
+	border-bottom-width: 5px;
+	border-image: none;
+	border-radius: 0 !important;
+	box-shadow:
+		inset 2px 2px 0 rgba(255, 255, 255, 0.2),
+		inset -2px -2px 0 rgba(0, 0, 0, 0.26);
+	font-size: 0.78rem;
+	line-height: 1.1;
 }
 
 .mobile-alert {
