@@ -637,6 +637,7 @@ button:focus-visible,
 }
 
 .hex-field {
+	position: relative;
 	grid-column: 1;
 }
 
@@ -822,9 +823,15 @@ small {
 }
 
 .hint-link {
+	position: absolute;
+	left: 0;
+	top: calc(100% + 4px);
+	z-index: 3;
+	max-width: 100%;
 	margin-top: 2px;
 	font-size: 0.86rem;
 	cursor: pointer;
+	white-space: nowrap;
 	text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
 }
 

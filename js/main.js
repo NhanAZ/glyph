@@ -4,9 +4,58 @@ if (document.readyState === 'loading') {
 	initializeGlyph();
 }
 
+let glyphInputRequestId = 0;
+
+function loadPreset(assetKey, hex, cacheKey, labelText, options = {}) {
+	const source = DEFAULT_GLYPHS[assetKey];
+	if (!source || !isValidGlyphPrefix(hex)) return false;
+
+	const {
+		hideHint = true,
+		updateUploadLabel = true,
+		showErrorToast = true,
+		isCurrent = () => true,
+		onError = null
+	} = options;
+
+	clearTimeout(updateTimer);
+	const image = new Image();
+	image.crossOrigin = 'anonymous';
+	image.onload = () => {
+		if (!isCurrent()) return;
+
+		if (!processGlyph(image, hex, { cacheKey, label: labelText, atlasUrl: source })) {
+			if (showErrorToast) showToast('Unable to process the preset image.', 'error');
+			if (onError) onError();
+			return;
+		}
+
+		if (hideHint) {
+			const hintMsg = getElement('defaultImageHint');
+			if (hintMsg) hintMsg.classList.add('d-none');
+		}
+
+		if (updateUploadLabel) {
+			const uploadLabel = getElement('uploadLabel');
+			if (uploadLabel) {
+				uploadLabel.textContent = `Loaded: ${labelText}`;
+				uploadLabel.className = 'text-primary fw-bold upload-label-text';
+			}
+		}
+	};
+	image.onerror = () => {
+		if (!isCurrent()) return;
+		if (showErrorToast) showToast('Unable to load the preset image.', 'error');
+		if (onError) onError();
+	};
+	image.src = source;
+	return true;
+}
+
 const glyphInputElement = getElement('glyph-input');
 listen(glyphInputElement, 'input', function () {
 	let glyphInput = this.value.trim().toUpperCase();
+	const requestId = ++glyphInputRequestId;
 	const glyphSuccessMsg = getElement('glyphSuccessMsg');
 	const glyphErrorMsg = getElement('glyphErrorMsg');
 	const validationMsg = getElement('inputValidation');
@@ -25,20 +74,34 @@ listen(glyphInputElement, 'input', function () {
 	if (glyphInput === '') glyphInput = 'E0';
 
 	if (isValidGlyphPrefix(glyphInput)) {
-		Glyph(glyphInput);
+		const isDefaultAtlas = glyphInput === 'E0' || glyphInput === 'E1';
+		const loadDefaultAtlas = () => loadPreset(glyphInput, glyphInput, `${glyphInput}_DEFAULT`, `glyph_${glyphInput}.png`, {
+			updateUploadLabel: false,
+			showErrorToast: false,
+			isCurrent: () => requestId === glyphInputRequestId,
+			onError: () => {
+				if (requestId !== glyphInputRequestId) return;
+				Glyph(glyphInput);
+				renderGlyphs();
+				if (hintMsg && hintHex) {
+					hintHex.textContent = glyphInput;
+					hintMsg.classList.remove('d-none');
+				}
+			}
+		});
+
+		if (!isDefaultAtlas || !loadDefaultAtlas()) {
+			Glyph(glyphInput);
+			renderGlyphs();
+		}
+
 		glyphSuccessMsg.textContent = 'Glyph generated successfully.';
 		glyphSuccessMsg.classList.remove('d-none');
 		glyphErrorMsg.classList.add('d-none');
 		if (validationMsg) validationMsg.classList.add('d-none');
 		this.classList.remove('is-invalid');
-		renderGlyphs();
 
-		if ((glyphInput === 'E0' || glyphInput === 'E1') && hintMsg && hintHex) {
-			hintHex.textContent = glyphInput;
-			hintMsg.classList.remove('d-none');
-		} else if (hintMsg) {
-			hintMsg.classList.add('d-none');
-		}
+		if (hintMsg) hintMsg.classList.add('d-none');
 	} else {
 		glyphErrorMsg.textContent = 'Please enter a hex prefix from 0 to 10FF.';
 		glyphErrorMsg.classList.remove('d-none');
@@ -445,31 +508,6 @@ document.addEventListener('DOMContentLoaded', () => {
 				showGlyphDetail(cell);
 			}
 		});
-	}
-
-	function loadPreset(assetKey, hex, cacheKey, labelText) {
-		const source = DEFAULT_GLYPHS[assetKey];
-		if (!source || !isValidGlyphPrefix(hex)) return false;
-
-		clearTimeout(updateTimer);
-		const image = new Image();
-		image.crossOrigin = 'anonymous';
-		image.onload = () => {
-			if (!processGlyph(image, hex, { cacheKey, label: labelText, atlasUrl: source })) {
-				showToast('Unable to process the preset image.', 'error');
-				return;
-			}
-
-			if (hintMsg) hintMsg.classList.add('d-none');
-			const uploadLabel = getElement('uploadLabel');
-			if (uploadLabel) {
-				uploadLabel.textContent = `Loaded: ${labelText}`;
-				uploadLabel.className = 'text-primary fw-bold upload-label-text';
-			}
-		};
-		image.onerror = () => showToast('Unable to load the preset image.', 'error');
-		image.src = source;
-		return true;
 	}
 
 	const hintMsg = getElement('defaultImageHint');
