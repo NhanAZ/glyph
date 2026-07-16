@@ -1,5 +1,73 @@
 let copyFeedbackTimer = null;
 
+const CONTROL_CHARACTER_LABELS = new Map([
+	[0x0000, 'NULL'],
+	[0x0001, 'START OF HEADING'],
+	[0x0002, 'START OF TEXT'],
+	[0x0003, 'END OF TEXT'],
+	[0x0004, 'END OF TRANSMISSION'],
+	[0x0005, 'ENQUIRY'],
+	[0x0006, 'ACKNOWLEDGE'],
+	[0x0007, 'BELL'],
+	[0x0008, 'BACKSPACE'],
+	[0x0009, 'TAB'],
+	[0x000A, 'LINE FEED'],
+	[0x000B, 'VERTICAL TAB'],
+	[0x000C, 'FORM FEED'],
+	[0x000D, 'CARRIAGE RETURN'],
+	[0x000E, 'SHIFT OUT'],
+	[0x000F, 'SHIFT IN'],
+	[0x0010, 'DATA LINK ESCAPE'],
+	[0x0011, 'DEVICE CONTROL ONE'],
+	[0x0012, 'DEVICE CONTROL TWO'],
+	[0x0013, 'DEVICE CONTROL THREE'],
+	[0x0014, 'DEVICE CONTROL FOUR'],
+	[0x0015, 'NEGATIVE ACKNOWLEDGE'],
+	[0x0016, 'SYNCHRONOUS IDLE'],
+	[0x0017, 'END OF TRANSMISSION BLOCK'],
+	[0x0018, 'CANCEL'],
+	[0x0019, 'END OF MEDIUM'],
+	[0x001A, 'SUBSTITUTE'],
+	[0x001B, 'ESCAPE'],
+	[0x001C, 'FILE SEPARATOR'],
+	[0x001D, 'GROUP SEPARATOR'],
+	[0x001E, 'RECORD SEPARATOR'],
+	[0x001F, 'UNIT SEPARATOR'],
+	[0x007F, 'DELETE']
+]);
+
+const NAMED_INVISIBLE_CODE_POINTS = new Map([
+	[0x0020, 'SPACE'],
+	[0x00A0, 'NO-BREAK SPACE'],
+	[0x00AD, 'SOFT HYPHEN'],
+	[0x061C, 'ARABIC LETTER MARK'],
+	[0x1680, 'OGHAM SPACE MARK'],
+	[0x180E, 'MONGOLIAN VOWEL SEPARATOR'],
+	[0x2000, 'EN QUAD'],
+	[0x2001, 'EM QUAD'],
+	[0x2002, 'EN SPACE'],
+	[0x2003, 'EM SPACE'],
+	[0x2004, 'THREE-PER-EM SPACE'],
+	[0x2005, 'FOUR-PER-EM SPACE'],
+	[0x2006, 'SIX-PER-EM SPACE'],
+	[0x2007, 'FIGURE SPACE'],
+	[0x2008, 'PUNCTUATION SPACE'],
+	[0x2009, 'THIN SPACE'],
+	[0x200A, 'HAIR SPACE'],
+	[0x200B, 'ZERO WIDTH SPACE'],
+	[0x200C, 'ZERO WIDTH NON-JOINER'],
+	[0x200D, 'ZERO WIDTH JOINER'],
+	[0x200E, 'LEFT-TO-RIGHT MARK'],
+	[0x200F, 'RIGHT-TO-LEFT MARK'],
+	[0x2028, 'LINE SEPARATOR'],
+	[0x2029, 'PARAGRAPH SEPARATOR'],
+	[0x202F, 'NARROW NO-BREAK SPACE'],
+	[0x205F, 'MEDIUM MATHEMATICAL SPACE'],
+	[0x2060, 'WORD JOINER'],
+	[0x3000, 'IDEOGRAPHIC SPACE'],
+	[0xFEFF, 'ZERO WIDTH NO-BREAK SPACE']
+]);
+
 function clearCopyFeedbackTimer() {
 	if (copyFeedbackTimer) {
 		clearTimeout(copyFeedbackTimer);
@@ -7,18 +75,89 @@ function clearCopyFeedbackTimer() {
 	}
 }
 
-function convertHexToEmoji(input) {
+function formatCodePoint(codePoint) {
+	return `U+${codePoint.toString(16).toUpperCase().padStart(4, '0')}`;
+}
+
+function isCombiningMark(codePoint) {
+	return (
+		(codePoint >= 0x0300 && codePoint <= 0x036F) ||
+		(codePoint >= 0x1AB0 && codePoint <= 0x1AFF) ||
+		(codePoint >= 0x1DC0 && codePoint <= 0x1DFF) ||
+		(codePoint >= 0x20D0 && codePoint <= 0x20FF) ||
+		(codePoint >= 0xFE20 && codePoint <= 0xFE2F)
+	);
+}
+
+function isVariationSelector(codePoint) {
+	return (
+		(codePoint >= 0xFE00 && codePoint <= 0xFE0F) ||
+		(codePoint >= 0xE0100 && codePoint <= 0xE01EF)
+	);
+}
+
+function isFormatCharacter(codePoint) {
+	return (
+		(codePoint >= 0x202A && codePoint <= 0x202E) ||
+		(codePoint >= 0x2061 && codePoint <= 0x206F) ||
+		(codePoint >= 0xFFF9 && codePoint <= 0xFFFB) ||
+		(codePoint >= 0xE0000 && codePoint <= 0xE007F)
+	);
+}
+
+function getInvisibleCodePointLabel(codePoint) {
+	if (CONTROL_CHARACTER_LABELS.has(codePoint)) return CONTROL_CHARACTER_LABELS.get(codePoint);
+	if (NAMED_INVISIBLE_CODE_POINTS.has(codePoint)) return NAMED_INVISIBLE_CODE_POINTS.get(codePoint);
+	if (codePoint <= 0x001F || (codePoint >= 0x0080 && codePoint <= 0x009F)) {
+		return 'CONTROL CHARACTER';
+	}
+	if (isCombiningMark(codePoint)) return 'COMBINING MARK';
+	if (isVariationSelector(codePoint)) return 'VARIATION SELECTOR';
+	if (isFormatCharacter(codePoint)) return 'FORMAT CHARACTER';
+	return '';
+}
+
+function getOutputVisualHint(value) {
+	const characters = Array.from(value);
+	if (characters.length !== 1) return '';
+
+	const codePoint = characters[0].codePointAt(0);
+	const label = getInvisibleCodePointLabel(codePoint);
+	return label ? `${formatCodePoint(codePoint)} ${label}` : '';
+}
+
+function updateConverterOutputHint(value) {
 	const output = getElement('converterOutput');
+	const hint = getElement('converterOutputHint');
+	const wrapper = output ? output.closest('.output-wrapper') : null;
+	const visualHint = getOutputVisualHint(value);
+
+	if (hint) {
+		hint.textContent = visualHint;
+		hint.classList.toggle('d-none', !visualHint);
+	}
+	if (wrapper) wrapper.classList.toggle('has-output-hint', Boolean(visualHint));
+	if (output) output.title = visualHint ? `${visualHint} - copy uses the actual character.` : '';
+}
+
+function setConverterOutput(value) {
+	const output = getElement('converterOutput');
+	if (!output) return;
+	output.value = value;
+	updateConverterOutputHint(value);
+}
+
+function convertHexToEmoji(input) {
 	const successMsg = getElement('successMsg');
 	const errorMsg = getElement('errorMsg');
-	if (!output || !successMsg || !errorMsg) return;
+	if (!successMsg || !errorMsg) return;
 
 	try {
 		const codePoint = Number.parseInt(input, 16);
 		if (!Number.isInteger(codePoint) || codePoint < 0 || codePoint > 0x10FFFF) {
 			throw new RangeError('Invalid Unicode code point.');
 		}
-		output.value = String.fromCodePoint(codePoint);
+		setConverterOutput(String.fromCodePoint(codePoint));
 		successMsg.textContent = 'Converted successfully.';
 		successMsg.classList.remove('d-none');
 	} catch {
@@ -28,12 +167,11 @@ function convertHexToEmoji(input) {
 }
 
 function convertEmojiToHex(input) {
-	const output = getElement('converterOutput');
 	const successMsg = getElement('successMsg');
-	if (!output || !successMsg) return;
+	if (!successMsg) return;
 
 	const hexValue = input.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
-	output.value = `0x${hexValue}`;
+	setConverterOutput(`0x${hexValue}`);
 	successMsg.textContent = 'Converted successfully.';
 	successMsg.classList.remove('d-none');
 }
@@ -52,7 +190,7 @@ function convert() {
 	if (copyButton) copyButton.disabled = false;
 	errorMsg.classList.add('d-none');
 	successMsg.classList.add('d-none');
-	output.value = '';
+	setConverterOutput('');
 
 	if (!input) {
 		updateCopyButtonState();
@@ -83,7 +221,7 @@ function copyOutput() {
 	const errorMsg = getElement('errorMsg');
 	const successMsg = getElement('successMsg');
 
-	if (!output || !copyButton || output.value.trim() === '') return;
+	if (!output || !copyButton || output.value === '') return;
 
 	copyText(output.value).then(() => {
 		clearCopyFeedbackTimer();

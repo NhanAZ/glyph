@@ -63,7 +63,7 @@ function updateCopyButtonState() {
 	const copyButton = getElement('copyButton');
 	if (!output || !copyButton) return;
 
-	if (output.value.trim() === '') {
+	if (output.value.length === 0) {
 		copyButton.style.opacity = '0.4';
 		copyButton.style.pointerEvents = 'none';
 	} else {

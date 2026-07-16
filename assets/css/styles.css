@@ -772,6 +772,28 @@ small {
 	padding-right: 76px;
 }
 
+.output-wrapper.has-output-hint .app-input {
+	color: transparent;
+	text-shadow: none;
+}
+
+.output-visual {
+	position: absolute;
+	left: 8px;
+	right: 76px;
+	top: 50%;
+	z-index: 1;
+	color: #eeeeee;
+	font-size: 0.86rem;
+	line-height: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	pointer-events: none;
+	transform: translateY(-50%);
+	text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.45);
+}
+
 .upload-zone {
 	position: relative;
 	display: flex;
@@ -1007,6 +1029,7 @@ small {
 .copy-button {
 	right: 4px;
 	top: 50%;
+	z-index: 2;
 	width: 62px;
 	height: 34px;
 	border-width: 3px 3px 6px;
