@@ -105,15 +105,44 @@ function isFormatCharacter(codePoint) {
 	);
 }
 
-function getInvisibleCodePointLabel(codePoint) {
+function isPrivateUseCodePoint(codePoint) {
+	return (
+		(codePoint >= 0xE000 && codePoint <= 0xF8FF) ||
+		(codePoint >= 0xF0000 && codePoint <= 0xFFFFD) ||
+		(codePoint >= 0x100000 && codePoint <= 0x10FFFD)
+	);
+}
+
+function isComplexScriptBlock(codePoint) {
+	return codePoint >= 0x0900 && codePoint <= 0x0DFF;
+}
+
+function getUnicodeMarkLabel(character) {
+	if (/^\p{Nonspacing_Mark}$/u.test(character)) return 'NONSPACING MARK';
+	if (/^\p{Spacing_Mark}$/u.test(character)) return 'SPACING MARK';
+	if (/^\p{Enclosing_Mark}$/u.test(character)) return 'ENCLOSING MARK';
+	if (/^\p{Mark}$/u.test(character)) return 'MARK CHARACTER';
+	return '';
+}
+
+function isAssignedCodePoint(character) {
+	return /^\p{Assigned}$/u.test(character);
+}
+
+function getInvisibleCodePointLabel(codePoint, character) {
 	if (CONTROL_CHARACTER_LABELS.has(codePoint)) return CONTROL_CHARACTER_LABELS.get(codePoint);
 	if (NAMED_INVISIBLE_CODE_POINTS.has(codePoint)) return NAMED_INVISIBLE_CODE_POINTS.get(codePoint);
 	if (codePoint <= 0x001F || (codePoint >= 0x0080 && codePoint <= 0x009F)) {
 		return 'CONTROL CHARACTER';
 	}
+	const markLabel = getUnicodeMarkLabel(character);
+	if (markLabel) return markLabel;
 	if (isCombiningMark(codePoint)) return 'COMBINING MARK';
 	if (isVariationSelector(codePoint)) return 'VARIATION SELECTOR';
 	if (isFormatCharacter(codePoint)) return 'FORMAT CHARACTER';
+	if (isPrivateUseCodePoint(codePoint)) return 'PRIVATE USE CHARACTER';
+	if (!isAssignedCodePoint(character)) return 'UNASSIGNED CODE POINT';
+	if (isComplexScriptBlock(codePoint)) return 'CODE POINT';
 	return '';
 }
 
@@ -121,8 +150,9 @@ function getOutputVisualHint(value) {
 	const characters = Array.from(value);
 	if (characters.length !== 1) return '';
 
-	const codePoint = characters[0].codePointAt(0);
-	const label = getInvisibleCodePointLabel(codePoint);
+	const character = characters[0];
+	const codePoint = character.codePointAt(0);
+	const label = getInvisibleCodePointLabel(codePoint, character);
 	return label ? `${formatCodePoint(codePoint)} ${label}` : '';
 }
 
