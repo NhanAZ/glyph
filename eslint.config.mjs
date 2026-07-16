@@ -16,6 +16,7 @@ const sharedAppGlobals = {
 	currentAtlasLabel: 'writable',
 	downloadFile: 'readonly',
 	downloadUrl: 'readonly',
+	extractGlyphTileUrl: 'readonly',
 	getBackgroundImageUrl: 'readonly',
 	getElement: 'readonly',
 	getGlyphPrefix: 'readonly',
@@ -37,6 +38,7 @@ const sharedAppGlobals = {
 	toggleDarkMode: 'readonly',
 	updateTimer: 'writable',
 	updateCopyButtonState: 'readonly',
+	updateGlyphCellsAtlas: 'readonly',
 	updateZoomWindowContent: 'readonly',
 	zoomEnabled: 'writable',
 	zoomWindow: 'writable'

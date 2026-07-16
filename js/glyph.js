@@ -6,6 +6,7 @@ function createGlyphCell({
 	width = '',
 	height = '',
 	imageUrl = '',
+	useAtlas = false,
 	transparent = false
 }) {
 	const cell = document.createElement('div');
@@ -16,7 +17,9 @@ function createGlyphCell({
 	cell.dataset.height = String(height);
 
 	if (transparent) cell.classList.add('transparent');
-	if (imageUrl) {
+	if (useAtlas) {
+		setCellAtlasBackground(cell, col, row);
+	} else if (imageUrl) {
 		cell.style.backgroundImage = `url("${imageUrl}")`;
 		cell.style.backgroundSize = '100% 100%';
 	} else {
@@ -26,9 +29,140 @@ function createGlyphCell({
 	return cell;
 }
 
+function getSpritePosition(index) {
+	return GRID > 1 ? (index / (GRID - 1)) * 100 : 0;
+}
+
+function setCellAtlasBackground(cell, col, row) {
+	const colIndex = Math.max(0, Number(col) - 1);
+	const rowIndex = Math.max(0, Number(row) - 1);
+
+	cell.dataset.spriteCol = String(colIndex);
+	cell.dataset.spriteRow = String(rowIndex);
+	cell.style.backgroundImage = 'var(--glyph-atlas-url)';
+	cell.style.backgroundSize = `${GRID * 100}% ${GRID * 100}%`;
+	cell.style.backgroundPosition = `${getSpritePosition(colIndex)}% ${getSpritePosition(rowIndex)}%`;
+	cell.style.backgroundRepeat = 'no-repeat';
+	cell.textContent = '';
+}
+
+function setGlyphOutputAtlas(glyphOutput, atlasUrl) {
+	if (!glyphOutput) return;
+	const nextVersion = (Number.parseInt(glyphOutput.dataset.atlasVersion, 10) || 0) + 1;
+	glyphOutput.dataset.atlasVersion = String(nextVersion);
+
+	if (atlasUrl) {
+		glyphOutput.dataset.atlasUrl = atlasUrl;
+		glyphOutput.style.setProperty('--glyph-atlas-url', `url("${atlasUrl}")`);
+	} else {
+		delete glyphOutput.dataset.atlasUrl;
+		glyphOutput.style.removeProperty('--glyph-atlas-url');
+	}
+}
+
+function getCellAtlasUrl(cell) {
+	if (!cell) return '';
+	const glyphOutput = cell.closest ? cell.closest('#glyph-output') : null;
+	return cell.dataset.atlasUrl || (glyphOutput ? glyphOutput.dataset.atlasUrl : '') || '';
+}
+
+function updateGlyphCellsAtlas(atlasUrl) {
+	const glyphOutput = getElement('glyph-output');
+	if (!glyphOutput || !atlasUrl) return;
+
+	setGlyphOutputAtlas(glyphOutput, atlasUrl);
+	Array.from(glyphOutput.querySelectorAll('div[data-sprite-col][data-sprite-row]')).forEach(cell => {
+		const col = Number.parseInt(cell.dataset.spriteCol, 10) + 1;
+		const row = Number.parseInt(cell.dataset.spriteRow, 10) + 1;
+		setCellAtlasBackground(cell, col, row);
+	});
+}
+
+function isTransparentGlyphTile(imageData) {
+	return imageData.data.every((value, index) => (index + 1) % 4 === 0 || value === 0);
+}
+
+function markTransparentCellsFromAtlas(img, glyphOutput, unicodeSize, atlasWidth, atlasHeight, sourceCanvas = null) {
+	if (!img || !glyphOutput || unicodeSize < 1 || atlasWidth < 1 || atlasHeight < 1) return;
+
+	const cells = Array.from(glyphOutput.querySelectorAll('div[data-sprite-col][data-sprite-row]'));
+	if (!cells.length) return;
+
+	const atlasVersion = glyphOutput.dataset.atlasVersion || '0';
+	const canvas = sourceCanvas || document.createElement('canvas');
+	if (!sourceCanvas) {
+		canvas.width = atlasWidth;
+		canvas.height = atlasHeight;
+	}
+
+	const ctx = canvas.getContext('2d', { willReadFrequently: true });
+	if (!ctx) return;
+
+	if (!sourceCanvas) {
+		try {
+			ctx.drawImage(img, 0, 0, atlasWidth, atlasHeight);
+		} catch {
+			return;
+		}
+	}
+
+	const schedule = (callback) => {
+		if (window.requestIdleCallback) {
+			window.requestIdleCallback(callback);
+		} else {
+			window.requestAnimationFrame(callback);
+		}
+	};
+	let index = 0;
+
+	const scanChunk = (deadline) => {
+		if (glyphOutput.dataset.atlasVersion !== atlasVersion) return;
+
+		const startedAt = performance.now();
+		while (index < cells.length) {
+			const hasIdleTime = deadline && typeof deadline.timeRemaining === 'function'
+				? deadline.timeRemaining() > 1
+				: performance.now() - startedAt < 8;
+			if (!hasIdleTime) break;
+
+			const cell = cells[index++];
+			const col = Number.parseInt(cell.dataset.spriteCol, 10);
+			const row = Number.parseInt(cell.dataset.spriteRow, 10);
+			const x = col * unicodeSize;
+			const y = row * unicodeSize;
+
+			try {
+				const imageData = ctx.getImageData(x, y, unicodeSize, unicodeSize);
+				cell.classList.toggle('transparent', isTransparentGlyphTile(imageData));
+			} catch {
+				return;
+			}
+		}
+
+		if (index < cells.length) {
+			schedule(scanChunk);
+		}
+	};
+
+	schedule(scanChunk);
+}
+
+function markTransparentCellsFromAtlasUrl(atlasUrl, glyphOutput, unicodeSize, atlasWidth, atlasHeight) {
+	if (!atlasUrl) return;
+
+	const img = new Image();
+	if (!atlasUrl.startsWith('data:')) img.crossOrigin = 'anonymous';
+	img.onload = function () {
+		markTransparentCellsFromAtlas(img, glyphOutput, unicodeSize, atlasWidth, atlasHeight);
+	};
+	img.src = atlasUrl;
+}
+
 function getBackgroundImageUrl(element) {
 	if (!element) return '';
 	if (element.dataset.originalBg) return element.dataset.originalBg;
+	const atlasUrl = getCellAtlasUrl(element);
+	if (atlasUrl && element.dataset.spriteCol) return atlasUrl;
 
 	const backgroundImage = element.style.backgroundImage;
 	const match = backgroundImage.match(/^url\((['"]?)(.*)\1\)$/);
@@ -60,6 +194,53 @@ function getAtlasTileRect(cell, imageWidth, imageHeight) {
 	return { tileW, tileH, x, y };
 }
 
+function extractGlyphTileUrl(cell) {
+	return new Promise((resolve) => {
+		if (!cell) {
+			resolve('');
+			return;
+		}
+
+		const atlasUrl = getCellAtlasUrl(cell);
+		const backgroundUrl = getBackgroundImageUrl(cell);
+		const sourceUrl = atlasUrl || backgroundUrl;
+		if (!sourceUrl) {
+			resolve('');
+			return;
+		}
+
+		if (!atlasUrl) {
+			resolve(sourceUrl);
+			return;
+		}
+
+		const img = new Image();
+		img.crossOrigin = 'anonymous';
+		img.onload = function () {
+			const tile = getAtlasTileRect(cell, img.naturalWidth || img.width, img.naturalHeight || img.height);
+			if (!tile) {
+				resolve('');
+				return;
+			}
+
+			const canvas = document.createElement('canvas');
+			canvas.width = tile.tileW;
+			canvas.height = tile.tileH;
+			const ctx = canvas.getContext('2d');
+			if (!ctx) {
+				resolve('');
+				return;
+			}
+
+			ctx.imageSmoothingEnabled = false;
+			ctx.drawImage(img, tile.x, tile.y, tile.tileW, tile.tileH, 0, 0, tile.tileW, tile.tileH);
+			resolve(canvas.toDataURL('image/png'));
+		};
+		img.onerror = () => resolve('');
+		img.src = sourceUrl;
+	});
+}
+
 function setAtlasInfo(width, height, label) {
 	const infoEl = getElement('atlasInfo');
 	if (!infoEl) return;
@@ -83,6 +264,7 @@ function Glyph(glyph = 'E0') {
 	const fragment = document.createDocumentFragment();
 	currentAtlasDataUrl = null;
 	currentAtlasLabel = `${filename}.png`;
+	setGlyphOutputAtlas(glyphOutput, '');
 
 	for (let i = 0; i < GRID * GRID; i++) {
 		const row = Math.floor(i / GRID) + 1;
@@ -113,7 +295,11 @@ function initializeGlyph() {
 			const img = new Image();
 			img.crossOrigin = 'anonymous';
 			img.onload = function () {
-				processGlyph(img, 'E0', { cacheKey: 'E0_DEFAULT', label: 'glyph_E0.png' });
+				processGlyph(img, 'E0', {
+					cacheKey: 'E0_DEFAULT',
+					label: 'glyph_E0.png',
+					atlasUrl: DEFAULT_GLYPHS.E0
+				});
 			};
 			img.onerror = function () {
 				Glyph('E0');
@@ -137,14 +323,22 @@ function applyCachedGlyph(entry) {
 
 	currentAtlasDataUrl = entry.atlasDataUrl || null;
 	currentAtlasLabel = entry.label || currentAtlasLabel;
+	setGlyphOutputAtlas(glyphOutput, currentAtlasDataUrl);
 	setAtlasInfo(entry.width, entry.height, entry.label);
-	renderGlyphs();
+	markTransparentCellsFromAtlasUrl(
+		currentAtlasDataUrl,
+		glyphOutput,
+		entry.unicodeSize,
+		entry.atlasWidth || entry.width,
+		entry.atlasHeight || entry.height
+	);
 	return true;
 }
 
 function renderGlyphs() {
 	const glyphOutput = getElement('glyph-output');
 	if (!glyphOutput) return;
+	if (glyphOutput.dataset.atlasUrl) return;
 
 	const glyphs = Array.from(glyphOutput.querySelectorAll('div[data-hex]'));
 	const themeKey = isDarkMode ? 'dark' : 'light';
@@ -155,6 +349,7 @@ function renderGlyphs() {
 		const start = performance.now();
 		for (; index < glyphs.length && performance.now() - start < 8; index++) {
 			const glyph = glyphs[index];
+			if (glyph.dataset.spriteCol) continue;
 			const bgUrl = getBackgroundImageUrl(glyph);
 
 			if (!bgUrl || (glyph.dataset.tintTheme === themeKey && glyph.dataset.displayBg)) continue;
@@ -237,19 +432,30 @@ function processGlyph(img, hexValue, options = {}) {
 		return applyCachedGlyph(glyphCache.get(themedKey));
 	}
 
-	const canvas = document.createElement('canvas');
-	const ctx = canvas.getContext('2d');
-	if (!ctx) return false;
-
 	const unicodeSize = Math.floor(Math.min(imageWidth, imageHeight) / GRID);
 	if (unicodeSize < 1) return false;
-	canvas.width = unicodeSize * GRID;
-	canvas.height = unicodeSize * GRID;
+	const atlasWidth = unicodeSize * GRID;
+	const atlasHeight = unicodeSize * GRID;
+	const sourceAtlasUrl = options.atlasUrl || '';
+	const canUseSourceAtlas = sourceAtlasUrl && imageWidth === atlasWidth && imageHeight === atlasHeight;
+	let atlasUrl = sourceAtlasUrl;
+	let atlasCanvas = null;
 
-	try {
-		ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-	} catch {
-		return false;
+	if (!canUseSourceAtlas) {
+		atlasCanvas = document.createElement('canvas');
+		const ctx = atlasCanvas.getContext('2d', { willReadFrequently: true });
+		if (!ctx) return false;
+
+		atlasCanvas.width = atlasWidth;
+		atlasCanvas.height = atlasHeight;
+
+		try {
+			ctx.drawImage(img, 0, 0, atlasCanvas.width, atlasCanvas.height);
+		} catch {
+			return false;
+		}
+
+		atlasUrl = atlasCanvas.toDataURL('image/png');
 	}
 
 	const fragment = document.createDocumentFragment();
@@ -262,24 +468,6 @@ function processGlyph(img, hexValue, options = {}) {
 		const char = String.fromCodePoint(charCode);
 		const hexCode = charCode.toString(16).toUpperCase().padStart(4, '0');
 
-		const x = (i % GRID) * unicodeSize;
-		const y = Math.floor(i / GRID) * unicodeSize;
-		const unicodeCanvas = document.createElement('canvas');
-		unicodeCanvas.width = unicodeSize;
-		unicodeCanvas.height = unicodeSize;
-		const unicodeCtx = unicodeCanvas.getContext('2d');
-		if (!unicodeCtx) return false;
-		unicodeCtx.imageSmoothingEnabled = false;
-		unicodeCtx.drawImage(canvas, x, y, unicodeSize, unicodeSize, 0, 0, unicodeSize, unicodeSize);
-
-		let imageData;
-		try {
-			imageData = unicodeCtx.getImageData(0, 0, unicodeSize, unicodeSize);
-		} catch {
-			return false;
-		}
-		const isTransparent = imageData.data.every((value, index) => (index + 1) % 4 === 0 || value === 0);
-
 		fragment.appendChild(createGlyphCell({
 			char,
 			hexCode,
@@ -287,8 +475,7 @@ function processGlyph(img, hexValue, options = {}) {
 			row,
 			width: unicodeSize,
 			height: unicodeSize,
-			imageUrl: unicodeCanvas.toDataURL('image/png'),
-			transparent: isTransparent
+			useAtlas: true
 		}));
 	}
 
@@ -296,10 +483,11 @@ function processGlyph(img, hexValue, options = {}) {
 	zoomEnabled = false;
 	hideZoomWindow();
 
+	currentAtlasDataUrl = atlasUrl;
 	glyphOutput.replaceChildren(fragment);
-	renderGlyphs();
+	setGlyphOutputAtlas(glyphOutput, currentAtlasDataUrl);
+	markTransparentCellsFromAtlas(img, glyphOutput, unicodeSize, atlasWidth, atlasHeight, atlasCanvas);
 
-	currentAtlasDataUrl = canvas.toDataURL('image/png');
 	currentAtlasLabel = label;
 	setAtlasInfo(imageWidth, imageHeight, label);
 
@@ -309,6 +497,8 @@ function processGlyph(img, hexValue, options = {}) {
 			unicodeSize,
 			width: imageWidth,
 			height: imageHeight,
+			atlasWidth,
+			atlasHeight,
 			label,
 			atlasDataUrl: currentAtlasDataUrl
 		});
@@ -405,6 +595,7 @@ function replaceAtlasTile(cell, newImage) {
 			);
 
 			resolve({
+				atlasUrl: currentAtlasDataUrl,
 				tileUrl: tileCanvas.toDataURL('image/png'),
 				tileW: tile.tileW,
 				tileH: tile.tileH

@@ -1,13 +1,17 @@
 /* Minecraft-inspired tool surface */
 @font-face {
 	font-family: "Minecraft Ten";
-	src: url("../fonts/minecraft-ten.ttf") format("truetype");
+	src:
+		url("../fonts/minecraft-ten-latin.woff2") format("woff2"),
+		url("../fonts/minecraft-ten.ttf") format("truetype");
 	font-display: swap;
 }
 
 @font-face {
 	font-family: "Minecraftia";
-	src: url("../fonts/minecraft.otf") format("opentype");
+	src:
+		url("../fonts/minecraftia-latin.woff2") format("woff2"),
+		url("../fonts/minecraft.otf") format("opentype");
 	font-display: swap;
 }
 
@@ -97,7 +101,6 @@ body {
 	background-size: 160px 160px, 160px 160px;
 	image-rendering: pixelated;
 	overflow-x: hidden;
-	animation: moveBackground 100s linear infinite;
 }
 
 @keyframes moveBackground {
@@ -128,6 +131,213 @@ input,
 select,
 textarea {
 	font: inherit;
+}
+
+.d-none,
+[hidden] {
+	display: none !important;
+}
+
+.d-block {
+	display: block !important;
+}
+
+.d-flex {
+	display: flex !important;
+}
+
+.flex-column {
+	flex-direction: column !important;
+}
+
+.flex-wrap {
+	flex-wrap: wrap !important;
+}
+
+.align-items-center {
+	align-items: center !important;
+}
+
+.justify-content-between {
+	justify-content: space-between !important;
+}
+
+.gap-2 {
+	gap: 0.5rem !important;
+}
+
+.ms-auto {
+	margin-left: auto !important;
+}
+
+.mb-0 {
+	margin-bottom: 0 !important;
+}
+
+.mb-2 {
+	margin-bottom: 0.5rem !important;
+}
+
+.mb-3 {
+	margin-bottom: 1rem !important;
+}
+
+.mb-4 {
+	margin-bottom: 1.5rem !important;
+}
+
+.mt-1 {
+	margin-top: 0.25rem !important;
+}
+
+.mt-2 {
+	margin-top: 0.5rem !important;
+}
+
+.mt-3 {
+	margin-top: 1rem !important;
+}
+
+.p-3 {
+	padding: 1rem !important;
+}
+
+.px-3 {
+	padding-right: 1rem !important;
+	padding-left: 1rem !important;
+}
+
+.py-2 {
+	padding-top: 0.5rem !important;
+	padding-bottom: 0.5rem !important;
+}
+
+.position-relative {
+	position: relative !important;
+}
+
+.position-absolute {
+	position: absolute !important;
+}
+
+.w-100 {
+	width: 100% !important;
+}
+
+.h-100 {
+	height: 100% !important;
+}
+
+.opacity-0 {
+	opacity: 0 !important;
+}
+
+.fw-bold,
+.fw-medium {
+	font-weight: 900 !important;
+}
+
+.text-uppercase {
+	text-transform: uppercase !important;
+}
+
+.text-center {
+	text-align: center !important;
+}
+
+.img-fluid {
+	max-width: 100%;
+	height: auto;
+}
+
+.collapse:not(.show),
+.dropdown-menu:not(.show),
+.modal:not(.show) {
+	display: none;
+}
+
+.dropdown {
+	position: relative;
+}
+
+.dropdown-menu {
+	position: absolute;
+	z-index: 1000;
+	min-width: 10rem;
+}
+
+.dropdown-menu-end {
+	right: 0;
+	left: auto;
+}
+
+.modal {
+	position: fixed;
+	inset: 0;
+	z-index: 1055;
+	width: 100%;
+	height: 100%;
+	overflow: hidden auto;
+	outline: 0;
+}
+
+.modal-dialog {
+	position: relative;
+	width: auto;
+	margin: 0.5rem auto;
+	pointer-events: none;
+}
+
+.modal-dialog-centered {
+	display: flex;
+	align-items: center;
+	min-height: calc(100% - 1rem);
+}
+
+.modal-content {
+	pointer-events: auto;
+}
+
+.row {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.row > * {
+	width: 100%;
+	max-width: 100%;
+}
+
+@media (min-width: 768px) {
+	.d-md-none {
+		display: none !important;
+	}
+
+	.col-md-4 {
+		flex: 0 0 auto;
+		width: 33.333333%;
+	}
+
+	.col-md-5 {
+		flex: 0 0 auto;
+		width: 41.666667%;
+	}
+
+	.col-md-7 {
+		flex: 0 0 auto;
+		width: 58.333333%;
+	}
+
+	.col-md-8 {
+		flex: 0 0 auto;
+		width: 66.666667%;
+	}
+}
+
+@media (min-width: 992px) {
+	.d-lg-none {
+		display: none !important;
+	}
 }
 
 button,
@@ -896,6 +1106,30 @@ small {
 
 .dropdown-divider {
 	border-color: rgba(0, 0, 0, 0.28);
+}
+
+.dropdown-menu[aria-labelledby="exportDropdown"] {
+	min-width: 150px;
+	padding: 4px;
+}
+
+.dropdown-menu[aria-labelledby="exportDropdown"] .dropdown-item {
+	min-height: 36px;
+	padding: 5px 8px !important;
+	border-width: 3px 3px 5px;
+	font-size: 0.8rem;
+	line-height: 1.05;
+	white-space: nowrap;
+}
+
+.dropdown-menu[aria-labelledby="exportDropdown"] .dropdown-divider {
+	margin: 4px 3px;
+}
+
+.dropdown-menu[aria-labelledby="exportDropdown"] .dropdown-item:active,
+.dropdown-menu[aria-labelledby="exportDropdown"] .dropdown-item:active:hover,
+.dropdown-menu[aria-labelledby="exportDropdown"] .dropdown-item:active:focus {
+	border-width: 3px !important;
 }
 
 .rounded-alert,

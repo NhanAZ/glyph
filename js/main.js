@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
-	function showGlyphDetail(cell) {
+	async function showGlyphDetail(cell) {
 		if (!cell || !detailModal) return;
 		currentDetailCell = cell;
 		replacePending = null;
@@ -310,7 +310,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		let dimText = `${widthAttr}px x ${heightAttr}px`;
 		let glyphDownloadUrl = '';
 
-		const resolvedImageUrl = getBackgroundImageUrl(cell);
+		const resolvedImageUrl = await extractGlyphTileUrl(cell);
+		if (currentDetailCell !== cell) return;
 
 		if (resolvedImageUrl) {
 			if (detailPreview && isTransparentCell) detailPreview.classList.add('transparent-state');
@@ -367,11 +368,9 @@ document.addEventListener('DOMContentLoaded', () => {
 			detailClearBtn.disabled = false;
 			setButtonContent(detailClearBtn, 'Clear to transparent');
 			detailClearBtn.onclick = () => {
-				cell.style.backgroundImage = '';
-				cell.style.backgroundSize = '';
 				cell.classList.add('transparent');
-				cell.dataset.originalBg = '';
-				cell.dataset.displayBg = '';
+				delete cell.dataset.originalBg;
+				delete cell.dataset.displayBg;
 				delete cell.dataset.pendingTintTheme;
 				delete cell.dataset.tintTheme;
 
@@ -401,7 +400,9 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 				showToast('Cleared to transparent');
 
-				void clearAtlasTile(cell);
+				clearAtlasTile(cell).then((atlasUrl) => {
+					if (atlasUrl) updateGlyphCellsAtlas(atlasUrl);
+				});
 			};
 		}
 
@@ -450,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const image = new Image();
 		image.crossOrigin = 'anonymous';
 		image.onload = () => {
-			if (!processGlyph(image, hex, { cacheKey, label: labelText })) {
+			if (!processGlyph(image, hex, { cacheKey, label: labelText, atlasUrl: source })) {
 				showToast('Unable to process the preset image.', 'error');
 				return;
 			}
@@ -731,11 +732,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			const tileW = result && result.tileW;
 			const tileH = result && result.tileH;
 			if (tileUrl) {
-				cell.style.backgroundImage = `url("${tileUrl}")`;
-				cell.style.backgroundSize = '100% 100%';
+				if (result.atlasUrl) updateGlyphCellsAtlas(result.atlasUrl);
 				cell.classList.remove('transparent');
-				cell.dataset.originalBg = tileUrl;
-				cell.dataset.displayBg = '';
+				delete cell.dataset.originalBg;
+				delete cell.dataset.displayBg;
 				delete cell.dataset.pendingTintTheme;
 				delete cell.dataset.tintTheme;
 				if (detailPreview) detailPreview.classList.remove('transparent-state');
