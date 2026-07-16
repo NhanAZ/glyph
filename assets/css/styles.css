@@ -1019,6 +1019,7 @@ small {
 
 #glyph-output {
 	--glyph-columns: 16;
+	--glyph-rows: 16;
 	display: grid;
 	grid-template-columns: repeat(var(--glyph-columns), minmax(40px, 1fr));
 	gap: 3px;
@@ -1026,6 +1027,30 @@ small {
 	overflow-x: auto;
 	padding: 0;
 	background: transparent;
+}
+
+#glyph-output.is-loading {
+	position: relative;
+	aspect-ratio: var(--glyph-columns) / var(--glyph-rows);
+	min-height: 280px;
+	overflow: hidden;
+	background:
+		linear-gradient(135deg, rgba(255, 255, 255, 0.06) 25%, transparent 25% 50%, rgba(255, 255, 255, 0.06) 50% 75%, transparent 75%),
+		#383838;
+	background-size: 28px 28px;
+}
+
+#glyph-output.is-loading::before {
+	content: "Loading atlas...";
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	z-index: 1;
+	padding: 8px 10px;
+	color: #f5f5f5;
+	background: rgba(0, 0, 0, 0.55);
+	border: 3px solid #1a1a1a;
+	transform: translate(-50%, -50%);
 }
 
 #glyph-output div {
@@ -1725,6 +1750,7 @@ small {
 
 	#glyph-output {
 		--glyph-columns: 12;
+		--glyph-rows: 22;
 		grid-template-columns: repeat(var(--glyph-columns), minmax(42px, 1fr));
 	}
 
@@ -1830,6 +1856,7 @@ small {
 
 	#glyph-output {
 		--glyph-columns: 6;
+		--glyph-rows: 43;
 		grid-template-columns: repeat(var(--glyph-columns), minmax(42px, 1fr));
 		gap: 3px;
 	}
@@ -1874,5 +1901,6 @@ small {
 
 	#glyph-output {
 		--glyph-columns: 4;
+		--glyph-rows: 64;
 	}
 }

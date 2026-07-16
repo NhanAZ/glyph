@@ -78,6 +78,13 @@ function updateGlyphCellsAtlas(atlasUrl) {
 	});
 }
 
+function markGlyphOutputReady(glyphOutput) {
+	if (!glyphOutput) return;
+
+	glyphOutput.classList.remove('is-loading');
+	glyphOutput.removeAttribute('aria-busy');
+}
+
 function isTransparentGlyphTile(imageData) {
 	return imageData.data.every((value, index) => (index + 1) % 4 === 0 || value === 0);
 }
@@ -277,6 +284,7 @@ function Glyph(glyph = 'E0') {
 	}
 
 	glyphOutput.replaceChildren(fragment);
+	markGlyphOutputReady(glyphOutput);
 
 	removeZoomEvents();
 	zoomEnabled = false;
@@ -317,6 +325,7 @@ function applyCachedGlyph(entry) {
 
 	const cells = entry.cells.map(cell => cell.cloneNode(true));
 	glyphOutput.replaceChildren(...cells);
+	markGlyphOutputReady(glyphOutput);
 	removeZoomEvents();
 	zoomEnabled = false;
 	hideZoomWindow();
@@ -485,6 +494,7 @@ function processGlyph(img, hexValue, options = {}) {
 
 	currentAtlasDataUrl = atlasUrl;
 	glyphOutput.replaceChildren(fragment);
+	markGlyphOutputReady(glyphOutput);
 	setGlyphOutputAtlas(glyphOutput, currentAtlasDataUrl);
 	markTransparentCellsFromAtlas(img, glyphOutput, unicodeSize, atlasWidth, atlasHeight, atlasCanvas);
 

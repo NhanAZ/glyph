@@ -1,4 +1,8 @@
-window.addEventListener('load', initializeGlyph);
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', initializeGlyph, { once: true });
+} else {
+	initializeGlyph();
+}
 
 const glyphInputElement = getElement('glyph-input');
 listen(glyphInputElement, 'input', function () {
