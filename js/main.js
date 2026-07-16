@@ -68,7 +68,7 @@ listen(glyphInputElement, 'input', function () {
 	if (glyphUpload) glyphUpload.value = '';
 	const label = getElement('uploadLabel');
 	if (label) {
-		label.textContent = 'Upload glyph_XX.png';
+		label.textContent = 'Tap or drop glyph_XX.png';
 		label.className = 'text-secondary upload-label-text';
 	}
 
@@ -161,7 +161,7 @@ listen(getElement('glyphUpload'), 'change', async function () {
 	} catch (error) {
 		this.value = '';
 		if (label) {
-			label.textContent = 'Upload glyph_XX.png';
+			label.textContent = 'Tap or drop glyph_XX.png';
 			label.className = 'text-secondary upload-label-text';
 		}
 		alert(error instanceof Error ? error.message : 'Unable to load the PNG atlas.');

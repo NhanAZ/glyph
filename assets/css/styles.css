@@ -661,9 +661,9 @@ button:focus-visible,
 	top: 15px;
 	left: auto;
 	z-index: 2;
-	display: flex;
-	align-items: center;
+	display: block;
 	max-width: min(430px, calc(100% - 170px));
+	min-width: 0;
 	min-height: 28px;
 	margin: 0 !important;
 	padding: 4px 8px !important;
@@ -673,6 +673,7 @@ button:focus-visible,
 	font-size: 0.78rem;
 	line-height: 1.1;
 	white-space: normal;
+	overflow-wrap: anywhere;
 	overflow: visible;
 	text-overflow: clip;
 }
@@ -1014,13 +1015,20 @@ small {
 }
 
 .copy-button:hover,
-.copy-button:focus,
-.copy-button:active {
+.copy-button:focus {
 	margin-top: 0 !important;
 	border-width: 3px 3px 6px !important;
 	border-image-source: var(--ui-button-border) !important;
 	border-image-slice: 2 2 4 2 fill !important;
 	transform: translateY(-50%) !important;
+}
+
+.copy-button:active {
+	margin-top: 0 !important;
+	border-width: 3px 3px 4px !important;
+	border-image-source: var(--ui-button-active-border) !important;
+	border-image-slice: 2 fill !important;
+	transform: translateY(calc(-50% + 2px)) !important;
 }
 
 .atlas-card {

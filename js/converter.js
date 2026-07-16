@@ -1,3 +1,12 @@
+let copyFeedbackTimer = null;
+
+function clearCopyFeedbackTimer() {
+	if (copyFeedbackTimer) {
+		clearTimeout(copyFeedbackTimer);
+		copyFeedbackTimer = null;
+	}
+}
+
 function convertHexToEmoji(input) {
 	const output = getElement('converterOutput');
 	const successMsg = getElement('successMsg');
@@ -37,6 +46,10 @@ function convert() {
 	if (!inputElement || !errorMsg || !successMsg || !output) return;
 
 	let input = inputElement.value.trim();
+	clearCopyFeedbackTimer();
+	const copyButton = getElement('copyButton');
+	setButtonContent(copyButton, 'Copy');
+	if (copyButton) copyButton.disabled = false;
 	errorMsg.classList.add('d-none');
 	successMsg.classList.add('d-none');
 	output.value = '';
@@ -73,6 +86,7 @@ function copyOutput() {
 	if (!output || !copyButton || output.value.trim() === '') return;
 
 	copyText(output.value).then(() => {
+		clearCopyFeedbackTimer();
 		if (errorMsg) errorMsg.classList.add('d-none');
 		if (successMsg) {
 			successMsg.textContent = 'Copied to clipboard.';
@@ -81,11 +95,16 @@ function copyOutput() {
 		setButtonContent(copyButton, 'Copied');
 		copyButton.disabled = true;
 
-		setTimeout(() => {
+		copyFeedbackTimer = setTimeout(() => {
 			setButtonContent(copyButton, 'Copy');
 			copyButton.disabled = false;
+			if (successMsg && successMsg.textContent === 'Copied to clipboard.') {
+				successMsg.classList.add('d-none');
+			}
+			copyFeedbackTimer = null;
 		}, 2000);
 	}).catch(() => {
+		clearCopyFeedbackTimer();
 		if (successMsg) successMsg.classList.add('d-none');
 		if (errorMsg) {
 			errorMsg.textContent = 'Unable to access the clipboard.';
