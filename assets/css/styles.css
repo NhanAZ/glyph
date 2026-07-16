@@ -654,7 +654,7 @@ button:focus-visible,
 	margin-bottom: 6px;
 }
 
-.converter-status {
+.tool-status {
 	position: absolute;
 	right: 10px;
 	top: 15px;
@@ -676,8 +676,12 @@ button:focus-visible,
 	text-overflow: ellipsis;
 }
 
-.converter-status.d-none {
+.tool-status.d-none {
 	display: none !important;
+}
+
+.generator-status {
+	max-width: min(310px, calc(100% - 270px));
 }
 
 .preset-actions {
@@ -1217,7 +1221,7 @@ small {
 	background: #d7b55c;
 }
 
-.converter-card .converter-status {
+.tool-card .tool-status {
 	min-height: 28px;
 	padding: 4px 8px !important;
 	border: 3px solid #1f1f1f;
