@@ -663,7 +663,7 @@ button:focus-visible,
 	z-index: 2;
 	display: flex;
 	align-items: center;
-	max-width: min(340px, calc(100% - 170px));
+	max-width: min(430px, calc(100% - 170px));
 	min-height: 28px;
 	margin: 0 !important;
 	padding: 4px 8px !important;
@@ -672,9 +672,9 @@ button:focus-visible,
 	border-image-width: 4px 3px;
 	font-size: 0.78rem;
 	line-height: 1.1;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+	white-space: normal;
+	overflow: visible;
+	text-overflow: clip;
 }
 
 .tool-status.d-none {
@@ -1013,13 +1013,14 @@ small {
 	box-shadow: none;
 }
 
-.copy-button:hover {
-	transform: translateY(-50%);
-}
-
+.copy-button:hover,
+.copy-button:focus,
 .copy-button:active {
-	margin-top: 0;
-	transform: translateY(calc(-50% + 3px));
+	margin-top: 0 !important;
+	border-width: 3px 3px 6px !important;
+	border-image-source: var(--ui-button-border) !important;
+	border-image-slice: 2 2 4 2 fill !important;
+	transform: translateY(-50%) !important;
 }
 
 .atlas-card {
@@ -1820,6 +1821,15 @@ small {
 	body {
 		font-size: 15px;
 		background-size: 112px 112px, 112px 112px;
+	}
+
+	.tool-status {
+		position: fixed;
+		top: 12px;
+		right: 12px;
+		left: 12px;
+		z-index: 1000;
+		max-width: none;
 	}
 
 	.app-container {

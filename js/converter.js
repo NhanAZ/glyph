@@ -57,7 +57,7 @@ function convert() {
 	} else if (Array.from(input).length === 1) {
 		convertEmojiToHex(input);
 	} else {
-		errorMsg.textContent = 'Invalid input. Please enter a valid hex value or a single symbol/emoji.';
+		errorMsg.textContent = 'Enter a hex value or one symbol/emoji.';
 		errorMsg.classList.remove('d-none');
 	}
 	
@@ -68,10 +68,16 @@ function copyOutput() {
 	const output = getElement('converterOutput');
 	const copyButton = getElement('copyButton');
 	const errorMsg = getElement('errorMsg');
+	const successMsg = getElement('successMsg');
 
 	if (!output || !copyButton || output.value.trim() === '') return;
 
 	copyText(output.value).then(() => {
+		if (errorMsg) errorMsg.classList.add('d-none');
+		if (successMsg) {
+			successMsg.textContent = 'Copied to clipboard.';
+			successMsg.classList.remove('d-none');
+		}
 		setButtonContent(copyButton, 'Copied');
 		copyButton.disabled = true;
 
@@ -80,6 +86,7 @@ function copyOutput() {
 			copyButton.disabled = false;
 		}, 2000);
 	}).catch(() => {
+		if (successMsg) successMsg.classList.add('d-none');
 		if (errorMsg) {
 			errorMsg.textContent = 'Unable to access the clipboard.';
 			errorMsg.classList.remove('d-none');
