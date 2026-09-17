@@ -820,6 +820,9 @@ small {
 
 .upload-zone input {
 	inset: 0;
+	width: auto;
+	height: auto;
+	z-index: 0;
 	cursor: pointer;
 }
 
@@ -830,14 +833,29 @@ small {
 	pointer-events: none;
 }
 
+.upload-zone-icon {
+	flex: 0 0 auto;
+	width: 20px;
+	height: 20px;
+	opacity: 0.88;
+	object-fit: contain;
+	image-rendering: pixelated;
+}
+
+.upload-zone.is-dragging {
+	filter: brightness(1.18);
+}
+
 .upload-zone-label {
 	display: flex;
 	align-items: center;
 	gap: 8px;
+	flex: 1 1 auto;
 	min-width: 0;
 }
 
 .upload-label-text {
+	flex: 1 1 auto;
 	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;

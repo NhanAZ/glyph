@@ -124,16 +124,12 @@ listen(getElement('converterInput'), 'input', convert);
 listen(getElement('converterOutput'), 'click', copyOutput);
 listen(getElement('darkModeToggle'), 'click', toggleDarkMode);
 
-listen(getElement('glyphUpload'), 'change', async function () {
-	const file = this.files && this.files[0];
+async function importGlyphFile(file, input = null) {
 	if (!file) return;
 
-	const hexValue = getGlyphPrefixFromFileName(file.name);
-	if (!hexValue) {
-		alert('Invalid file name. Use glyph_<HEX>.png with a prefix from 0 to 10FF.');
-		this.value = '';
-		return;
-	}
+	const glyphInputValue = glyphInputElement ? glyphInputElement.value : '';
+	const hexValue = getGlyphPrefixFromFileName(file.name)
+		|| getGlyphPrefix(glyphInputValue, 'E0');
 
 	const label = getElement('uploadLabel');
 
@@ -159,14 +155,55 @@ listen(getElement('glyphUpload'), 'change', async function () {
 		if (hintMsg) hintMsg.classList.add('d-none');
 		showToast('Grid updated', 'success', 2000);
 	} catch (error) {
-		this.value = '';
+		if (input) input.value = '';
 		if (label) {
 			label.textContent = 'Tap or drop glyph_XX.png';
 			label.className = 'text-secondary upload-label-text';
 		}
 		alert(error instanceof Error ? error.message : 'Unable to load the PNG atlas.');
 	}
+}
+
+listen(getElement('glyphUpload'), 'change', async function () {
+		await importGlyphFile(this.files && this.files[0], this);
 });
+
+const glyphUploadZone = document.querySelector('.upload-zone');
+let uploadDragDepth = 0;
+
+if (glyphUploadZone) {
+	const isFileDrag = event => event.dataTransfer
+		&& Array.from(event.dataTransfer.types || []).includes('Files');
+
+	glyphUploadZone.addEventListener('dragenter', event => {
+		if (!isFileDrag(event)) return;
+		event.preventDefault();
+		uploadDragDepth++;
+		glyphUploadZone.classList.add('is-dragging');
+	});
+
+	glyphUploadZone.addEventListener('dragover', event => {
+		if (!isFileDrag(event)) return;
+		event.preventDefault();
+		event.dataTransfer.dropEffect = 'copy';
+		glyphUploadZone.classList.add('is-dragging');
+	});
+
+	glyphUploadZone.addEventListener('dragleave', event => {
+		if (!isFileDrag(event)) return;
+		uploadDragDepth = Math.max(0, uploadDragDepth - 1);
+		if (uploadDragDepth === 0) glyphUploadZone.classList.remove('is-dragging');
+	});
+
+	glyphUploadZone.addEventListener('drop', async event => {
+		if (!isFileDrag(event)) return;
+		event.preventDefault();
+		uploadDragDepth = 0;
+		glyphUploadZone.classList.remove('is-dragging');
+		const file = event.dataTransfer.files && event.dataTransfer.files[0];
+		await importGlyphFile(file, getElement('glyphUpload'));
+	});
+}
 
 window.addEventListener('scroll', function () {
 	hideZoomWindow();
