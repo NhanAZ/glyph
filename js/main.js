@@ -343,7 +343,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	const detailUnicode = getElement('glyphDetailUnicode');
 	const detailNotice = getElement('glyphDetailNotice');
 	const detailPreview = document.querySelector('.detail-preview');
-	const detailCopyBtn = getElement('glyphDetailCopyBtn');
 	const detailDownloadBtn = getElement('glyphDetailDownloadBtn');
 	const detailClearBtn = getElement('glyphDetailClearBtn');
 	const detailReplaceInput = getElement('glyphDetailReplaceInput');
@@ -399,71 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			(codePoint >= 0xF0000 && codePoint <= 0xFFFFD) ||
 			(codePoint >= 0x100000 && codePoint <= 0x10FFFD)
 		);
-	}
-
-	function ensureDrawerPrompt() {
-		let overlay = getElement('drawerRedirectPrompt');
-		if (!overlay) {
-			overlay = document.createElement('div');
-			overlay.id = 'drawerRedirectPrompt';
-			overlay.className = 'drawer-redirect-overlay';
-
-			const card = document.createElement('div');
-			card.className = 'drawer-redirect-card';
-			
-			const title = document.createElement('h5');
-			title.className = 'mb-3 fw-bold text-center';
-			title.textContent = 'Choose a Drawing Tool';
-			
-			const description = document.createElement('p');
-			description.className = 'mb-4 text-secondary text-center';
-			description.textContent = 'Where would you like to draw this glyph?';
-			
-			const actions = document.createElement('div');
-			actions.className = 'd-flex flex-column gap-2 mb-3';
-			
-			const webDrawerBtn = document.createElement('button');
-			webDrawerBtn.type = 'button';
-			webDrawerBtn.className = 'btn btn-outline-primary w-100 py-2';
-			webDrawerBtn.textContent = 'Web Glyph Drawer (Experiment)';
-			
-			const asepriteBtn = document.createElement('button');
-			asepriteBtn.type = 'button';
-			asepriteBtn.className = 'btn btn-primary w-100 py-2';
-			asepriteBtn.textContent = 'Aseprite (Recommend)';
-			
-			const jokeText = document.createElement('small');
-			jokeText.className = 'text-muted text-center d-block mb-3 mt-1';
-			jokeText.style.fontSize = '0.75rem';
-			jokeText.style.fontStyle = 'italic';
-			jokeText.innerHTML = '(Dear Aseprite team, I am a huge fan! If you happen to see this little shoutout, a Pro license would be a dream come true for me at <a href="mailto:itsnhanaz@gmail.com" class="text-muted text-decoration-none">itsnhanaz@gmail.com</a>. Thank you so much!)';
-
-			const cancelButton = document.createElement('button');
-			cancelButton.type = 'button';
-			cancelButton.className = 'btn btn-outline-secondary w-100 py-2 drawer-cancel mt-2';
-			cancelButton.textContent = 'Cancel';
-
-			actions.append(asepriteBtn, webDrawerBtn);
-			card.append(title, description, actions, jokeText, cancelButton);
-			overlay.appendChild(card);
-			document.body.appendChild(overlay);
-
-			cancelButton.addEventListener('click', () => overlay.classList.remove('visible'));
-			webDrawerBtn.addEventListener('click', () => {
-				window.open('https://nhanaz-web.github.io/glyph-drawer/', '_blank', 'noopener');
-				overlay.classList.remove('visible');
-			});
-			asepriteBtn.addEventListener('click', () => {
-				window.open('https://www.aseprite.org/', '_blank', 'noopener');
-				overlay.classList.remove('visible');
-			});
-			overlay.addEventListener('click', (e) => {
-				if (e.target === overlay) overlay.classList.remove('visible');
-			});
-		}
-		requestAnimationFrame(() => {
-			overlay.classList.add('visible');
-		});
 	}
 
 	async function showGlyphDetail(cell) {
@@ -524,14 +458,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 		if (detailDim) detailDim.textContent = dimText || '-';
 		if (detailUnicode) detailUnicode.textContent = formatUnicodeEscape(hex);
-
-		if (detailCopyBtn) {
-			detailCopyBtn.disabled = false;
-			setButtonContent(detailCopyBtn, 'Draw');
-			detailCopyBtn.onclick = () => {
-				ensureDrawerPrompt();
-			};
-		}
 
 		if (detailDownloadBtn) {
 			detailDownloadBtn.disabled = !glyphDownloadUrl;

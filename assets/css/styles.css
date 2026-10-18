@@ -347,7 +347,6 @@ button,
 .dropdown-item,
 .app-container a,
 .modal a,
-.drawer-redirect-overlay a,
 .app-container h1,
 .app-container h2,
 .app-container h3,
@@ -356,22 +355,14 @@ button,
 .modal h3,
 .modal h4,
 .modal h5,
-.drawer-redirect-overlay h1,
-.drawer-redirect-overlay h2,
-.drawer-redirect-overlay h3,
-.drawer-redirect-overlay h4,
-.drawer-redirect-overlay h5,
 .app-container label,
 .modal label,
 .app-container p,
 .modal p,
-.drawer-redirect-overlay p,
 .app-container small,
 .modal small,
-.drawer-redirect-overlay small,
 .app-container span,
 .modal span,
-.drawer-redirect-overlay span,
 .title-kicker,
 .alert,
 .replace-label,
@@ -1663,7 +1654,7 @@ small {
 
 .detail-actions {
 	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 8px;
 	width: 100%;
 	align-items: stretch;
@@ -1821,45 +1812,6 @@ small {
 	min-width: 140px;
 }
 
-#drawerRedirectPrompt.drawer-redirect-overlay,
-.drawer-redirect-overlay {
-	position: fixed;
-	inset: 0;
-	z-index: 2000;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 16px;
-	background: rgba(0, 0, 0, 0.68);
-	opacity: 0;
-	pointer-events: none;
-	transition: opacity var(--transition);
-}
-
-#drawerRedirectPrompt.drawer-redirect-overlay.visible,
-.drawer-redirect-overlay.visible {
-	opacity: 1;
-	pointer-events: auto;
-}
-
-.drawer-redirect-card {
-	width: min(430px, 100%);
-	padding: 16px;
-	color: #1f1f1f;
-	background: transparent;
-	border: 8px solid transparent;
-	border-image-source: var(--ui-container-border);
-	border-image-slice: 4 4 4 4 fill;
-	border-image-width: 8px;
-	border-image-repeat: stretch;
-	border-radius: var(--radius-card);
-	box-shadow: none;
-}
-
-.drawer-redirect-card .btn {
-	min-height: 44px;
-}
-
 .badge.bg-light {
 	background-color: #ececec !important;
 	color: #1f1f1f !important;
@@ -1902,9 +1854,6 @@ small {
 		grid-template-columns: repeat(var(--glyph-columns), minmax(42px, 1fr));
 	}
 
-	.detail-actions {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
 }
 
 @media (max-width: 767px) {

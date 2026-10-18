@@ -14,7 +14,7 @@ Glyph Tools can begin with a labeled grid template, a working example, or an emp
 
 ## Every slot keeps its identity
 
-Selecting a cell reveals the character, hexadecimal code, decimal value, grid position, dimensions, and Unicode escape assigned to that slot. The texture can then be replaced with another PNG, picked from the bundled Minecraft texture library, cleared to transparency, or opened in a drawing workflow.
+Selecting a cell reveals the character, hexadecimal code, decimal value, grid position, dimensions, and Unicode escape assigned to that slot. The texture can then be replaced with another PNG, picked from the bundled Minecraft texture library, or cleared to transparency.
 
 This keeps the visual edit connected to the code point that Minecraft will read. There is no need to count rows by hand or guess which character belongs to an icon.
 
