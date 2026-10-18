@@ -818,6 +818,50 @@ small {
 	filter: brightness(1.08);
 }
 
+.upload-help {
+	margin-top: 6px;
+	font-size: 0.78rem;
+	line-height: 1.4;
+}
+
+.glyph-prefix-dialog {
+	position: fixed;
+	width: min(440px, calc(100% - 24px));
+	max-height: calc(100dvh - 32px);
+	margin: auto;
+	padding: 16px;
+	overflow-y: auto;
+}
+
+.glyph-prefix-dialog::backdrop {
+	background: rgba(0, 0, 0, 0.55);
+}
+
+.glyph-prefix-dialog p {
+	margin: 12px 0;
+	font-size: 0.86rem;
+	line-height: 1.4;
+}
+
+.upload-prefix-filename {
+	font-weight: bold;
+	overflow-wrap: anywhere;
+}
+
+.upload-prefix-actions {
+	display: flex;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 16px;
+}
+
+.upload-prefix-actions .btn:disabled {
+	color: var(--button-text);
+	background: transparent;
+	opacity: 1;
+}
+
 .upload-zone input {
 	inset: 0;
 	width: auto;
@@ -1356,12 +1400,12 @@ small {
 	left: 50%;
 	z-index: 1;
 	padding: 9px 12px;
-	color: #eeeeee;
-	background: transparent;
+	color: #111111;
+	background: #ffffff;
 	border-width: 4px 3px;
 	border-style: solid;
 	border-image-source: var(--ui-input-border);
-	border-image-slice: 2 1 2 1 fill;
+	border-image-slice: 2 1 2 1;
 	border-image-repeat: stretch;
 	border-radius: var(--radius-input);
 	box-shadow: none;
@@ -1379,11 +1423,6 @@ small {
 .action-toast.visible {
 	opacity: 1;
 	transform: translate(-50%, 0);
-}
-
-.action-toast.success {
-	color: #102114;
-	background: var(--accent);
 }
 
 .zoom-window {

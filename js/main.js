@@ -5,10 +5,29 @@ if (document.readyState === 'loading') {
 }
 
 let glyphInputRequestId = 0;
+let glyphUploadRequestId = 0;
+let pendingGlyphUpload = null;
+
+function cancelGlyphUpload() {
+	glyphUploadRequestId++;
+	if (!pendingGlyphUpload) return;
+
+	if (pendingGlyphUpload.input) pendingGlyphUpload.input.value = '';
+	pendingGlyphUpload = null;
+	const dialog = getElement('glyphPrefixDialog');
+	if (dialog && dialog.open) dialog.close();
+	const label = getElement('uploadLabel');
+	if (label) {
+		label.textContent = 'Tap or drop a PNG';
+		label.className = 'text-secondary upload-label-text';
+	}
+}
 
 function loadPreset(assetKey, hex, cacheKey, labelText, options = {}) {
 	const source = DEFAULT_GLYPHS[assetKey];
 	if (!source || !isValidGlyphPrefix(hex)) return false;
+	cancelGlyphUpload();
+	const uploadRequestId = glyphUploadRequestId;
 
 	const {
 		hideHint = true,
@@ -22,7 +41,7 @@ function loadPreset(assetKey, hex, cacheKey, labelText, options = {}) {
 	const image = new Image();
 	image.crossOrigin = 'anonymous';
 	image.onload = () => {
-		if (!isCurrent()) return;
+		if (uploadRequestId !== glyphUploadRequestId || !isCurrent()) return;
 
 		if (!processGlyph(image, hex, { cacheKey, label: labelText, atlasUrl: source })) {
 			if (showErrorToast) showToast('Unable to process the preset image.', 'error');
@@ -44,7 +63,7 @@ function loadPreset(assetKey, hex, cacheKey, labelText, options = {}) {
 		}
 	};
 	image.onerror = () => {
-		if (!isCurrent()) return;
+		if (uploadRequestId !== glyphUploadRequestId || !isCurrent()) return;
 		if (showErrorToast) showToast('Unable to load the preset image.', 'error');
 		if (onError) onError();
 	};
@@ -54,6 +73,7 @@ function loadPreset(assetKey, hex, cacheKey, labelText, options = {}) {
 
 const glyphInputElement = getElement('glyph-input');
 listen(glyphInputElement, 'input', function () {
+	cancelGlyphUpload();
 	const rawGlyphInput = this.value.trim().toUpperCase();
 	let glyphInput = rawGlyphInput;
 	const requestId = ++glyphInputRequestId;
@@ -68,7 +88,7 @@ listen(glyphInputElement, 'input', function () {
 	if (glyphUpload) glyphUpload.value = '';
 	const label = getElement('uploadLabel');
 	if (label) {
-		label.textContent = 'Tap or drop glyph_XX.png';
+		label.textContent = 'Tap or drop a PNG';
 		label.className = 'text-secondary upload-label-text';
 	}
 
@@ -124,14 +144,35 @@ listen(getElement('converterInput'), 'input', convert);
 listen(getElement('converterOutput'), 'click', copyOutput);
 listen(getElement('darkModeToggle'), 'click', toggleDarkMode);
 
-async function importGlyphFile(file, input = null) {
+async function importGlyphFile(file, input = null, confirmedPrefix = null) {
 	if (!file) return;
 
-	const glyphInputValue = glyphInputElement ? glyphInputElement.value : '';
+	cancelGlyphUpload();
+	const requestId = glyphUploadRequestId;
+	glyphInputRequestId++;
 	const hexValue = getGlyphPrefixFromFileName(file.name)
-		|| getGlyphPrefix(glyphInputValue, 'E0');
+		|| getGlyphPrefix(confirmedPrefix, null);
 
 	const label = getElement('uploadLabel');
+	if (!hexValue) {
+		pendingGlyphUpload = { file, input };
+		if (label) {
+			label.textContent = file.name;
+			label.className = 'text-primary fw-bold upload-label-text';
+		}
+		const filename = getElement('uploadPrefixFilename');
+		if (filename) filename.textContent = file.name;
+		const prefixInput = getElement('uploadPrefix');
+		if (prefixInput) {
+			prefixInput.value = '';
+		}
+		const confirmButton = getElement('confirmGlyphImport');
+		if (confirmButton) confirmButton.disabled = true;
+		const dialog = getElement('glyphPrefixDialog');
+		if (dialog && !dialog.open) dialog.showModal();
+		if (prefixInput) prefixInput.focus();
+		return;
+	}
 
 	try {
 		const image = await loadPngFile(file, {
@@ -140,12 +181,19 @@ async function importGlyphFile(file, input = null) {
 			requireSquare: true,
 			dimensionMultiple: GRID
 		});
+		if (requestId !== glyphUploadRequestId) return;
 		clearTimeout(updateTimer);
 		if (!processGlyph(image, hexValue, { label: file.name })) {
 			throw new Error('The atlas could not be processed.');
 		}
 
 		if (glyphInputElement) glyphInputElement.value = hexValue;
+		if (input) input.value = '';
+		const errorMsg = getElement('glyphErrorMsg');
+		if (errorMsg) errorMsg.classList.add('d-none');
+		const validationMsg = getElement('inputValidation');
+		if (validationMsg) validationMsg.classList.add('d-none');
+		if (glyphInputElement) glyphInputElement.classList.remove('is-invalid');
 		if (label) {
 			label.textContent = file.name;
 			label.className = 'text-primary fw-bold upload-label-text';
@@ -153,11 +201,11 @@ async function importGlyphFile(file, input = null) {
 
 		const hintMsg = getElement('defaultImageHint');
 		if (hintMsg) hintMsg.classList.add('d-none');
-		showToast('Grid updated', 'success', 2000);
 	} catch (error) {
+		if (requestId !== glyphUploadRequestId) return;
 		if (input) input.value = '';
 		if (label) {
-			label.textContent = 'Tap or drop glyph_XX.png';
+			label.textContent = 'Tap or drop a PNG';
 			label.className = 'text-secondary upload-label-text';
 		}
 		alert(error instanceof Error ? error.message : 'Unable to load the PNG atlas.');
@@ -165,7 +213,27 @@ async function importGlyphFile(file, input = null) {
 }
 
 listen(getElement('glyphUpload'), 'change', async function () {
-		await importGlyphFile(this.files && this.files[0], this);
+	await importGlyphFile(this.files && this.files[0], this);
+});
+
+listen(getElement('uploadPrefix'), 'input', function () {
+	const confirmButton = getElement('confirmGlyphImport');
+	if (confirmButton) confirmButton.disabled = !getGlyphPrefix(this.value, null);
+});
+
+listen(getElement('glyphPrefixForm'), 'submit', async event => {
+	event.preventDefault();
+	const prefixInput = getElement('uploadPrefix');
+	const prefix = getGlyphPrefix(prefixInput ? prefixInput.value : '', null);
+	if (!pendingGlyphUpload || !prefix) return;
+	const { file, input } = pendingGlyphUpload;
+	await importGlyphFile(file, input, prefix);
+});
+
+listen(getElement('cancelGlyphImport'), 'click', cancelGlyphUpload);
+listen(getElement('glyphPrefixDialog'), 'cancel', event => {
+	event.preventDefault();
+	cancelGlyphUpload();
 });
 
 const glyphUploadZone = document.querySelector('.upload-zone');
