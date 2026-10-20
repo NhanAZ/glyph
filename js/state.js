@@ -9,12 +9,9 @@ const APP_CONFIG = Object.freeze({
 const GRID = APP_CONFIG.gridSize;
 const GLYPH_CACHE_LIMIT = APP_CONFIG.glyphCacheLimit;
 
-let zoomWindow = null;
-let updateTimer = null;
-let zoomEnabled = false;
 let isDarkMode = false;
 let currentAtlasDataUrl = null;
 let currentAtlasLabel = '';
 
-// Cached cells are keyed by atlas and color theme.
+// Cached cells are keyed by atlas.
 const glyphCache = new Map();

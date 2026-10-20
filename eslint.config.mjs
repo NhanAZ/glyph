@@ -7,7 +7,6 @@ const sharedAppGlobals = {
 	GLYPH_CACHE_LIMIT: 'readonly',
 	GRID: 'readonly',
 	Glyph: 'readonly',
-	addZoomEvents: 'readonly',
 	clearAtlasTile: 'readonly',
 	convert: 'readonly',
 	copyOutput: 'readonly',
@@ -22,26 +21,18 @@ const sharedAppGlobals = {
 	getGlyphPrefix: 'readonly',
 	getGlyphPrefixFromFileName: 'readonly',
 	glyphCache: 'readonly',
-	hideZoomWindow: 'readonly',
 	initializeGlyph: 'readonly',
 	isDarkMode: 'writable',
 	isValidGlyphPrefix: 'readonly',
 	listen: 'readonly',
 	loadPngFile: 'readonly',
 	processGlyph: 'readonly',
-	removeZoomEvents: 'readonly',
-	renderGlyphs: 'readonly',
 	replaceAtlasTile: 'readonly',
 	setButtonContent: 'readonly',
 	showToast: 'readonly',
-	showZoomWindow: 'readonly',
 	toggleDarkMode: 'readonly',
-	updateTimer: 'writable',
 	updateCopyButtonState: 'readonly',
-	updateGlyphCellsAtlas: 'readonly',
-	updateZoomWindowContent: 'readonly',
-	zoomEnabled: 'writable',
-	zoomWindow: 'writable'
+	updateGlyphCellsAtlas: 'readonly'
 };
 
 export default [

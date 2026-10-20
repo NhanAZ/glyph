@@ -7,6 +7,11 @@ on:
 
 permissions:
   contents: write
+  actions: write
+
+concurrency:
+  group: "update-vanilla-${{ github.ref }}"
+  cancel-in-progress: false
 
 jobs:
   update-vanilla:
@@ -20,19 +25,27 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Fetch vanilla textures
         run: node scripts/fetch-vanilla.js
 
       - name: Commit changes
+        id: commit
         run: |
-          if git diff --quiet; then
+          git add -- vanilla-textures
+          if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add vanilla-textures scripts/fetch-vanilla.js
           git commit -m "chore: refresh vanilla textures"
           git push
+          echo "updated=true" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy updated textures
+        if: steps.commit.outputs.updated == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run static.yml --ref "$GITHUB_REF_NAME"

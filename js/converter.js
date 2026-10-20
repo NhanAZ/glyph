@@ -1,4 +1,5 @@
 let copyFeedbackTimer = null;
+let conversionVersion = 0;
 
 const CONTROL_CHARACTER_LABELS = new Map([
 	[0x0000, 'NULL'],
@@ -183,6 +184,9 @@ function convertHexToEmoji(input) {
 	if (!successMsg || !errorMsg) return;
 
 	try {
+		if (!/^[0-9A-Fa-f]+$/.test(input)) {
+			throw new RangeError('Invalid Unicode code point.');
+		}
 		const codePoint = Number.parseInt(input, 16);
 		if (!Number.isInteger(codePoint) || codePoint < 0 || codePoint > 0x10FFFF) {
 			throw new RangeError('Invalid Unicode code point.');
@@ -213,7 +217,9 @@ function convert() {
 	const output = getElement('converterOutput');
 	if (!inputElement || !errorMsg || !successMsg || !output) return;
 
-	let input = inputElement.value.trim();
+	const rawInput = inputElement.value;
+	let input = Array.from(rawInput).length === 1 ? rawInput : rawInput.trim();
+	conversionVersion++;
 	clearCopyFeedbackTimer();
 	const copyButton = getElement('copyButton');
 	setButtonContent(copyButton, 'Copy');
@@ -228,9 +234,9 @@ function convert() {
 	}
 
 	let isExplicitHex = false;
-	if (/^(0x|u\+|U\+)/i.test(input)) {
+	if (/^(0x|u\+)/i.test(input)) {
 		isExplicitHex = true;
-		input = input.replace(/^(0x|u\+|U\+)/i, '');
+		input = input.replace(/^(0x|u\+)/i, '');
 	}
 
 	if (isExplicitHex || (input.length > 1 && /^[0-9A-Fa-f]+$/.test(input))) {
@@ -253,7 +259,9 @@ function copyOutput() {
 
 	if (!output || !copyButton || output.value === '') return;
 
+	const version = conversionVersion;
 	copyText(output.value).then(() => {
+		if (version !== conversionVersion) return;
 		clearCopyFeedbackTimer();
 		if (errorMsg) errorMsg.classList.add('d-none');
 		if (successMsg) {
@@ -272,6 +280,7 @@ function copyOutput() {
 			copyFeedbackTimer = null;
 		}, 2000);
 	}).catch(() => {
+		if (version !== conversionVersion) return;
 		clearCopyFeedbackTimer();
 		if (successMsg) successMsg.classList.add('d-none');
 		if (errorMsg) {

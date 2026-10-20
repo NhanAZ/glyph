@@ -1,10 +1,10 @@
 # Icon redraw source
 
-Folder này gom các icon/ảnh UI nguồn để vẽ lại bản pixel.
+Ảnh tham khảo để vẽ lại icon theo phong cách pixel. Ứng dụng không tải trực tiếp các file trong thư mục này.
 
-- `fontawesome-svg/`: icon Font Awesome đang được gọi bằng class trong HTML/JS.
-- `app-png/`: favicon/app icon PNG/ICO hiện có trong `assets/icons`.
-- `ui-png/`: PNG UI đang dùng làm border/background trong CSS Minecraft style.
-- `manifest.json`: mapping nguồn -> file export.
+- `fontawesome-svg/`: icon Font Awesome từ giao diện cũ.
+- `app-png/`: bản sao favicon và app icon từ `assets/icons/`.
+- `ui-png/`: bản sao ảnh viền và nền giao diện.
+- `manifest.json`: danh sách file và nguồn tương ứng.
 
-Ghi chú: không copy toàn bộ `vanilla-textures` vì đó là texture/item library, không phải icon UI của app.
+Thư viện texture Minecraft nằm riêng trong `vanilla-textures/`.

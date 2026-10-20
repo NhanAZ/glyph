@@ -23,6 +23,18 @@ function cancelGlyphUpload() {
 	}
 }
 
+function updateGlyphInputState(prefix) {
+	const input = getElement('glyph-input');
+	if (input) {
+		input.value = prefix;
+		input.classList.remove('is-invalid');
+	}
+	for (const id of ['glyphErrorMsg', 'inputValidation']) {
+		const message = getElement(id);
+		if (message) message.classList.add('d-none');
+	}
+}
+
 function loadPreset(assetKey, hex, cacheKey, labelText, options = {}) {
 	const source = DEFAULT_GLYPHS[assetKey];
 	if (!source || !isValidGlyphPrefix(hex)) return false;
@@ -37,7 +49,6 @@ function loadPreset(assetKey, hex, cacheKey, labelText, options = {}) {
 		onError = null
 	} = options;
 
-	clearTimeout(updateTimer);
 	const image = new Image();
 	image.crossOrigin = 'anonymous';
 	image.onload = () => {
@@ -49,6 +60,7 @@ function loadPreset(assetKey, hex, cacheKey, labelText, options = {}) {
 			return;
 		}
 
+		updateGlyphInputState(hex);
 		if (hideHint) {
 			const hintMsg = getElement('defaultImageHint');
 			if (hintMsg) hintMsg.classList.add('d-none');
@@ -103,7 +115,6 @@ listen(glyphInputElement, 'input', function () {
 			onError: () => {
 				if (requestId !== glyphInputRequestId) return;
 				Glyph(glyphInput);
-				renderGlyphs();
 				if (hintMsg && hintHex) {
 					hintHex.textContent = glyphInput;
 					hintMsg.classList.remove('d-none');
@@ -113,7 +124,6 @@ listen(glyphInputElement, 'input', function () {
 
 		if (!isDefaultAtlas || !loadDefaultAtlas()) {
 			Glyph(glyphInput);
-			renderGlyphs();
 		}
 
 		if (rawGlyphInput) {
@@ -182,18 +192,12 @@ async function importGlyphFile(file, input = null, confirmedPrefix = null) {
 			dimensionMultiple: GRID
 		});
 		if (requestId !== glyphUploadRequestId) return;
-		clearTimeout(updateTimer);
 		if (!processGlyph(image, hexValue, { label: file.name })) {
 			throw new Error('The atlas could not be processed.');
 		}
 
-		if (glyphInputElement) glyphInputElement.value = hexValue;
+		updateGlyphInputState(hexValue);
 		if (input) input.value = '';
-		const errorMsg = getElement('glyphErrorMsg');
-		if (errorMsg) errorMsg.classList.add('d-none');
-		const validationMsg = getElement('inputValidation');
-		if (validationMsg) validationMsg.classList.add('d-none');
-		if (glyphInputElement) glyphInputElement.classList.remove('is-invalid');
 		if (label) {
 			label.textContent = file.name;
 			label.className = 'text-primary fw-bold upload-label-text';
@@ -273,52 +277,25 @@ if (glyphUploadZone) {
 	});
 }
 
-window.addEventListener('scroll', function () {
-	hideZoomWindow();
-	if (zoomWindow) {
-		zoomWindow.style.bottom = '20px';
-	}
-});
-
 document.addEventListener('DOMContentLoaded', () => {
-	const mobileAlert = getElement('mobileAlert');
 	const glyphGrid = getElement('glyph-output');
 	const gridModeToggle = getElement('gridModeToggle');
 	const gridToggleLabel = gridModeToggle ? gridModeToggle.querySelector('.grid-toggle-label') : null;
 	let gridMode = 'adaptive';
-	let mobileAlertTimer = null;
 
 	function applyGridMode(mode) {
 		if (!glyphGrid) return;
 		if (mode === 'fixed') {
 			glyphGrid.style.setProperty('--glyph-columns', 16);
+			glyphGrid.style.setProperty('--glyph-rows', 16);
 			if (gridToggleLabel) gridToggleLabel.textContent = '16x16 view';
 		} else {
 			glyphGrid.style.removeProperty('--glyph-columns');
+			glyphGrid.style.removeProperty('--glyph-rows');
 			if (gridToggleLabel) gridToggleLabel.textContent = 'Adaptive grid';
 		}
 	}
 
-	function checkScreenSize() {
-		if (!mobileAlert) return;
-		if (window.innerWidth < 768) {
-			mobileAlert.style.display = 'block';
-			if (mobileAlertTimer) clearTimeout(mobileAlertTimer);
-			mobileAlertTimer = setTimeout(() => {
-				if (window.bootstrap && window.bootstrap.Alert) {
-					const alertInstance = window.bootstrap.Alert.getOrCreateInstance(mobileAlert);
-					alertInstance.close();
-				} else {
-					mobileAlert.style.display = 'none';
-				}
-			}, 5000);
-		} else {
-			mobileAlert.style.display = 'none';
-		}
-	}
-
-	checkScreenSize();
-	window.addEventListener('resize', checkScreenSize);
 	applyGridMode(gridMode);
 
 	if (gridModeToggle && glyphGrid) {
@@ -334,7 +311,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	const detailModalEl = getElement('glyphDetailModal');
 	const detailModal = detailModalEl && modalApi ? new modalApi(detailModalEl) : null;
 	const detailImg = getElement('glyphDetailImage');
-	const detailCharFallback = getElement('glyphDetailChar');
 	const detailHex = getElement('glyphDetailHex');
 	const detailDec = getElement('glyphDetailDec');
 	const detailPos = getElement('glyphDetailPos');
@@ -348,9 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const detailReplaceInput = getElement('glyphDetailReplaceInput');
 	const actionUploadPng = getElement('actionUploadPng');
 	const actionVanillaPicker = getElement('actionVanillaPicker');
-	const beforeAfterWrap = getElement('glyphBeforeAfter');
 	const vanillaStatus = getElement('vanillaStatus');
-	const vanillaOpenPickerBtn = actionVanillaPicker;
 	const vanillaPickerStatus = getElement('vanillaPickerStatus');
 	const vanillaGrid = getElement('vanillaGrid');
 	const vanillaPickerModalEl = getElement('vanillaPickerModal');
@@ -369,10 +343,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	let vanillaPage = 1;
 	let vanillaPageSizeValue = '36';
 	let vanillaRenderId = 0;
-	let replacePending = null;
 	let currentDetailCell = null;
+	let detailRequestId = 0;
 	let detailNoticeTimer = null;
 	const vanillaCacheTtl = 24 * 60 * 60 * 1000;
+
+	listen(detailModalEl, 'hidden.bs.modal', () => {
+		currentDetailCell = null;
+		detailRequestId++;
+	});
 
 	function showDetailNotice(message, variant = 'success') {
 		if (!detailNotice) return;
@@ -403,10 +382,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	async function showGlyphDetail(cell) {
 		if (!cell || !detailModal) return;
 		currentDetailCell = cell;
-		replacePending = null;
-		if (beforeAfterWrap) beforeAfterWrap.classList.add('d-none');
+		const requestId = ++detailRequestId;
 		if (detailImg) detailImg.classList.remove('d-none');
-		if (detailCharFallback) detailCharFallback.classList.add('d-none');
 		if (vanillaStatus) vanillaStatus.textContent = '';
 
 		const isTransparentCell = cell.classList.contains('transparent');
@@ -423,14 +400,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		let glyphDownloadUrl = '';
 
 		const resolvedImageUrl = await extractGlyphTileUrl(cell);
-		if (currentDetailCell !== cell) return;
+		if (requestId !== detailRequestId || !cell.isConnected) return;
 
 		if (resolvedImageUrl) {
 			if (detailPreview && isTransparentCell) detailPreview.classList.add('transparent-state');
 			glyphDownloadUrl = resolvedImageUrl;
 			if (detailImg && detailImg.src !== resolvedImageUrl) detailImg.src = resolvedImageUrl;
 			if (detailImg) detailImg.classList.remove('d-none');
-			if (detailCharFallback) detailCharFallback.classList.add('d-none');
 		} else {
 			if (detailPreview) detailPreview.classList.add('transparent-state');
 			const transparentCanvas = document.createElement('canvas');
@@ -443,7 +419,6 @@ document.addEventListener('DOMContentLoaded', () => {
 				detailImg.src = glyphDownloadUrl;
 				detailImg.classList.remove('d-none');
 			}
-			if (detailCharFallback) detailCharFallback.classList.add('d-none');
 		}
 
 		if (detailHex) detailHex.textContent = hex;
@@ -471,13 +446,22 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (detailClearBtn) {
 			detailClearBtn.disabled = false;
 			setButtonContent(detailClearBtn, 'Clear to transparent');
-			detailClearBtn.onclick = () => {
-				cell.classList.add('transparent');
-				delete cell.dataset.originalBg;
-				delete cell.dataset.displayBg;
-				delete cell.dataset.pendingTintTheme;
-				delete cell.dataset.tintTheme;
-
+			detailClearBtn.onclick = async () => {
+				if (!cell.isConnected) return;
+				const clearRequestId = ++detailRequestId;
+				detailClearBtn.disabled = true;
+				const atlasUrl = await clearAtlasTile(cell, () => clearRequestId === detailRequestId && cell.isConnected);
+				if (!cell.isConnected) return;
+				if (atlasUrl) {
+					updateGlyphCellsAtlas(atlasUrl);
+					cell.classList.add('transparent');
+				}
+				if (currentDetailCell === cell) detailClearBtn.disabled = false;
+				if (clearRequestId !== detailRequestId) return;
+				if (!atlasUrl) {
+					showToast('Unable to clear the glyph. Load an atlas and try again.', 'error');
+					return;
+				}
 				const clearedCanvas = document.createElement('canvas');
 				const tileW = widthAttr || 220;
 				const tileH = heightAttr || 220;
@@ -487,9 +471,6 @@ document.addEventListener('DOMContentLoaded', () => {
 				if (detailImg) {
 					detailImg.src = clearedUrl;
 					detailImg.classList.remove('d-none');
-				}
-				if (detailCharFallback) {
-					detailCharFallback.classList.add('d-none');
 				}
 				if (detailPreview) detailPreview.classList.add('transparent-state');
 				if (detailDim) detailDim.textContent = `${tileW}px x ${tileH}px`;
@@ -503,10 +484,6 @@ document.addEventListener('DOMContentLoaded', () => {
 					};
 				}
 				showToast('Cleared to transparent');
-
-				clearAtlasTile(cell).then((atlasUrl) => {
-					if (atlasUrl) updateGlyphCellsAtlas(atlasUrl);
-				});
 			};
 		}
 
@@ -592,8 +569,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function getCurrentGlyphPrefix() {
-		const glyphInput = getElement('glyph-input');
-		return getGlyphPrefix(glyphInput ? glyphInput.value : '', 'E0');
+		const firstCell = getGlyphCells()[0];
+		const firstCodePoint = firstCell ? Number.parseInt(firstCell.getAttribute('data-hex'), 16) : NaN;
+		return Number.isInteger(firstCodePoint) ? Math.floor(firstCodePoint / (GRID * GRID)).toString(16).toUpperCase() : 'E0';
 	}
 
 	function getGlyphRows(cells = getGlyphCells()) {
@@ -796,55 +774,33 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	function queueReplaceCandidate(imgObj) {
-		replacePending = { img: imgObj };
-		applyPendingReplace();
-	}
-
-	function applyPendingReplace() {
-		if (!replacePending || !currentDetailCell) return;
-		const { img } = replacePending;
-		const cell = currentDetailCell;
+	async function replaceDetailGlyph(img, cell, requestId) {
+		if (!cell || !cell.isConnected || requestId !== detailRequestId) return;
 		const hex = cell.getAttribute('data-hex') || '';
-		replaceAtlasTile(cell, img).then((result) => {
-			const tileUrl = result && result.tileUrl;
-			const tileW = result && result.tileW;
-			const tileH = result && result.tileH;
-			if (tileUrl) {
-				if (result.atlasUrl) updateGlyphCellsAtlas(result.atlasUrl);
-				cell.classList.remove('transparent');
-				delete cell.dataset.originalBg;
-				delete cell.dataset.displayBg;
-				delete cell.dataset.pendingTintTheme;
-				delete cell.dataset.tintTheme;
-				if (detailPreview) detailPreview.classList.remove('transparent-state');
-				if (tileW) cell.setAttribute('data-width', tileW);
-				if (tileH) cell.setAttribute('data-height', tileH);
-				if (detailImg) {
-					detailImg.src = tileUrl;
-					detailImg.classList.remove('d-none');
-				}
-				if (detailCharFallback) detailCharFallback.classList.add('d-none');
-				if (detailDim) {
-					detailDim.textContent = tileW && tileH
-						? `${tileW}px x ${tileH}px`
-						: detailDim.textContent;
-				}
-				if (detailDownloadBtn) {
-					const fileName = `glyph_${hex.replace(/^0x/i, '').toLowerCase() || 'char'}.png`;
-					detailDownloadBtn.disabled = false;
-					detailDownloadBtn.onclick = () => {
-						downloadUrl(tileUrl, fileName);
-					};
-				}
-				showToast('Glyph replaced');
-			} else {
-				showToast('Load an atlas before replacing a glyph.', 'error');
-			}
-			replacePending = null;
-			if (beforeAfterWrap) beforeAfterWrap.classList.add('d-none');
-			if (detailImg) detailImg.classList.remove('d-none');
-		});
+		const result = await replaceAtlasTile(cell, img, () => requestId === detailRequestId && cell.isConnected);
+		if (!cell.isConnected) return;
+		if (result && result.atlasUrl) {
+			updateGlyphCellsAtlas(result.atlasUrl);
+			cell.classList.toggle('transparent', result.transparent);
+		}
+		if (requestId !== detailRequestId) return;
+		if (!result || !result.tileUrl) {
+			showToast('Unable to replace the glyph. Load an atlas and try again.', 'error');
+			return;
+		}
+		const { tileUrl, tileW, tileH } = result;
+		if (detailPreview) detailPreview.classList.toggle('transparent-state', result.transparent);
+		if (detailImg) {
+			detailImg.src = tileUrl;
+			detailImg.classList.remove('d-none');
+		}
+		if (detailDim) detailDim.textContent = `${tileW}px x ${tileH}px`;
+		if (detailDownloadBtn) {
+			const fileName = `glyph_${hex.replace(/^0x/i, '').toLowerCase() || 'char'}.png`;
+			detailDownloadBtn.disabled = false;
+			detailDownloadBtn.onclick = () => downloadUrl(tileUrl, fileName);
+		}
+		showToast('Glyph replaced');
 	}
 
 	function populateCategories() {
@@ -913,14 +869,18 @@ document.addEventListener('DOMContentLoaded', () => {
 				card.appendChild(img);
 				card.appendChild(label);
 				const selectTexture = () => {
+					const cell = currentDetailCell;
+					const requestId = ++detailRequestId;
 					const previewSrc = img.src;
 					const previewImg = new Image();
 					previewImg.crossOrigin = 'anonymous';
 					previewImg.onload = function () {
-						queueReplaceCandidate(previewImg);
+						if (requestId !== detailRequestId || !cell || !cell.isConnected) return;
+						replaceDetailGlyph(previewImg, cell, requestId);
 						if (vanillaPickerModal) vanillaPickerModal.hide();
 					};
 					previewImg.onerror = function () {
+						if (requestId !== detailRequestId) return;
 						if (vanillaPickerStatus) vanillaPickerStatus.textContent = 'Failed to load texture.';
 					};
 					previewImg.src = previewSrc;
@@ -956,8 +916,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		renderChunk();
 	}
 
-	if (vanillaOpenPickerBtn) {
-		vanillaOpenPickerBtn.addEventListener('click', async () => {
+	if (actionVanillaPicker) {
+		actionVanillaPicker.addEventListener('click', async () => {
+			const cell = currentDetailCell;
 			if (!vanillaPaths.length) {
 				if (Array.isArray(window.__vanillaPaths) && window.__vanillaPaths.length) {
 					vanillaPaths = updateVanillaPathState(window.__vanillaPaths);
@@ -966,12 +927,13 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 				populateCategories();
 			}
+			if (currentDetailCell !== cell || !cell || !cell.isConnected) return;
 			if (!vanillaPaths.length) {
 				showToast('Vanilla textures are unavailable.', 'error');
 				return;
 			}
 			vanillaPage = 1;
-			renderVanillaGrid('');
+			renderVanillaGrid(vanillaSearchInput ? vanillaSearchInput.value : '');
 			if (vanillaPickerStatus) vanillaPickerStatus.textContent = 'Click a texture to apply it.';
 			if (vanillaPickerModal) vanillaPickerModal.show();
 		});
@@ -982,7 +944,10 @@ document.addEventListener('DOMContentLoaded', () => {
 		vanillaSearchInput.addEventListener('input', () => {
 			const val = vanillaSearchInput.value || '';
 			if (searchDebounce) clearTimeout(searchDebounce);
-			searchDebounce = setTimeout(() => renderVanillaGrid(val), 200);
+			searchDebounce = setTimeout(() => {
+				vanillaPage = 1;
+				renderVanillaGrid(val);
+			}, 200);
 		});
 	}
 
@@ -1038,11 +1003,14 @@ document.addEventListener('DOMContentLoaded', () => {
 		detailReplaceInput.onchange = async (event) => {
 			const file = event.target.files && event.target.files[0];
 			if (!file) return;
+			const cell = currentDetailCell;
+			const requestId = ++detailRequestId;
 
 			try {
 				const image = await loadPngFile(file);
-				queueReplaceCandidate(image);
+				await replaceDetailGlyph(image, cell, requestId);
 			} catch (error) {
+				if (requestId !== detailRequestId) return;
 				alert(error instanceof Error ? error.message : 'Unable to load the PNG image.');
 			}
 		};

@@ -5,9 +5,7 @@ function createGlyphCell({
 	row,
 	width = '',
 	height = '',
-	imageUrl = '',
-	useAtlas = false,
-	transparent = false
+	useAtlas = false
 }) {
 	const cell = document.createElement('div');
 	cell.dataset.hex = `0x${hexCode}`;
@@ -16,12 +14,8 @@ function createGlyphCell({
 	cell.dataset.width = String(width);
 	cell.dataset.height = String(height);
 
-	if (transparent) cell.classList.add('transparent');
 	if (useAtlas) {
 		setCellAtlasBackground(cell, col, row);
-	} else if (imageUrl) {
-		cell.style.backgroundImage = `url("${imageUrl}")`;
-		cell.style.backgroundSize = '100% 100%';
 	} else {
 		cell.textContent = char;
 	}
@@ -71,11 +65,6 @@ function updateGlyphCellsAtlas(atlasUrl) {
 	if (!glyphOutput || !atlasUrl) return;
 
 	setGlyphOutputAtlas(glyphOutput, atlasUrl);
-	Array.from(glyphOutput.querySelectorAll('div[data-sprite-col][data-sprite-row]')).forEach(cell => {
-		const col = Number.parseInt(cell.dataset.spriteCol, 10) + 1;
-		const row = Number.parseInt(cell.dataset.spriteRow, 10) + 1;
-		setCellAtlasBackground(cell, col, row);
-	});
 }
 
 function markGlyphOutputReady(glyphOutput) {
@@ -86,7 +75,10 @@ function markGlyphOutputReady(glyphOutput) {
 }
 
 function isTransparentGlyphTile(imageData) {
-	return imageData.data.every((value, index) => (index + 1) % 4 === 0 || value === 0);
+	for (let index = 3; index < imageData.data.length; index += 4) {
+		if (imageData.data[index] !== 0) return false;
+	}
+	return true;
 }
 
 function markTransparentCellsFromAtlas(img, glyphOutput, unicodeSize, atlasWidth, atlasHeight, sourceCanvas = null) {
@@ -155,11 +147,13 @@ function markTransparentCellsFromAtlas(img, glyphOutput, unicodeSize, atlasWidth
 }
 
 function markTransparentCellsFromAtlasUrl(atlasUrl, glyphOutput, unicodeSize, atlasWidth, atlasHeight) {
-	if (!atlasUrl) return;
+	if (!atlasUrl || !glyphOutput) return;
 
+	const atlasVersion = glyphOutput.dataset.atlasVersion;
 	const img = new Image();
 	if (!atlasUrl.startsWith('data:')) img.crossOrigin = 'anonymous';
 	img.onload = function () {
+		if (glyphOutput.dataset.atlasVersion !== atlasVersion) return;
 		markTransparentCellsFromAtlas(img, glyphOutput, unicodeSize, atlasWidth, atlasHeight);
 	};
 	img.src = atlasUrl;
@@ -167,7 +161,6 @@ function markTransparentCellsFromAtlasUrl(atlasUrl, glyphOutput, unicodeSize, at
 
 function getBackgroundImageUrl(element) {
 	if (!element) return '';
-	if (element.dataset.originalBg) return element.dataset.originalBg;
 	const atlasUrl = getCellAtlasUrl(element);
 	if (atlasUrl && element.dataset.spriteCol) return atlasUrl;
 
@@ -239,9 +232,13 @@ function extractGlyphTileUrl(cell) {
 				return;
 			}
 
-			ctx.imageSmoothingEnabled = false;
-			ctx.drawImage(img, tile.x, tile.y, tile.tileW, tile.tileH, 0, 0, tile.tileW, tile.tileH);
-			resolve(canvas.toDataURL('image/png'));
+			try {
+				ctx.imageSmoothingEnabled = false;
+				ctx.drawImage(img, tile.x, tile.y, tile.tileW, tile.tileH, 0, 0, tile.tileW, tile.tileH);
+				resolve(canvas.toDataURL('image/png'));
+			} catch {
+				resolve('');
+			}
 		};
 		img.onerror = () => resolve('');
 		img.src = sourceUrl;
@@ -286,10 +283,6 @@ function Glyph(glyph = 'E0') {
 	glyphOutput.replaceChildren(fragment);
 	markGlyphOutputReady(glyphOutput);
 
-	removeZoomEvents();
-	zoomEnabled = false;
-	hideZoomWindow();
-
 	setAtlasInfo(null, null, `${filename}.png`);
 	return true;
 }
@@ -300,9 +293,13 @@ function initializeGlyph() {
 
 	if (!glyphOutput.hasChildNodes()) {
 		if (DEFAULT_GLYPHS.E0) {
+			const atlasVersion = glyphOutput.dataset.atlasVersion;
+			const isCurrent = () => !glyphOutput.hasChildNodes() &&
+				glyphOutput.dataset.atlasVersion === atlasVersion;
 			const img = new Image();
 			img.crossOrigin = 'anonymous';
 			img.onload = function () {
+				if (!isCurrent()) return;
 				processGlyph(img, 'E0', {
 					cacheKey: 'E0_DEFAULT',
 					label: 'glyph_E0.png',
@@ -310,7 +307,7 @@ function initializeGlyph() {
 				});
 			};
 			img.onerror = function () {
-				Glyph('E0');
+				if (isCurrent()) Glyph('E0');
 			};
 			img.src = DEFAULT_GLYPHS.E0;
 		} else {
@@ -326,9 +323,6 @@ function applyCachedGlyph(entry) {
 	const cells = entry.cells.map(cell => cell.cloneNode(true));
 	glyphOutput.replaceChildren(...cells);
 	markGlyphOutputReady(glyphOutput);
-	removeZoomEvents();
-	zoomEnabled = false;
-	hideZoomWindow();
 
 	currentAtlasDataUrl = entry.atlasDataUrl || null;
 	currentAtlasLabel = entry.label || currentAtlasLabel;
@@ -344,88 +338,6 @@ function applyCachedGlyph(entry) {
 	return true;
 }
 
-function renderGlyphs() {
-	const glyphOutput = getElement('glyph-output');
-	if (!glyphOutput) return;
-	if (glyphOutput.dataset.atlasUrl) return;
-
-	const glyphs = Array.from(glyphOutput.querySelectorAll('div[data-hex]'));
-	const themeKey = isDarkMode ? 'dark' : 'light';
-	const schedule = window.requestIdleCallback || window.requestAnimationFrame;
-	let index = 0;
-
-	const processChunk = () => {
-		const start = performance.now();
-		for (; index < glyphs.length && performance.now() - start < 8; index++) {
-			const glyph = glyphs[index];
-			if (glyph.dataset.spriteCol) continue;
-			const bgUrl = getBackgroundImageUrl(glyph);
-
-			if (!bgUrl || (glyph.dataset.tintTheme === themeKey && glyph.dataset.displayBg)) continue;
-
-			const img = new Image();
-			glyph.dataset.pendingTintTheme = themeKey;
-			img.onload = function () {
-				const activeTheme = isDarkMode ? 'dark' : 'light';
-				if (
-					activeTheme !== themeKey ||
-					glyph.dataset.pendingTintTheme !== themeKey ||
-					getBackgroundImageUrl(glyph) !== bgUrl
-				) {
-					return;
-				}
-
-				const canvas = document.createElement('canvas');
-				const ctx = canvas.getContext('2d');
-				if (!ctx || img.width < 1 || img.height < 1) return;
-				canvas.width = img.width;
-				canvas.height = img.height;
-
-				let imageData;
-				try {
-					ctx.drawImage(img, 0, 0);
-					imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-				} catch {
-					return;
-				}
-				const data = imageData.data;
-
-				for (let i = 0; i < data.length; i += 4) {
-					if (data[i + 3] === 0) {
-						const tint = themeKey === 'dark' ? 50 : 200;
-						const alpha = themeKey === 'dark' ? 128 : 64;
-						data[i] = tint;
-						data[i + 1] = tint;
-						data[i + 2] = tint;
-						data[i + 3] = alpha;
-					}
-				}
-
-				ctx.putImageData(imageData, 0, 0);
-				const processedUrl = canvas.toDataURL();
-				glyph.style.backgroundImage = `url(${processedUrl})`;
-				glyph.dataset.originalBg = bgUrl;
-				glyph.dataset.displayBg = processedUrl;
-				glyph.dataset.tintTheme = themeKey;
-				delete glyph.dataset.pendingTintTheme;
-			};
-			img.onerror = () => {
-				if (glyph.dataset.pendingTintTheme === themeKey) {
-					delete glyph.dataset.pendingTintTheme;
-				}
-			};
-			img.crossOrigin = 'anonymous';
-			img.src = bgUrl;
-		}
-
-		if (index < glyphs.length) {
-			schedule(processChunk);
-		}
-	};
-
-	processChunk();
-}
-
 function processGlyph(img, hexValue, options = {}) {
 	const normalizedHex = getGlyphPrefix(hexValue, null);
 	const glyphOutput = getElement('glyph-output');
@@ -435,10 +347,9 @@ function processGlyph(img, hexValue, options = {}) {
 
 	const cacheKey = options.cacheKey;
 	const label = options.label || `glyph_${normalizedHex}.png`;
-	const themedKey = cacheKey ? `${cacheKey}__${isDarkMode ? 'dark' : 'light'}` : null;
 
-	if (themedKey && glyphCache.has(themedKey)) {
-		return applyCachedGlyph(glyphCache.get(themedKey));
+	if (cacheKey && glyphCache.has(cacheKey)) {
+		return applyCachedGlyph(glyphCache.get(cacheKey));
 	}
 
 	const unicodeSize = Math.floor(Math.min(imageWidth, imageHeight) / GRID);
@@ -459,12 +370,12 @@ function processGlyph(img, hexValue, options = {}) {
 		atlasCanvas.height = atlasHeight;
 
 		try {
+			ctx.imageSmoothingEnabled = false;
 			ctx.drawImage(img, 0, 0, atlasCanvas.width, atlasCanvas.height);
+			atlasUrl = atlasCanvas.toDataURL('image/png');
 		} catch {
 			return false;
 		}
-
-		atlasUrl = atlasCanvas.toDataURL('image/png');
 	}
 
 	const fragment = document.createDocumentFragment();
@@ -488,10 +399,6 @@ function processGlyph(img, hexValue, options = {}) {
 		}));
 	}
 
-	removeZoomEvents();
-	zoomEnabled = false;
-	hideZoomWindow();
-
 	currentAtlasDataUrl = atlasUrl;
 	glyphOutput.replaceChildren(fragment);
 	markGlyphOutputReady(glyphOutput);
@@ -501,8 +408,8 @@ function processGlyph(img, hexValue, options = {}) {
 	currentAtlasLabel = label;
 	setAtlasInfo(imageWidth, imageHeight, label);
 
-	if (themedKey) {
-		glyphCache.set(themedKey, {
+	if (cacheKey) {
+		glyphCache.set(cacheKey, {
 			cells: Array.from(glyphOutput.children, cell => cell.cloneNode(true)),
 			unicodeSize,
 			width: imageWidth,
@@ -522,96 +429,71 @@ function processGlyph(img, hexValue, options = {}) {
 	return true;
 }
 
-function clearAtlasTile(cell) {
+function editAtlasTile(cell, newImage = null, isCurrent = () => true) {
 	return new Promise((resolve) => {
-		if (!currentAtlasDataUrl || !cell) {
+		if (!currentAtlasDataUrl || !cell || !isCurrent()) {
 			resolve(null);
 			return;
 		}
 
+		const atlasUrl = currentAtlasDataUrl;
+		const glyphOutput = getElement('glyph-output');
+		const atlasVersion = glyphOutput?.dataset.atlasVersion;
 		const img = new Image();
+		img.crossOrigin = 'anonymous';
 		img.onload = function () {
-			const canvas = document.createElement('canvas');
-			canvas.width = img.width;
-			canvas.height = img.height;
-			const ctx = canvas.getContext('2d');
-			const tile = getAtlasTileRect(cell, img.width, img.height);
-			if (!ctx || !tile) return resolve(null);
-			ctx.drawImage(img, 0, 0);
+			if (!isCurrent() || currentAtlasDataUrl !== atlasUrl || glyphOutput?.dataset.atlasVersion !== atlasVersion) {
+				resolve(null);
+				return;
+			}
 
-			ctx.clearRect(tile.x, tile.y, tile.tileW, tile.tileH);
+			try {
+				const canvas = document.createElement('canvas');
+				canvas.width = img.width;
+				canvas.height = img.height;
+				const ctx = canvas.getContext('2d');
+				const tile = getAtlasTileRect(cell, img.width, img.height);
+				if (!ctx || !tile) return resolve(null);
+				ctx.imageSmoothingEnabled = false;
+				ctx.drawImage(img, 0, 0);
+				ctx.clearRect(tile.x, tile.y, tile.tileW, tile.tileH);
 
-			currentAtlasDataUrl = canvas.toDataURL('image/png');
-			glyphCache.clear();
-			setAtlasInfo(img.width, img.height, currentAtlasLabel || 'Atlas');
-			resolve(currentAtlasDataUrl);
+				let tileUrl = '';
+				let transparent = true;
+				if (newImage) {
+					if (newImage.width < 1 || newImage.height < 1) return resolve(null);
+					const tileCanvas = document.createElement('canvas');
+					tileCanvas.width = tile.tileW;
+					tileCanvas.height = tile.tileH;
+					const tileCtx = tileCanvas.getContext('2d');
+					if (!tileCtx) return resolve(null);
+					tileCtx.imageSmoothingEnabled = false;
+					tileCtx.drawImage(newImage, 0, 0, tile.tileW, tile.tileH);
+					tileUrl = tileCanvas.toDataURL('image/png');
+					transparent = isTransparentGlyphTile(tileCtx.getImageData(0, 0, tile.tileW, tile.tileH));
+					ctx.drawImage(tileCanvas, tile.x, tile.y);
+				}
+
+				const editedAtlasUrl = canvas.toDataURL('image/png');
+				if (!isCurrent()) return resolve(null);
+				currentAtlasDataUrl = editedAtlasUrl;
+				glyphCache.clear();
+				setAtlasInfo(img.width, img.height, currentAtlasLabel || 'Atlas');
+				resolve({ atlasUrl: currentAtlasDataUrl, tileUrl, tileW: tile.tileW, tileH: tile.tileH, transparent });
+			} catch {
+				resolve(null);
+			}
 		};
 		img.onerror = () => resolve(null);
-		img.src = currentAtlasDataUrl;
+		img.src = atlasUrl;
 	});
 }
 
-function replaceAtlasTile(cell, newImage) {
-	return new Promise((resolve) => {
-		if (!currentAtlasDataUrl || !cell || !newImage) {
-			resolve(null);
-			return;
-		}
+async function clearAtlasTile(cell, isCurrent) {
+	const result = await editAtlasTile(cell, null, isCurrent);
+	return result ? result.atlasUrl : null;
+}
 
-		const atlasImg = new Image();
-		atlasImg.onload = function () {
-			const canvas = document.createElement('canvas');
-			canvas.width = atlasImg.width;
-			canvas.height = atlasImg.height;
-			const ctx = canvas.getContext('2d');
-			const tile = getAtlasTileRect(cell, atlasImg.width, atlasImg.height);
-			if (!ctx || !tile || newImage.width < 1 || newImage.height < 1) return resolve(null);
-			ctx.imageSmoothingEnabled = false;
-			ctx.drawImage(atlasImg, 0, 0);
-
-			ctx.clearRect(tile.x, tile.y, tile.tileW, tile.tileH);
-			ctx.drawImage(
-				newImage,
-				0,
-				0,
-				newImage.width,
-				newImage.height,
-				tile.x,
-				tile.y,
-				tile.tileW,
-				tile.tileH
-			);
-
-			currentAtlasDataUrl = canvas.toDataURL('image/png');
-			glyphCache.clear();
-			setAtlasInfo(atlasImg.width, atlasImg.height, currentAtlasLabel || 'Atlas');
-
-			const tileCanvas = document.createElement('canvas');
-			tileCanvas.width = tile.tileW;
-			tileCanvas.height = tile.tileH;
-			const tileCtx = tileCanvas.getContext('2d');
-			if (!tileCtx) return resolve(null);
-			tileCtx.imageSmoothingEnabled = false;
-			tileCtx.drawImage(
-				newImage,
-				0,
-				0,
-				newImage.width,
-				newImage.height,
-				0,
-				0,
-				tile.tileW,
-				tile.tileH
-			);
-
-			resolve({
-				atlasUrl: currentAtlasDataUrl,
-				tileUrl: tileCanvas.toDataURL('image/png'),
-				tileW: tile.tileW,
-				tileH: tile.tileH
-			});
-		};
-		atlasImg.onerror = () => resolve(null);
-		atlasImg.src = currentAtlasDataUrl;
-	});
+function replaceAtlasTile(cell, newImage, isCurrent) {
+	return newImage ? editAtlasTile(cell, newImage, isCurrent) : Promise.resolve(null);
 }

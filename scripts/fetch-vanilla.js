@@ -8,13 +8,13 @@ const { execFileSync } = require('child_process');
 const REPOSITORY = 'https://github.com/Mojang/bedrock-samples.git';
 const TEXTURE_DIRECTORY = 'resource_pack/textures';
 const OUTPUT_DIRECTORY = path.resolve(__dirname, '..', 'vanilla-textures');
-const MANIFEST_PATH = path.join(OUTPUT_DIRECTORY, 'manifest.json');
 
 function runGit(args, cwd) {
 	execFileSync('git', args, { cwd, stdio: 'inherit' });
 }
 
-function copyPngFiles(source, destination) {
+function copyPngFiles(source, destination, baseDirectory = destination) {
+	const paths = [];
 	fs.mkdirSync(destination, { recursive: true });
 
 	for (const entry of fs.readdirSync(source, { withFileTypes: true })) {
@@ -22,23 +22,10 @@ function copyPngFiles(source, destination) {
 		const destinationPath = path.join(destination, entry.name);
 
 		if (entry.isDirectory()) {
-			copyPngFiles(sourcePath, destinationPath);
+			paths.push(...copyPngFiles(sourcePath, destinationPath, baseDirectory));
 		} else if (entry.isFile() && entry.name.toLowerCase().endsWith('.png')) {
 			fs.copyFileSync(sourcePath, destinationPath);
-		}
-	}
-}
-
-function collectPngPaths(directory, baseDirectory) {
-	const paths = [];
-
-	for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-		const fullPath = path.join(directory, entry.name);
-
-		if (entry.isDirectory()) {
-			paths.push(...collectPngPaths(fullPath, baseDirectory));
-		} else if (entry.isFile() && entry.name.toLowerCase().endsWith('.png')) {
-			paths.push(path.relative(baseDirectory, fullPath).replace(/\\/g, '/'));
+			paths.push(path.relative(baseDirectory, destinationPath).replace(/\\/g, '/'));
 		}
 	}
 
@@ -47,6 +34,8 @@ function collectPngPaths(directory, baseDirectory) {
 
 function main() {
 	const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'vanilla-textures-'));
+	let stagingDirectory;
+	let backupDirectory;
 
 	try {
 		console.log('Downloading textures from Mojang/bedrock-samples...');
@@ -64,20 +53,38 @@ function main() {
 			encoding: 'utf8'
 		}).trim();
 
-		fs.rmSync(OUTPUT_DIRECTORY, { recursive: true, force: true });
-		copyPngFiles(sourceDirectory, OUTPUT_DIRECTORY);
-
-		const paths = collectPngPaths(OUTPUT_DIRECTORY, OUTPUT_DIRECTORY).sort();
+		// Keep staging on the output filesystem so installation uses directory renames.
+		stagingDirectory = fs.mkdtempSync(path.join(path.dirname(OUTPUT_DIRECTORY), '.vanilla-textures-'));
+		const stagedTextures = path.join(stagingDirectory, 'textures');
+		backupDirectory = path.join(stagingDirectory, 'previous');
+		const paths = copyPngFiles(sourceDirectory, stagedTextures).sort();
+		if (paths.length === 0) throw new Error('The source contains no PNG textures.');
 		const manifest = {
 			source: REPOSITORY,
 			revision,
 			paths
 		};
-		fs.writeFileSync(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+		fs.writeFileSync(path.join(stagedTextures, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+
+		if (fs.existsSync(OUTPUT_DIRECTORY)) fs.renameSync(OUTPUT_DIRECTORY, backupDirectory);
+		try {
+			fs.renameSync(stagedTextures, OUTPUT_DIRECTORY);
+		} catch (error) {
+			if (fs.existsSync(backupDirectory)) fs.renameSync(backupDirectory, OUTPUT_DIRECTORY);
+			throw error;
+		}
+		fs.rmSync(backupDirectory, { recursive: true, force: true });
 
 		console.log(`Copied ${paths.length} textures into ${OUTPUT_DIRECTORY}`);
 	} finally {
 		fs.rmSync(temporaryDirectory, { recursive: true, force: true });
+		if (stagingDirectory) {
+			if (fs.existsSync(backupDirectory)) {
+				console.warn(`Previous textures preserved at ${backupDirectory}`);
+			} else {
+				fs.rmSync(stagingDirectory, { recursive: true, force: true });
+			}
+		}
 	}
 }
 

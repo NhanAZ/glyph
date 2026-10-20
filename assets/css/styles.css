@@ -365,10 +365,7 @@ button,
 .modal span,
 .title-kicker,
 .alert,
-.replace-label,
-.zoom-info,
 .vanilla-name,
-.glyph-preview-char,
 .action-toast,
 .footer-links a,
 .mobile-nav-card a,
@@ -1329,10 +1326,6 @@ small {
 	line-height: 1.1;
 }
 
-.mobile-alert {
-	display: none !important;
-}
-
 .footer-links {
 	display: flex;
 	justify-content: center;
@@ -1414,32 +1407,6 @@ small {
 .action-toast.visible {
 	opacity: 1;
 	transform: translate(-50%, 0);
-}
-
-.zoom-window {
-	padding: 10px;
-	background: transparent;
-	border: 8px solid transparent;
-	border-image-source: var(--ui-container-border);
-	border-image-slice: 4 4 4 4 fill;
-	border-image-width: 8px;
-	border-image-repeat: stretch;
-	border-radius: var(--radius-input);
-	box-shadow: none;
-}
-
-.zoom-window canvas {
-	display: block;
-	image-rendering: pixelated;
-	border-radius: 0;
-}
-
-.zoom-window .zoom-info {
-	margin-top: 8px;
-	color: #252525;
-	font-size: 13px;
-	font-weight: 900;
-	text-align: center;
 }
 
 /* Modals */
@@ -1582,14 +1549,6 @@ small {
 	background: transparent;
 }
 
-.glyph-preview-char {
-	padding: 20px 0;
-	color: #f0f0f0;
-	font-size: 4rem;
-	font-weight: 900;
-	text-shadow: 2px 2px 0 #111111;
-}
-
 .preview-download-btn {
 	position: absolute;
 	top: 10px;
@@ -1616,40 +1575,6 @@ small {
 .preview-download-btn:hover {
 	background: transparent;
 	border-image-source: var(--ui-button-hover-border);
-}
-
-.replace-preview {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: 12px;
-	align-items: start;
-}
-
-.replace-card {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 8px;
-	padding: 10px;
-	background: transparent;
-	border: 8px solid transparent;
-	border-image-source: var(--ui-container-border);
-	border-image-slice: 4 4 4 4 fill;
-	border-image-width: 8px;
-	border-image-repeat: stretch;
-	border-radius: var(--radius-input);
-}
-
-.replace-label {
-	color: #eeeeee;
-	font-size: 0.8rem;
-	font-weight: 900;
-	text-transform: uppercase;
-}
-
-.replace-preview .glyph-preview-img {
-	width: 150px;
-	height: 150px;
 }
 
 .detail-actions {
@@ -1980,8 +1905,7 @@ small {
 	}
 
 	.detail-meta,
-	.detail-actions,
-	.replace-preview {
+	.detail-actions {
 		grid-template-columns: 1fr;
 	}
 

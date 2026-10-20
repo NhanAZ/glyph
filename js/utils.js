@@ -48,16 +48,6 @@ function listen(element, eventName, handler, options) {
 	return true;
 }
 
-function showCopyNotification(element) {
-	if (!element) return;
-	const notification = element.querySelector('.copy-notification');
-	if (!notification) return;
-	notification.classList.add('show-anim');
-	setTimeout(() => {
-		notification.classList.remove('show-anim');
-	}, 1000);
-}
-
 function updateCopyButtonState() {
 	const output = getElement('converterOutput');
 	const copyButton = getElement('copyButton');
@@ -78,8 +68,6 @@ function toggleDarkMode() {
 
 	const darkModeToggle = getElement('darkModeToggle');
 	setButtonContent(darkModeToggle, isDarkMode ? 'Light' : 'Dark');
-
-	renderGlyphs();
 }
 
 function setButtonContent(button, label = '') {
@@ -92,7 +80,6 @@ function showToast(message, variant = 'success', duration = 1500) {
 	if (!toastLayer) {
 		toastLayer = document.createElement('div');
 		toastLayer.className = 'toast-layer';
-		document.body.appendChild(toastLayer);
 	}
 	document.body.appendChild(toastLayer);
 

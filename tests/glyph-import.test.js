@@ -40,7 +40,7 @@ function createApp(loadImage = async file => ({ file })) {
 		},
 		window: { addEventListener() {} },
 		Image: class { constructor() { images.push(this); } },
-		GRID: 16, updateTimer: null, DEFAULT_GLYPHS: { E0: 'default.png' },
+		GRID: 16, DEFAULT_GLYPHS: { E0: 'default.png' },
 		clearTimeout() {}, initializeGlyph() {}, copyOutput() {}, convert() {}, toggleDarkMode() {},
 		processGlyph: (image, prefix, options) => { processed.push({ image, prefix, options }); return true; },
 		alert: message => alerts.push(message),
@@ -177,4 +177,19 @@ test('selecting a preset cancels a pending file; a pending file also supersedes 
 	await app.importFile({ name: 'new.png' });
 	app.images[0].onload();
 	assert.equal(app.processed.length, 0);
+});
+
+test('a successfully loaded preset synchronizes the prefix and clears stale validation errors', () => {
+	const app = createApp();
+	app.element('glyph-input').value = 'invalid';
+	app.element('glyph-input').classList.add('is-invalid');
+	app.element('glyphErrorMsg').classList.remove('d-none');
+	app.element('inputValidation').classList.remove('d-none');
+	app.loadPreset();
+	app.images[0].onload();
+	assert.equal(app.processed[0].prefix, 'E0');
+	assert.equal(app.element('glyph-input').value, 'E0');
+	assert.equal(app.element('glyph-input').classList.contains('is-invalid'), false);
+	assert.equal(app.element('glyphErrorMsg').classList.contains('d-none'), true);
+	assert.equal(app.element('inputValidation').classList.contains('d-none'), true);
 });
