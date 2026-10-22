@@ -8,6 +8,14 @@ let glyphInputRequestId = 0;
 let glyphUploadRequestId = 0;
 let pendingGlyphUpload = null;
 
+function isPrivateUseCharacter(codePoint) {
+	return Number.isInteger(codePoint) && (
+		(codePoint >= 0xE000 && codePoint <= 0xF8FF) ||
+		(codePoint >= 0xF0000 && codePoint <= 0xFFFFD) ||
+		(codePoint >= 0x100000 && codePoint <= 0x10FFFD)
+	);
+}
+
 function cancelGlyphUpload() {
 	glyphUploadRequestId++;
 	if (!pendingGlyphUpload) return;
@@ -126,13 +134,8 @@ listen(glyphInputElement, 'input', function () {
 			Glyph(glyphInput);
 		}
 
-		if (rawGlyphInput) {
-			glyphSuccessMsg.textContent = 'Glyph generated successfully.';
-			glyphSuccessMsg.classList.remove('d-none');
-		} else {
-			glyphSuccessMsg.textContent = '';
-			glyphSuccessMsg.classList.add('d-none');
-		}
+		glyphSuccessMsg.textContent = '';
+		glyphSuccessMsg.classList.add('d-none');
 		glyphErrorMsg.classList.add('d-none');
 		if (validationMsg) validationMsg.classList.add('d-none');
 		this.classList.remove('is-invalid');
@@ -149,9 +152,14 @@ listen(glyphInputElement, 'input', function () {
 });
 
 listen(getElement('copyButton'), 'click', copyOutput);
-listen(getElement('converterInput'), 'input', convert);
-
 listen(getElement('converterOutput'), 'click', copyOutput);
+
+const converterInputElement = getElement('converterInput');
+listen(converterInputElement, 'input', function () {
+	this.classList.toggle('private-use-placeholder',
+		Array.from(this.value).length === 1 && isPrivateUseCharacter(this.value.codePointAt(0)));
+	convert();
+});
 listen(getElement('darkModeToggle'), 'click', toggleDarkMode);
 
 async function importGlyphFile(file, input = null, confirmedPrefix = null) {
@@ -369,14 +377,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		const clean = hexValue.toString().trim().replace(/^0x/i, '');
 		if (!clean || !/^[0-9A-Fa-f]+$/.test(clean)) return '-';
 		return `\\u{${clean.toUpperCase()}}`;
-	}
-
-	function isPrivateUseCharacter(codePoint) {
-		return Number.isInteger(codePoint) && (
-			(codePoint >= 0xE000 && codePoint <= 0xF8FF) ||
-			(codePoint >= 0xF0000 && codePoint <= 0xFFFFD) ||
-			(codePoint >= 0x100000 && codePoint <= 0x10FFFD)
-		);
 	}
 
 	async function showGlyphDetail(cell) {
@@ -800,7 +800,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			detailDownloadBtn.disabled = false;
 			detailDownloadBtn.onclick = () => downloadUrl(tileUrl, fileName);
 		}
-		showToast('Glyph replaced');
 	}
 
 	function populateCategories() {

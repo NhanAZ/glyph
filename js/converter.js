@@ -164,7 +164,8 @@ function updateConverterOutputHint(value) {
 	const visualHint = getOutputVisualHint(value);
 
 	if (hint) {
-		hint.textContent = visualHint;
+		hint.textContent = value && isPrivateUseCodePoint(value.codePointAt(0)) ? '\u25A1' : visualHint;
+		hint.classList.toggle('private-use-placeholder', Boolean(value && isPrivateUseCodePoint(value.codePointAt(0))));
 		hint.classList.toggle('d-none', !visualHint);
 	}
 	if (wrapper) wrapper.classList.toggle('has-output-hint', Boolean(visualHint));
@@ -192,8 +193,6 @@ function convertHexToEmoji(input) {
 			throw new RangeError('Invalid Unicode code point.');
 		}
 		setConverterOutput(String.fromCodePoint(codePoint));
-		successMsg.textContent = 'Converted successfully.';
-		successMsg.classList.remove('d-none');
 	} catch {
 		errorMsg.textContent = 'Invalid Unicode code point.';
 		errorMsg.classList.remove('d-none');
@@ -206,8 +205,6 @@ function convertEmojiToHex(input) {
 
 	const hexValue = input.codePointAt(0).toString(16).toUpperCase().padStart(4, '0');
 	setConverterOutput(`0x${hexValue}`);
-	successMsg.textContent = 'Converted successfully.';
-	successMsg.classList.remove('d-none');
 }
 
 function convert() {
@@ -227,6 +224,8 @@ function convert() {
 	errorMsg.classList.add('d-none');
 	successMsg.classList.add('d-none');
 	setConverterOutput('');
+	const resultLabel = getElement('converterResultLabel');
+	if (resultLabel) resultLabel.textContent = 'Result';
 
 	if (!input) {
 		updateCopyButtonState();
@@ -241,8 +240,10 @@ function convert() {
 
 	if (isExplicitHex || (input.length > 1 && /^[0-9A-Fa-f]+$/.test(input))) {
 		convertHexToEmoji(input);
+		if (resultLabel && output.value) resultLabel.textContent = 'Character';
 	} else if (Array.from(input).length === 1) {
 		convertEmojiToHex(input);
+		if (resultLabel) resultLabel.textContent = 'Hex code';
 	} else {
 		errorMsg.textContent = 'Enter a hex value or one symbol/emoji.';
 		errorMsg.classList.remove('d-none');
@@ -264,19 +265,13 @@ function copyOutput() {
 		if (version !== conversionVersion) return;
 		clearCopyFeedbackTimer();
 		if (errorMsg) errorMsg.classList.add('d-none');
-		if (successMsg) {
-			successMsg.textContent = 'Copied to clipboard.';
-			successMsg.classList.remove('d-none');
-		}
+		if (successMsg) successMsg.classList.add('d-none');
 		setButtonContent(copyButton, 'Copied');
 		copyButton.disabled = true;
 
 		copyFeedbackTimer = setTimeout(() => {
 			setButtonContent(copyButton, 'Copy');
 			copyButton.disabled = false;
-			if (successMsg && successMsg.textContent === 'Copied to clipboard.') {
-				successMsg.classList.add('d-none');
-			}
 			copyFeedbackTimer = null;
 		}, 2000);
 	}).catch(() => {

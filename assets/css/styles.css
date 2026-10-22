@@ -1,3 +1,11 @@
+/* Original square outline: keeps PUA editing native and independent of OS fonts. */
+@font-face {
+	font-family: "Glyph Private Use";
+	src: url("../fonts/private-use-square.woff") format("woff");
+	font-display: block;
+	unicode-range: U+25A1, U+E000-F8FF, U+F0000-FFFFD, U+100000-10FFFD;
+}
+
 /* Minecraft-inspired tool surface */
 @font-face {
 	font-family: "Minecraft Ten";
@@ -552,6 +560,7 @@ button:focus-visible,
 
 .tool-deck {
 	display: grid;
+	align-items: start;
 	grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
 	gap: 12px;
 	margin-bottom: 12px;
@@ -1099,10 +1108,10 @@ small {
 .copy-button:active,
 .copy-button:active:hover,
 .copy-button:active:focus {
-	margin-top: 0 !important;
-	border-width: 3px 3px 6px !important;
-	border-image-source: var(--ui-button-hover-border) !important;
-	border-image-slice: 2 2 4 2 fill !important;
+	margin-top: 4px !important;
+	border-width: 4px !important;
+	border-image-source: var(--ui-button-active-border) !important;
+	border-image-slice: 2 fill !important;
 	transform: translateY(-50%) !important;
 }
 
@@ -1352,12 +1361,29 @@ small {
 	border-image-repeat: stretch;
 	border-radius: var(--radius-input);
 	text-shadow: 1px 1px 0 #ffffff;
+	transition: margin-top var(--transition), filter var(--transition);
 }
 
 .footer-links a:hover,
 .mobile-nav-card a:hover {
 	color: var(--button-text);
 	border-image-source: var(--ui-button-hover-border);
+}
+
+.footer-links a:active,
+.footer-links a:active:hover,
+.footer-links a:active:focus,
+.mobile-nav-card a:active,
+.mobile-nav-card a:active:hover,
+.mobile-nav-card a:active:focus {
+	margin-top: 4px;
+	color: var(--button-text);
+	background: transparent;
+	border-width: 4px;
+	border-image-source: var(--ui-button-active-border);
+	border-image-slice: 2 fill;
+	box-shadow: none;
+	transform: none;
 }
 
 .mobile-nav-card {
@@ -1570,11 +1596,24 @@ small {
 	border-image-repeat: stretch;
 	border-radius: var(--radius-input);
 	box-shadow: none;
+	transition: margin-top var(--transition), filter var(--transition);
 }
 
 .preview-download-btn:hover {
 	background: transparent;
 	border-image-source: var(--ui-button-hover-border);
+}
+
+.preview-download-btn:active,
+.preview-download-btn:active:hover,
+.preview-download-btn:active:focus {
+	margin-top: 4px;
+	background: transparent;
+	border-width: 4px;
+	border-image-source: var(--ui-button-active-border);
+	border-image-slice: 2 fill;
+	box-shadow: none;
+	transform: none;
 }
 
 .detail-actions {
@@ -1636,7 +1675,7 @@ small {
 }
 
 .private-use-placeholder {
-	font-family: "Segoe UI Symbol", "Arial Unicode MS", sans-serif;
+	font-family: "Glyph Private Use", "Segoe UI Symbol", sans-serif;
 	font-size: 1.2rem !important;
 	line-height: 1;
 }
@@ -1934,3 +1973,11 @@ small {
 		--glyph-rows: 64;
 	}
 }
+
+/* Converter: native editing with a separate, labelled result. */
+.converter-card .converter-grid { grid-template-rows: auto auto; gap: 14px; flex: 0; }
+.converter-card .converter-grid .field-block:last-child { margin-bottom: 0; }
+.converter-card .form-label { text-transform: none; }
+.output-wrapper.has-output-hint .app-input { -webkit-text-fill-color: transparent; }
+
+.converter-card #converterOutput { caret-color: transparent; }

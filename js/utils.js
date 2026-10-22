@@ -53,6 +53,7 @@ function updateCopyButtonState() {
 	const copyButton = getElement('copyButton');
 	if (!output || !copyButton) return;
 
+	copyButton.disabled = output.value.length === 0;
 	if (output.value.length === 0) {
 		copyButton.style.opacity = '0.4';
 		copyButton.style.pointerEvents = 'none';

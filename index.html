@@ -71,7 +71,7 @@
 	<link rel="shortcut icon" href="assets/icons/favicon.ico">
 	<link rel="manifest" href="assets/icons/site.webmanifest?v=20260714a">
 	<meta name="theme-color" content="#060606">
-	<link href="assets/css/styles.css?v=20261020" rel="stylesheet">
+	<link href="assets/css/styles.css?v=20261023-ui-review1" rel="stylesheet">
 </head>
 
 <body>
@@ -149,16 +149,16 @@
 
 				<div class="converter-grid">
 					<div class="field-block">
-						<label class="form-label detail-text" for="converterInput">INPUT</label>
-						<input type="text" id="converterInput" class="app-input">
+						<label class="form-label detail-text" for="converterInput">Hex code or character</label>
+						<input type="text" id="converterInput" class="app-input" placeholder="e.g. 0xE016" autocomplete="off" spellcheck="false">
 					</div>
 
 					<div class="field-block">
-						<label class="form-label detail-text" for="converterOutput">OUTPUT</label>
+						<label id="converterResultLabel" class="form-label detail-text" for="converterOutput">Result</label>
 						<div class="output-wrapper position-relative">
-							<input type="text" id="converterOutput" class="app-input" readonly>
+							<input type="text" id="converterOutput" class="app-input" placeholder="Your result appears here" readonly>
 							<span id="converterOutputHint" class="output-visual d-none" aria-hidden="true"></span>
-							<button id="copyButton" class="icon-button position-absolute copy-button" type="button" title="Copy to clipboard">Copy</button>
+							<button id="copyButton" class="icon-button position-absolute copy-button" type="button" title="Copy to clipboard" disabled>Copy</button>
 						</div>
 					</div>
 				</div>
@@ -361,12 +361,12 @@
 	</div>
 
 	<script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-	<script defer src="js/state.js?v=20261020"></script>
+	<script defer src="js/state.js?v=20261023-ui-review1"></script>
 	<script defer src="js/defaults.js?v=20260705g"></script>
-	<script defer src="js/utils.js?v=20261020"></script>
-	<script defer src="js/converter.js?v=20261020"></script>
-	<script defer src="js/glyph.js?v=20261020"></script>
-	<script defer src="js/main.js?v=20261020"></script>
+	<script defer src="js/utils.js?v=20261023-ui-review1"></script>
+	<script defer src="js/converter.js?v=20261023-ui-review1"></script>
+	<script defer src="js/glyph.js?v=20261023-ui-review1"></script>
+	<script defer src="js/main.js?v=20261023-ui-review1"></script>
 </body>
 
 </html>

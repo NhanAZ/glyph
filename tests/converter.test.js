@@ -76,6 +76,7 @@ test('an old clipboard request does not overwrite feedback for a new conversion'
 	await Promise.resolve();
 	await Promise.resolve();
 	assert.equal(app.element('converterOutput').value, 'B');
-	assert.equal(app.element('successMsg').textContent, 'Converted successfully.');
+	assert.equal(app.element('successMsg').classList.contains('d-none'), true);
+	assert.equal(app.element('converterResultLabel').textContent, 'Character');
 	assert.equal(app.element('copyButton').disabled, false);
 });
