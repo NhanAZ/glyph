@@ -29,8 +29,6 @@ function createApp(options = {}) {
 			};
 		}
 		addEventListener(event, handler) { this.handlers[event] = handler; }
-		showModal() { this.open = true; }
-		close() { this.open = false; }
 		querySelector() { return null; }
 		querySelectorAll() { return this.children; }
 		getAttribute(name) { return this[name]; }
@@ -50,7 +48,8 @@ function createApp(options = {}) {
 			createElement: () => ({ toDataURL: () => 'cleared.png' })
 		},
 		window: {
-			innerWidth: 1024, addEventListener() {}
+			innerWidth: 1024, addEventListener() {},
+			bootstrap: { Modal: class { show() {} hide() {} } }
 		},
 		getElement: element,
 		listen: (target, event, handler) => target.addEventListener(event, handler),
@@ -129,8 +128,8 @@ test('closing details cancels a pending replacement image', async () => {
 	const app = createApp({ loadPngFile: () => new Promise(resolve => { finishLoad = resolve; }) });
 	await app.open(app.cell('E800'));
 	const pending = app.element('glyphDetailReplaceInput').onchange({ target: { files: [{ name: 'tile.png' }] } });
-	const onClose = app.element('glyphDetailModal').handlers.close;
-	if (onClose) onClose();
+	const onHidden = app.element('glyphDetailModal').handlers['hidden.bs.modal'];
+	if (onHidden) onHidden();
 	finishLoad({});
 	await pending;
 	assert.equal(app.replacements.length, 0);
@@ -157,7 +156,7 @@ test('newer edits and closing details invalidate an atlas edit before it commits
 	await app.element('glyphDetailClearBtn').onclick();
 	assert.equal(replaceIsCurrent(), false);
 	assert.equal(clearIsCurrent(), true);
-	app.element('glyphDetailModal').handlers.close();
+	app.element('glyphDetailModal').handlers['hidden.bs.modal']();
 	assert.equal(clearIsCurrent(), false);
 	finishReplace(null);
 	await pending;

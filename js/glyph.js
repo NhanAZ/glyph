@@ -7,9 +7,7 @@ function createGlyphCell({
 	height = '',
 	useAtlas = false
 }) {
-	const cell = document.createElement('button');
-	cell.type = 'button';
-	cell.setAttribute('aria-label', 'Glyph U+' + hexCode + ', row ' + row + ', column ' + col);
+	const cell = document.createElement('div');
 	cell.dataset.hex = `0x${hexCode}`;
 	cell.dataset.char = char;
 	cell.dataset.position = `(${col};${row})`;
@@ -86,7 +84,7 @@ function isTransparentGlyphTile(imageData) {
 function markTransparentCellsFromAtlas(img, glyphOutput, unicodeSize, atlasWidth, atlasHeight, sourceCanvas = null) {
 	if (!img || !glyphOutput || unicodeSize < 1 || atlasWidth < 1 || atlasHeight < 1) return;
 
-	const cells = Array.from(glyphOutput.querySelectorAll('[data-sprite-col][data-sprite-row]'));
+	const cells = Array.from(glyphOutput.querySelectorAll('div[data-sprite-col][data-sprite-row]'));
 	if (!cells.length) return;
 
 	const atlasVersion = glyphOutput.dataset.atlasVersion || '0';
@@ -254,9 +252,9 @@ function setAtlasInfo(width, height, label) {
 	if (label) currentAtlasLabel = label;
 
 	if (width && height) {
-		infoEl.textContent = `${label || 'Atlas'} (${width} x ${height} px)`;
+		infoEl.textContent = `${label || 'Atlas'} - ${width}px x ${height}px`;
 	} else {
-		infoEl.textContent = label ? `${label} has no image loaded yet.` : 'No atlas image is loaded yet.';
+		infoEl.textContent = label ? `${label} - no image` : 'Atlas: not loaded';
 	}
 }
 
