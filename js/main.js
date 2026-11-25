@@ -310,14 +310,17 @@ document.addEventListener('DOMContentLoaded', () => {
 		gridModeToggle.addEventListener('click', () => {
 			gridMode = gridMode === 'adaptive' ? 'fixed' : 'adaptive';
 			gridModeToggle.classList.toggle('active', gridMode === 'fixed');
+			gridModeToggle.setAttribute('aria-pressed', String(gridMode === 'fixed'));
 			applyGridMode(gridMode);
 		});
 	}
 
 	// Glyph detail dialog.
-	const modalApi = window.bootstrap && window.bootstrap.Modal;
 	const detailModalEl = getElement('glyphDetailModal');
-	const detailModal = detailModalEl && modalApi ? new modalApi(detailModalEl) : null;
+	const detailModal = detailModalEl ? {
+		show: () => detailModalEl.showModal(),
+		hide: () => detailModalEl.close()
+	} : null;
 	const detailImg = getElement('glyphDetailImage');
 	const detailHex = getElement('glyphDetailHex');
 	const detailDec = getElement('glyphDetailDec');
@@ -336,11 +339,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	const vanillaPickerStatus = getElement('vanillaPickerStatus');
 	const vanillaGrid = getElement('vanillaGrid');
 	const vanillaPickerModalEl = getElement('vanillaPickerModal');
-	const vanillaPickerModal = vanillaPickerModalEl && modalApi ? new modalApi(vanillaPickerModalEl) : null;
+	const vanillaPickerModal = vanillaPickerModalEl ? {
+		show: () => vanillaPickerModalEl.showModal(),
+		hide: () => vanillaPickerModalEl.close()
+	} : null;
 	const vanillaSearchInput = getElement('vanillaSearchInput');
 	const vanillaCategorySelect = getElement('vanillaCategorySelect');
-	const vanillaPageSizeBtn = getElement('vanillaPageSizeBtn');
-	const vanillaPageSizeMenu = getElement('vanillaPageSizeMenu');
+	const vanillaPageSizeSelect = getElement('vanillaPageSizeSelect');
 	const vanillaPrevPage = getElement('vanillaPrevPage');
 	const vanillaNextPage = getElement('vanillaNextPage');
 	const vanillaPageInfo = getElement('vanillaPageInfo');
@@ -356,10 +361,44 @@ document.addEventListener('DOMContentLoaded', () => {
 	let detailNoticeTimer = null;
 	const vanillaCacheTtl = 24 * 60 * 60 * 1000;
 
-	listen(detailModalEl, 'hidden.bs.modal', () => {
+	listen(detailModalEl, 'close', () => {
 		currentDetailCell = null;
 		detailRequestId++;
 	});
+
+	if (typeof document.querySelectorAll === 'function') {
+		document.querySelectorAll('[data-dialog-close]').forEach(button => {
+			button.addEventListener('click', () => {
+				const dialogId = button.dataset.dialogClose;
+				if (dialogId === 'glyphPrefixDialog') {
+					cancelGlyphUpload();
+					return;
+				}
+				const dialog = getElement(dialogId);
+				if (dialog && dialog.open) dialog.close();
+			});
+		});
+	}
+
+	for (const dialog of [detailModalEl, vanillaPickerModalEl]) {
+		listen(dialog, 'click', event => {
+			if (event.target === dialog && dialog.open) dialog.close();
+		});
+	}
+
+	const exportSummary = getElement('exportDropdown');
+	const exportDetails = exportSummary && exportSummary.parentElement;
+	const exportMenu = getElement('exportMenu');
+	listen(exportMenu, 'click', event => {
+		if (event.target instanceof Element && event.target.closest('button') && exportDetails) {
+			exportDetails.open = false;
+		}
+	});
+	if (exportDetails && typeof document.addEventListener === 'function') {
+		document.addEventListener('click', event => {
+			if (!exportDetails.contains(event.target)) exportDetails.open = false;
+		});
+	}
 
 	function showDetailNotice(message, variant = 'success') {
 		if (!detailNotice) return;
@@ -515,10 +554,18 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (glyphGrid) {
 		glyphGrid.addEventListener('click', (e) => {
 			const cell = e.target instanceof Element
-				? e.target.closest('#glyph-output div[data-hex]')
+				? e.target.closest('#glyph-output [data-hex]')
 				: null;
 			if (cell) {
 				e.preventDefault();
+				if (typeof CustomEvent === 'function' && typeof document.dispatchEvent === 'function') {
+					document.dispatchEvent(new CustomEvent('glyphtools:selection', {
+						detail: {
+							hex: cell.dataset.hex || '',
+							position: cell.dataset.position || ''
+						}
+					}));
+				}
 				showGlyphDetail(cell);
 			}
 		});
@@ -565,7 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function getGlyphCells() {
-		return glyphGrid ? Array.from(glyphGrid.querySelectorAll('div[data-char]')) : [];
+		return glyphGrid ? Array.from(glyphGrid.querySelectorAll('[data-char]')) : [];
 	}
 
 	function getCurrentGlyphPrefix() {
@@ -837,7 +884,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		vanillaGrid.replaceChildren();
 		if (vanillaPickerStatus) vanillaPickerStatus.textContent = 'Rendering...';
-		if (vanillaPageInfo) vanillaPageInfo.textContent = `Page ${vanillaPage}/${totalPages}`;
+		if (vanillaPageInfo) vanillaPageInfo.textContent = `Page ${vanillaPage} of ${totalPages}`;
 		if (vanillaPrevPage) vanillaPrevPage.disabled = vanillaPage <= 1;
 		if (vanillaNextPage) vanillaNextPage.disabled = vanillaPage >= totalPages;
 
@@ -851,11 +898,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			let count = 0;
 			while (i < pageItems.length && count < chunkSize) {
 				const path = pageItems[i++];
-				const card = document.createElement('div');
+				const card = document.createElement('button');
+				card.type = 'button';
 				card.className = 'vanilla-tile';
 				card.dataset.path = path;
-				card.tabIndex = 0;
-				card.setAttribute('role', 'button');
 				const img = document.createElement('img');
 				img.loading = 'lazy';
 				img.crossOrigin = 'anonymous';
@@ -885,12 +931,6 @@ document.addEventListener('DOMContentLoaded', () => {
 					previewImg.src = previewSrc;
 				};
 				card.addEventListener('click', selectTexture);
-				card.addEventListener('keydown', event => {
-					if (event.key === 'Enter' || event.key === ' ') {
-						event.preventDefault();
-						selectTexture();
-					}
-				});
 				fragment.appendChild(card);
 				count++;
 			}
@@ -958,17 +998,12 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 	}
 
-	if (vanillaPageSizeMenu && vanillaPageSizeBtn) {
-		vanillaPageSizeMenu.querySelectorAll('[data-size]').forEach(item => {
-			item.addEventListener('click', (e) => {
-				const val = e.currentTarget.getAttribute('data-size') || '36';
-				vanillaPageSizeValue = val;
-				const labelEl = vanillaPageSizeBtn.querySelector('.vanilla-page-size-label');
-				if (labelEl) labelEl.textContent = val === 'all' ? 'Show all' : val;
-				vanillaPage = 1;
-				const searchVal = vanillaSearchInput ? vanillaSearchInput.value : '';
-				renderVanillaGrid(searchVal);
-			});
+	if (vanillaPageSizeSelect) {
+		vanillaPageSizeSelect.addEventListener('change', () => {
+			vanillaPageSizeValue = vanillaPageSizeSelect.value || '36';
+			vanillaPage = 1;
+			const searchVal = vanillaSearchInput ? vanillaSearchInput.value : '';
+			renderVanillaGrid(searchVal);
 		});
 	}
 

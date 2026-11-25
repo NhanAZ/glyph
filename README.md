@@ -1,32 +1,42 @@
 # Glyph Tools
 
-Create, inspect, and edit Minecraft glyph atlases in your browser.
+Create, inspect, and edit Minecraft Bedrock glyph atlases in your browser.
 
 **[Open Glyph Tools](https://nhanaz.github.io/glyph/)**
 
 ![Glyph Tools workspace](docs/glyph-tools-preview.png)
 
-## Usage
+## Use the editor
 
-1. Load a preset or upload a PNG atlas. A filename such as `glyph_E0.png` selects the `E000`–`E0FF` range; other filenames prompt for a prefix.
-2. Select a cell to inspect its character, code point, position, and dimensions. Replace it with a PNG or a bundled Minecraft texture, or clear it.
+1. Load a preset or upload a PNG atlas. A filename such as `glyph_E0.png` selects the `E000` to `E0FF` range. Other filenames prompt for a prefix.
+2. Select a cell to inspect its character, code point, position, and dimensions. Replace it with a PNG or bundled Minecraft texture, or clear it.
 3. Download the edited atlas or export characters, a reference map, or metadata JSON. The bitmap font JSON export uses the Java Edition format.
 
-The converter also translates between hexadecimal code points and characters. Atlases use a 16 × 16 grid with 256 cells.
+The converter translates between hexadecimal code points and characters. Atlases use a 16 by 16 grid with 256 cells.
 
-## Run locally
+## Run in development
 
-Serve the repository over HTTP so the bundled texture picker can load its manifest.
+Use Node.js 22 or newer. Install dependencies and start Vite.
 
 ```bash
-python -m http.server 8000
+npm ci
+npm run dev
 ```
 
-Open [localhost:8000](http://localhost:8000/) in a browser. There is no build step.
+Open [localhost:5173/glyph](http://localhost:5173/glyph/).
+
+## Validate and build
+
+```bash
+npm run check
+npm run build
+```
+
+Vite writes a static site to `dist`. GitHub Pages publishes that folder. The app does not need a server side runtime.
 
 ## Refresh the Minecraft texture library
 
-Textures are bundled in the repository. To refresh them from [Mojang Bedrock Samples](https://github.com/Mojang/bedrock-samples/tree/main/resource_pack/textures), use Node.js and Git:
+Textures are bundled in the repository. To refresh them from [Mojang Bedrock Samples](https://github.com/Mojang/bedrock-samples/tree/main/resource_pack/textures), use Node.js and Git.
 
 ```bash
 node scripts/fetch-vanilla.js
@@ -34,19 +44,8 @@ node scripts/fetch-vanilla.js
 
 The script rebuilds `vanilla-textures/manifest.json` and replaces the library after the new files are ready.
 
-## Development
+## Design and licenses
 
-With Node.js 22 or newer:
+The interface draws on Mojang's Ore UI. It uses React Facet, the open source state and rendering package published in the [Mojang Ore UI repository](https://github.com/Mojang/ore-ui), for the live glyph selection readout. The workspace styles and controls are part of this project.
 
-```bash
-npm ci
-npm run check
-```
-
-This runs syntax checks, ESLint, and the tests.
-
-## License
-
-Source code: [GPL-3.0](LICENSE).
-
-Minecraft textures remain subject to the [Minecraft End User License Agreement](https://www.minecraft.net/eula).
+Glyph Tools source is licensed under [GPL-3.0](LICENSE). React, React Facet, and Vite are MIT licensed. Bundled Minecraft textures remain subject to the [Minecraft End User License Agreement](https://www.minecraft.net/eula).

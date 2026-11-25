@@ -54,10 +54,37 @@ export default [
 		}
 	},
 	{
+		files: ['js/**/*.jsx'],
+		languageOptions: {
+			ecmaVersion: 'latest',
+			sourceType: 'module',
+			parserOptions: {
+				ecmaFeatures: { jsx: true }
+			},
+			globals: globals.browser
+		},
+		rules: {
+			...js.configs.recommended.rules,
+			'no-unused-vars': ['error', { args: 'after-used', argsIgnorePattern: '^_' }]
+		}
+	},
+	{
 		files: ['scripts/**/*.js', 'tests/**/*.js'],
 		languageOptions: {
 			ecmaVersion: 'latest',
 			sourceType: 'commonjs',
+			globals: globals.node
+		},
+		rules: {
+			...js.configs.recommended.rules,
+			'no-unused-vars': ['error', { args: 'after-used', argsIgnorePattern: '^_' }]
+		}
+	},
+	{
+		files: ['vite.config.mjs'],
+		languageOptions: {
+			ecmaVersion: 'latest',
+			sourceType: 'module',
 			globals: globals.node
 		},
 		rules: {

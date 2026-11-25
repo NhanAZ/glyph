@@ -9,7 +9,7 @@ const APP_CONFIG = Object.freeze({
 const GRID = APP_CONFIG.gridSize;
 const GLYPH_CACHE_LIMIT = APP_CONFIG.glyphCacheLimit;
 
-let isDarkMode = false;
+let isDarkMode = true;
 let currentAtlasDataUrl = null;
 let currentAtlasLabel = '';
 

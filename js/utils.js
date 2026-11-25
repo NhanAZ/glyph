@@ -68,7 +68,13 @@ function toggleDarkMode() {
 	document.body.classList.toggle('dark-mode', isDarkMode);
 
 	const darkModeToggle = getElement('darkModeToggle');
-	setButtonContent(darkModeToggle, isDarkMode ? 'Light' : 'Dark');
+	if (darkModeToggle) {
+		const label = isDarkMode ? 'Light' : 'Dark';
+		const labelElement = darkModeToggle.querySelector('[data-theme-label]');
+		if (labelElement) labelElement.textContent = label;
+		darkModeToggle.setAttribute('aria-label', 'Switch to ' + label.toLowerCase() + ' theme');
+		darkModeToggle.title = 'Switch to ' + label.toLowerCase() + ' theme';
+	}
 }
 
 function setButtonContent(button, label = '') {
