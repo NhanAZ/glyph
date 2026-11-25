@@ -1,372 +1,306 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
 	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="color-scheme" content="dark light">
 	<title>Glyph Tools - Minecraft Bedrock Glyph Atlas Editor</title>
 	<meta name="description" content="Create, inspect, replace, and export Minecraft Bedrock glyph atlases with Unicode, hex, character, JSON, and PNG references in your browser.">
 	<meta name="author" content="NhanAZ">
 	<meta name="application-name" content="Glyph Tools">
 	<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 	<link rel="canonical" href="https://nhanaz.github.io/glyph/">
-	<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 	<link rel="preload" href="assets/fonts/minecraft-ten-latin.woff2" as="font" type="font/woff2" crossorigin>
-	<link rel="preload" href="assets/fonts/minecraftia-latin.woff2" as="font" type="font/woff2" crossorigin>
-
+	<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png">
+	<link rel="shortcut icon" href="assets/icons/favicon.ico">
+	<link rel="manifest" href="assets/icons/site.webmanifest">
+	<meta name="theme-color" content="#151b1b">
 	<meta property="og:type" content="website">
 	<meta property="og:locale" content="en_US">
 	<meta property="og:site_name" content="Glyph Tools">
 	<meta property="og:title" content="Glyph Tools - Minecraft Bedrock Glyph Atlas Editor">
-	<meta property="og:description" content="Create, inspect, replace, and export Minecraft Bedrock glyph atlases with Unicode, hex, character, JSON, and PNG references in your browser.">
+	<meta property="og:description" content="Create, inspect, replace, and export Minecraft Bedrock glyph atlases in your browser.">
 	<meta property="og:url" content="https://nhanaz.github.io/glyph/">
 	<meta property="og:image" content="https://nhanaz.github.io/glyph/docs/glyph-tools-preview.png">
 	<meta property="og:image:width" content="1270">
 	<meta property="og:image:height" content="714">
 	<meta property="og:image:alt" content="Glyph Tools Minecraft Bedrock glyph atlas workspace">
-
-	<meta name="twitter:card" content="summary_large_image">
-	<meta name="twitter:title" content="Glyph Tools - Minecraft Bedrock Glyph Atlas Editor">
-	<meta name="twitter:description" content="Create, inspect, replace, and export Minecraft Bedrock glyph atlases with Unicode, hex, character, JSON, and PNG references in your browser.">
-	<meta name="twitter:image" content="https://nhanaz.github.io/glyph/docs/glyph-tools-preview.png">
-	<meta name="twitter:image:alt" content="Glyph Tools Minecraft Bedrock glyph atlas workspace">
-
-	<script type="application/ld+json">
-	{
-		"@context": "https://schema.org",
-		"@type": "WebPage",
-		"@id": "https://nhanaz.github.io/glyph/#webpage",
-		"url": "https://nhanaz.github.io/glyph/",
-		"name": "Glyph Tools - Minecraft Bedrock Glyph Atlas Editor",
-		"description": "Create, inspect, replace, and export Minecraft Bedrock glyph atlases with Unicode, hex, character, JSON, and PNG references in your browser.",
-		"inLanguage": "en",
-		"primaryImageOfPage": {
-			"@type": "ImageObject",
-			"url": "https://nhanaz.github.io/glyph/docs/glyph-tools-preview.png",
-			"width": 1270,
-			"height": 714
-		},
-		"about": [
-			{
-				"@type": "Thing",
-				"name": "Minecraft Bedrock glyph atlases"
-			},
-			{
-				"@type": "Thing",
-				"name": "Unicode private-use characters"
-			}
-		],
-		"creator": {
-			"@type": "Person",
-			"name": "NhanAZ",
-			"url": "https://github.com/NhanAZ"
-		}
-	}
-	</script>
-	<link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" crossorigin onload="this.onload=null;this.rel='stylesheet'">
-	<noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></noscript>
-	<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
-	<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png">
-	<link rel="shortcut icon" href="assets/icons/favicon.ico">
-	<link rel="manifest" href="assets/icons/site.webmanifest?v=20260714a">
-	<meta name="theme-color" content="#060606">
-	<link href="assets/css/styles.css?v=20261023-mobile-status" rel="stylesheet">
+	<link href="assets/css/styles.css" rel="stylesheet">
 </head>
-
-<body>
-	<main class="app-container">
-		<header class="header-bar">
-			<div class="title-container">
-				<div class="title-kicker">Minecraft Bedrock</div>
-				<h1 class="title-text">Glyph Tools</h1>
-				<p class="subtitle-text">Textures to Glyph workspace</p>
-			</div>
-			<div class="header-actions">
-				<button class="icon-button text-icon-button glass-btn d-md-none nav-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false">Menu</button>
-				<button id="darkModeToggle" class="icon-button text-icon-button glass-btn" title="Toggle Dark Mode">Dark</button>
-			</div>
+<body class="dark-mode">
+	<div class="app-shell">
+		<header class="topbar">
+			<a class="brand" href="./" aria-label="Glyph Tools home">
+				<img class="brand-mark" src="assets/ui/bedrock.png" width="42" height="42" alt="">
+				<span class="brand-copy">
+					<span class="brand-context">Minecraft Bedrock</span>
+					<span class="brand-name">Glyph Tools</span>
+				</span>
+			</a>
+			<p class="topbar-caption">Glyph atlas workbench</p>
+			<nav class="topbar-links" aria-label="Project links">
+				<a href="https://wiki.bedrock.dev/text/custom-emojis" target="_blank" rel="noopener noreferrer">Bedrock Wiki</a>
+				<a href="https://github.com/NhanAZ/glyph" target="_blank" rel="noopener noreferrer">Source</a>
+				<a href="https://discord.gg/j2X83ujT6c" target="_blank" rel="noopener noreferrer">Community</a>
+			</nav>
+			<button id="darkModeToggle" class="theme-toggle" type="button" title="Switch to light theme" aria-label="Switch to light theme">
+				<span class="theme-glyph" aria-hidden="true">◐</span>
+				<span data-theme-label>Light</span>
+			</button>
 		</header>
 
-		<div class="collapse d-md-none mobile-nav" id="mobileNav">
-			<nav class="app-card mobile-nav-card">
-				<a href="https://github.com/NhanAZ/glyph" target="_blank" rel="noopener noreferrer">
-					GitHub
-				</a>
-				<a href="https://wiki.bedrock.dev/text/custom-emojis" target="_blank" rel="noopener noreferrer">
-					Docs
-				</a>
-				<a href="https://discord.gg/j2X83ujT6c" target="_blank" rel="noopener noreferrer">
-					Discord
-				</a>
-			</nav>
-		</div>
-
-		<div class="tool-deck">
-			<section class="app-card tool-card">
-				<div class="panel-heading">
-					<h2>Glyph Generator</h2>
-					<span id="inputValidation" class="text-danger small d-none">Invalid hex</span>
-					<div id="glyphSuccessMsg" class="tool-status generator-status alert rounded-alert alert-success d-none" role="status"></div>
-					<div id="glyphErrorMsg" class="tool-status generator-status alert rounded-alert alert-danger d-none" role="alert"></div>
+		<main class="workspace">
+			<section class="workspace-intro" aria-labelledby="pageTitle">
+				<div>
+					<p class="intro-context">Texture to glyph</p>
+					<h1 id="pageTitle">Build a glyph atlas</h1>
+					<p class="intro-copy">Load a sheet, tune its characters, and prepare it for your resource pack.</p>
 				</div>
+				<div class="range-stamp" aria-label="An atlas contains 256 glyphs in a 16 by 16 grid">
+					<span class="range-stamp-mark" aria-hidden="true">16</span>
+					<span><strong>256</strong><small>glyph slots</small></span>
+				</div>
+			</section>
 
-				<div class="tool-grid">
-					<div class="field-block hex-field">
-						<label class="form-label detail-text" for="glyph-input">HEX CODE</label>
-						<input type="text" id="glyph-input" class="app-input text-uppercase font-monospace fw-bold" placeholder="E0" maxlength="4">
-						<div id="defaultImageHint" class="text-primary fw-medium d-none hint-link">
-							Load default <span id="hintHex">E0</span> image
-						</div>
-					</div>
-
-					<div class="field-block upload-field">
-						<label class="form-label detail-text" for="glyphUpload">CUSTOM GLYPH PNG</label>
-						<div class="upload-zone">
-							<input type="file" id="glyphUpload" accept="image/png,.png" class="file-input opacity-0 position-absolute w-100 h-100" aria-label="Upload custom glyph PNG" aria-describedby="uploadHelp">
-							<div class="upload-zone-label">
-								<img class="upload-zone-icon" src="assets/ui/import.png" width="20" height="20" alt="" aria-hidden="true">
-								<span id="uploadLabel" class="text-secondary upload-label-text">Tap or drop a PNG</span>
+			<div class="workbench">
+				<aside class="tool-rail" aria-label="Atlas tools">
+					<section class="tool-section generator-section" aria-labelledby="generatorTitle">
+						<div class="section-heading">
+							<span class="section-mark section-mark--emerald" aria-hidden="true">A</span>
+							<div>
+								<h2 id="generatorTitle">Glyph generator</h2>
+								<p>Choose a character range and source art.</p>
 							</div>
 						</div>
-						<small id="uploadHelp" class="upload-help d-block d-md-none">On your phone, try Files / My Files to keep the original filename.</small>
+						<label class="field-label" for="glyph-input">Hex prefix</label>
+						<div class="field-with-suffix">
+							<input type="text" id="glyph-input" class="text-input text-input--hex" value="E0" placeholder="E0" maxlength="4" autocomplete="off" spellcheck="false" aria-describedby="glyphInputHelp inputValidation glyphErrorMsg">
+							<span class="field-suffix" aria-hidden="true">00-FF</span>
+						</div>
+						<small id="glyphInputHelp" class="field-hint">Use a prefix from 0 to 10FF.</small>
+						<span id="inputValidation" class="field-error d-none">Enter a valid hex prefix.</span>
+						<div id="glyphSuccessMsg" class="tool-status status-message status-message--success d-none" role="status"></div>
+						<div id="glyphErrorMsg" class="tool-status status-message status-message--error d-none" role="alert"></div>
+						<label class="field-label upload-title" for="glyphUpload">Upload PNG atlas</label>
+						<div class="upload-zone">
+							<input type="file" id="glyphUpload" accept="image/png,.png" class="file-input" aria-label="Upload a PNG glyph atlas" aria-describedby="uploadHelp">
+							<div class="upload-zone-content" aria-hidden="true">
+								<img src="assets/ui/import.png" width="24" height="24" alt="">
+								<span class="upload-zone-title">Drop a PNG or browse</span>
+								<span id="uploadLabel" class="upload-label-text">16 by 16 cells, square image</span>
+							</div>
+						</div>
+						<small id="uploadHelp" class="field-hint upload-help">Name it <code>glyph_E0.png</code> to set the range automatically.</small>
+						<div class="preset-actions" role="group" aria-label="Load a starting atlas">
+							<span class="field-label">Start from</span>
+							<button id="btnLoadTemplate" class="button button--quiet" type="button">Grid template</button>
+							<button id="btnLoadExample" class="button button--quiet" type="button">E1 example</button>
+							<button id="btnLoadEmpty" class="button button--quiet" type="button">Empty grid</button>
+						</div>
+						<button id="defaultImageHint" class="restore-hint d-none" type="button">Load the default <span id="hintHex">E0</span> atlas</button>
+					</section>
+
+					<section class="tool-section converter-section" aria-labelledby="converterTitle">
+						<div class="section-heading">
+							<span class="section-mark section-mark--gold" aria-hidden="true">↔</span>
+							<div>
+								<h2 id="converterTitle">Unicode converter</h2>
+								<p>Translate a symbol or code point.</p>
+							</div>
+						</div>
+						<label class="field-label" for="converterInput">Hex code or character</label>
+						<input type="text" id="converterInput" class="text-input" placeholder="0xE016 or a symbol" autocomplete="off" spellcheck="false" aria-describedby="errorMsg successMsg">
+						<div class="converter-result">
+							<label id="converterResultLabel" class="field-label" for="converterOutput">Result</label>
+							<div class="output-wrapper">
+								<input type="text" id="converterOutput" class="text-input" placeholder="Result appears here" readonly>
+								<span id="converterOutputHint" class="output-visual d-none" aria-hidden="true"></span>
+								<button id="copyButton" class="button button--copy" type="button" title="Copy result to clipboard" aria-label="Copy result" disabled>Copy</button>
+							</div>
+						</div>
+						<div id="errorMsg" class="tool-status status-message status-message--error d-none" role="alert"></div>
+						<div id="successMsg" class="tool-status status-message status-message--success d-none" role="status"></div>
+					</section>
+				</aside>
+
+				<section class="atlas-stage" aria-labelledby="atlasTitle">
+					<header class="atlas-header">
+						<div class="atlas-heading-block">
+							<div class="atlas-heading-line">
+								<h2 id="atlasTitle">Atlas</h2>
+								<span class="atlas-ready"><span class="status-dot" aria-hidden="true"></span>Local workspace</span>
+							</div>
+							<span id="atlasInfo" class="atlas-info" aria-live="polite">Loading default atlas</span>
+						</div>
+						<div class="atlas-actions">
+							<button id="gridModeToggle" class="button button--view" type="button" aria-pressed="false" title="Switch between adaptive and 16 by 16 grid views">
+								<span class="grid-icon" aria-hidden="true">▦</span>
+								<span class="grid-toggle-label">Adaptive grid</span>
+							</button>
+							<div class="export-control">
+								<details class="export-details">
+									<summary class="button button--primary" id="exportDropdown">
+										Export <span class="button-caret" aria-hidden="true">▾</span>
+									</summary>
+									<div id="exportMenu" class="export-menu">
+									<p class="menu-heading">Export atlas</p>
+									<button class="menu-item" id="btnDownloadAtlas" type="button">Atlas PNG</button>
+									<button class="menu-item" id="btnCopyAll" type="button">Copy character grid</button>
+									<button class="menu-item" id="btnCopyReference" type="button">Copy reference map</button>
+									<button class="menu-item" id="btnDownloadJson" type="button">Bitmap font JSON</button>
+									<button class="menu-item" id="btnDownloadFullJson" type="button">Glyph metadata JSON</button>
+									</div>
+								</details>
+							</div>
+						</div>
+					</header>
+
+					<div class="selection-readout" aria-live="polite" aria-atomic="true">
+						<span class="selection-indicator" aria-hidden="true">+</span>
+						<span class="selection-readout-label">Selection</span>
+						<span id="facetSelectionRoot" class="selection-readout-value"></span>
 					</div>
 
-					<div class="preset-actions">
-						<span class="form-label detail-text preset-label">PRESETS</span>
-						<button id="btnLoadTemplate" class="btn btn-sm btn-outline-secondary fw-medium pill-action">Grid Template</button>
-						<button id="btnLoadExample" class="btn btn-sm btn-outline-secondary fw-medium pill-action">E1 Example</button>
-						<button id="btnLoadEmpty" class="btn btn-sm btn-outline-secondary fw-medium pill-action">Empty Grid</button>
-					</div>
-				</div>
-
-			</section>
-
-			<section class="app-card tool-card converter-card">
-				<div class="panel-heading">
-					<h2>Converter</h2>
-					<div id="errorMsg" class="tool-status converter-status alert rounded-alert alert-danger d-none" role="alert"></div>
-					<div id="successMsg" class="tool-status converter-status alert rounded-alert alert-success d-none" role="status"></div>
-				</div>
-
-				<div class="converter-grid">
-					<div class="field-block">
-						<label class="form-label detail-text" for="converterInput">Hex code or character</label>
-						<input type="text" id="converterInput" class="app-input" placeholder="e.g. 0xE016" autocomplete="off" spellcheck="false">
-					</div>
-
-					<div class="field-block">
-						<label id="converterResultLabel" class="form-label detail-text" for="converterOutput">Result</label>
-						<div class="output-wrapper position-relative">
-							<input type="text" id="converterOutput" class="app-input" placeholder="Your result appears here" readonly>
-							<span id="converterOutputHint" class="output-visual d-none" aria-hidden="true"></span>
-							<button id="copyButton" class="icon-button position-absolute copy-button" type="button" title="Copy to clipboard" disabled>Copy</button>
+					<div class="atlas-body">
+						<div class="atlas-frame">
+							<div id="glyph-output" class="glyph-grid is-loading" aria-busy="true" aria-label="Glyph atlas"></div>
 						</div>
 					</div>
-				</div>
-
-			</section>
-		</div>
-
-		<section class="app-card atlas-card">
-			<div class="atlas-header">
-				<div class="atlas-title-group">
-					<h2>Output</h2>
-					<span id="atlasInfo" class="atlas-info text-secondary small">Loading atlas...</span>
-					<button id="gridModeToggle" class="btn btn-outline-secondary btn-sm fw-medium grid-toggle d-lg-none" type="button">
-						<span class="grid-toggle-label">Adaptive grid</span>
-					</button>
-				</div>
-				<div class="dropdown">
-					<button class="btn btn-sm export-btn px-3 py-2 fw-medium dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-						Export
-					</button>
-					<ul class="dropdown-menu dropdown-menu-end mt-2" aria-labelledby="exportDropdown">
-						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadAtlas" title="Download Atlas PNG">Atlas PNG</button></li>
-						<li><hr class="dropdown-divider opacity-50"></li>
-						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnCopyAll" title="Copy All (Minecraft String)">Copy String</button></li>
-						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnCopyReference" title="Copy Reference (Text Map)">Reference</button></li>
-						<li><hr class="dropdown-divider opacity-50"></li>
-						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadJson" title="Download JSON (Pack)">JSON Pack</button></li>
-						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadFullJson" title="Download JSON (Metadata)">JSON Metadata</button></li>
-					</ul>
-				</div>
+					<footer class="atlas-footer">
+						<span>Select a glyph to view its details and edit the atlas.</span>
+						<span class="atlas-footer-key"><kbd>Enter</kbd> or <kbd>Space</kbd> opens a glyph</span>
+					</footer>
+				</section>
 			</div>
-			<div class="atlas-body">
-				<div id="glyph-output" class="glyph-grid is-loading" aria-busy="true"></div>
-			</div>
-		</section>
+		</main>
 
-		<footer class="footer-links">
-			<a href="https://github.com/NhanAZ/glyph" target="_blank" rel="noopener noreferrer">
-				GitHub
-			</a>
-			<a href="https://wiki.bedrock.dev/text/custom-emojis" target="_blank" rel="noopener noreferrer">
-				Docs
-			</a>
-			<a href="https://discord.gg/j2X83ujT6c" target="_blank" rel="noopener noreferrer">
-				Discord
-			</a>
+		<footer class="page-footer">
+			<span>Glyph Tools keeps your atlas in this browser.</span>
+			<a href="https://github.com/NhanAZ/glyph/blob/master/LICENSE" target="_blank" rel="noopener noreferrer">GPL-3.0</a>
 		</footer>
-	</main>
+	</div>
 
-	<dialog id="glyphPrefixDialog" class="app-card glyph-prefix-dialog" aria-labelledby="uploadPrefixTitle" aria-describedby="uploadPrefixHelp">
-		<form id="glyphPrefixForm">
-			<div class="panel-heading">
-				<h2 id="uploadPrefixTitle">Choose atlas prefix</h2>
+	<dialog id="glyphPrefixDialog" class="app-dialog prefix-dialog" aria-labelledby="uploadPrefixTitle" aria-describedby="uploadPrefixHelp">
+		<form id="glyphPrefixForm" class="dialog-content">
+			<div class="dialog-heading">
+				<div>
+					<p class="dialog-kicker">Atlas import</p>
+					<h2 id="uploadPrefixTitle">Choose a hex prefix</h2>
+				</div>
+				<button type="button" class="icon-close" data-dialog-close="glyphPrefixDialog" aria-label="Close">×</button>
 			</div>
 			<p id="uploadPrefixFilename" class="upload-prefix-filename"></p>
-			<p id="uploadPrefixHelp">The filename has no valid atlas prefix. Enter a hex prefix from 0 to 10FF.</p>
-			<label class="form-label detail-text" for="uploadPrefix">ATLAS PREFIX</label>
-			<input type="text" id="uploadPrefix" class="app-input text-uppercase font-monospace fw-bold" placeholder="Example: E8" maxlength="4" required aria-describedby="uploadPrefixHelp" autocomplete="off" spellcheck="false">
-			<div class="upload-prefix-actions">
-				<button type="button" id="cancelGlyphImport" class="btn btn-sm btn-outline-danger">Cancel</button>
-				<button type="submit" id="confirmGlyphImport" class="btn btn-sm btn-outline-secondary" disabled>Import atlas</button>
+			<p id="uploadPrefixHelp" class="dialog-description">The filename does not contain a prefix. Enter a value from 0 to 10FF.</p>
+			<label class="field-label" for="uploadPrefix">Atlas prefix</label>
+			<input type="text" id="uploadPrefix" class="text-input text-input--hex" placeholder="E8" maxlength="4" required aria-describedby="uploadPrefixHelp" autocomplete="off" spellcheck="false">
+			<div class="dialog-actions">
+				<button type="button" id="cancelGlyphImport" class="button button--quiet" data-dialog-close="glyphPrefixDialog">Cancel</button>
+				<button type="submit" id="confirmGlyphImport" class="button button--primary" disabled>Import atlas</button>
 			</div>
 		</form>
 	</dialog>
 
-	<!-- Glyph Detail Modal -->
-	<div class="modal fade" id="glyphDetailModal" tabindex="-1" aria-hidden="true">
-		<div class="modal-dialog modal-dialog-centered modal-lg">
-			<div class="modal-content rounded-4 border-0 shadow-lg detail-modal">
-				<div class="modal-header detail-header">
-					<h5 class="modal-title">Glyph Details</h5>
-					<button type="button" class="btn btn-sm modal-close-btn" data-bs-dismiss="modal" aria-label="Close">X</button>
+	<dialog id="glyphDetailModal" class="app-dialog detail-dialog" aria-labelledby="glyphDetailTitle">
+		<div class="dialog-content">
+			<header class="dialog-heading">
+				<div>
+					<p class="dialog-kicker">Glyph inspector</p>
+					<h2 id="glyphDetailTitle">Glyph details</h2>
 				</div>
-				<div class="modal-body detail-body">
-					<div class="row g-4 align-items-center">
-						<div class="col-md-5 detail-preview-col">
-							<div class="detail-preview p-3 text-center">
-								<button type="button" class="preview-download-btn" id="glyphDetailDownloadBtn" title="Download glyph">Download</button>
-								<img id="glyphDetailImage" alt="Glyph preview" class="img-fluid glyph-preview-img d-none" />
-							</div>
-						</div>
-						<div class="col-md-7">
-							<ul class="list-group list-group-flush detail-meta">
-								<li class="list-group-item detail-field" data-copy-target="glyphDetailCharText" data-label="character">
-									<span class="text-secondary">Character</span>
-									<div class="detail-value">
-										<span id="glyphDetailCharText" class="fw-bold"></span>
-										<span class="detail-copy-text">Copy</span>
-									</div>
-								</li>
-								<li class="list-group-item detail-field" data-copy-target="glyphDetailHex" data-label="hex">
-									<span class="text-secondary">Hex</span>
-									<div class="detail-value">
-										<span id="glyphDetailHex" class="fw-bold"></span>
-										<span class="detail-copy-text">Copy</span>
-									</div>
-								</li>
-								<li class="list-group-item detail-field" data-copy-target="glyphDetailDec" data-label="decimal">
-									<span class="text-secondary">Decimal</span>
-									<div class="detail-value">
-										<span id="glyphDetailDec" class="fw-bold"></span>
-										<span class="detail-copy-text">Copy</span>
-									</div>
-								</li>
-								<li class="list-group-item detail-field" data-copy-target="glyphDetailPos" data-label="position">
-									<span class="text-secondary">Position</span>
-									<div class="detail-value">
-										<span id="glyphDetailPos" class="fw-bold"></span>
-										<span class="detail-copy-text">Copy</span>
-									</div>
-								</li>
-								<li class="list-group-item detail-field" data-copy-target="glyphDetailDim" data-label="dimensions">
-									<span class="text-secondary">Dimensions</span>
-									<div class="detail-value">
-										<span id="glyphDetailDim" class="fw-bold"></span>
-										<span class="detail-copy-text">Copy</span>
-									</div>
-								</li>
-								<li class="list-group-item detail-field" data-copy-target="glyphDetailUnicode" data-label="unicode escape">
-									<span class="text-secondary">Unicode Esc.</span>
-									<div class="detail-value">
-										<span id="glyphDetailUnicode" class="fw-bold"></span>
-										<span class="detail-copy-text">Copy</span>
-									</div>
-								</li>
-							</ul>
-
-							<div id="glyphDetailNotice" class="detail-notice" role="status" aria-live="polite"></div>
-							<small id="vanillaStatus" class="text-secondary d-block mt-3"></small>
-						</div>
-					</div>
+				<button type="button" class="icon-close" data-dialog-close="glyphDetailModal" aria-label="Close glyph details">×</button>
+			</header>
+			<div class="detail-layout">
+				<div class="detail-preview transparent-state">
+					<button type="button" class="preview-download-btn" id="glyphDetailDownloadBtn" title="Download glyph" disabled>Download PNG</button>
+					<img id="glyphDetailImage" alt="Selected glyph preview" class="glyph-preview-img d-none">
 				</div>
-				<div class="modal-footer d-flex justify-content-between flex-wrap gap-2 detail-footer">
-					<div class="detail-actions">
-						<input type="file" id="glyphDetailReplaceInput" accept="image/png,.png" class="d-none">
-						<button type="button" class="btn btn-primary" id="actionUploadPng">
-							Upload PNG
-						</button>
-						<button type="button" class="btn btn-primary" id="actionVanillaPicker">
-							Pick from Vanilla
-						</button>
-						<button type="button" class="btn btn-outline-danger" id="glyphDetailClearBtn">
-							Clear to transparent
-						</button>
-					</div>
+				<div class="detail-information">
+					<p class="detail-section-label">Character data</p>
+					<ul class="detail-meta">
+						<li><button type="button" class="detail-field" data-copy-target="glyphDetailCharText" data-label="character">
+							<span>Character</span><span class="detail-value"><span id="glyphDetailCharText" class="detail-data"></span><span class="detail-copy-text">Copy</span></span>
+						</button></li>
+						<li><button type="button" class="detail-field" data-copy-target="glyphDetailHex" data-label="hex">
+							<span>Hex</span><span class="detail-value"><span id="glyphDetailHex" class="detail-data"></span><span class="detail-copy-text">Copy</span></span>
+						</button></li>
+						<li><button type="button" class="detail-field" data-copy-target="glyphDetailDec" data-label="decimal">
+							<span>Decimal</span><span class="detail-value"><span id="glyphDetailDec" class="detail-data"></span><span class="detail-copy-text">Copy</span></span>
+						</button></li>
+						<li><button type="button" class="detail-field" data-copy-target="glyphDetailPos" data-label="position">
+							<span>Position</span><span class="detail-value"><span id="glyphDetailPos" class="detail-data"></span><span class="detail-copy-text">Copy</span></span>
+						</button></li>
+						<li><button type="button" class="detail-field" data-copy-target="glyphDetailDim" data-label="dimensions">
+							<span>Dimensions</span><span class="detail-value"><span id="glyphDetailDim" class="detail-data"></span><span class="detail-copy-text">Copy</span></span>
+						</button></li>
+						<li><button type="button" class="detail-field" data-copy-target="glyphDetailUnicode" data-label="unicode escape">
+							<span>Unicode escape</span><span class="detail-value"><span id="glyphDetailUnicode" class="detail-data"></span><span class="detail-copy-text">Copy</span></span>
+						</button></li>
+					</ul>
+					<div id="glyphDetailNotice" class="detail-notice" role="status" aria-live="polite"></div>
+					<small id="vanillaStatus" class="vanilla-status d-none"></small>
 				</div>
 			</div>
+			<footer class="dialog-footer">
+				<input type="file" id="glyphDetailReplaceInput" accept="image/png,.png" class="visually-hidden">
+				<button type="button" class="button button--primary" id="actionUploadPng">Upload PNG</button>
+				<button type="button" class="button button--quiet" id="actionVanillaPicker">Vanilla textures</button>
+				<button type="button" class="button button--danger" id="glyphDetailClearBtn">Clear glyph</button>
+			</footer>
 		</div>
-	</div>
+	</dialog>
 
-	<!-- Vanilla Picker Modal -->
-	<div class="modal fade" id="vanillaPickerModal" tabindex="-1" aria-hidden="true">
-		<div class="modal-dialog modal-dialog-centered modal-xl">
-			<div class="modal-content rounded-4 border-0 shadow-lg">
-				<div class="modal-header">
-					<h5 class="modal-title">Select Vanilla Texture</h5>
-					<button type="button" class="btn btn-sm modal-close-btn" data-bs-dismiss="modal" aria-label="Close">X</button>
+	<dialog id="vanillaPickerModal" class="app-dialog vanilla-dialog" aria-labelledby="vanillaPickerTitle">
+		<div class="dialog-content">
+			<header class="dialog-heading">
+				<div>
+					<p class="dialog-kicker">Minecraft Bedrock textures</p>
+					<h2 id="vanillaPickerTitle">Choose a texture</h2>
 				</div>
-				<div class="modal-body">
-					<div class="row g-2 mb-3 align-items-center">
-						<div class="col-md-8">
-							<input type="text" id="vanillaSearchInput" class="form-control" placeholder="Search textures (type name or path)...">
-						</div>
-						<div class="col-md-4">
-							<select id="vanillaCategorySelect" class="form-select">
-								<option value="all">All categories</option>
-							</select>
-						</div>
-						<small id="vanillaPickerStatus" class="text-secondary ms-2 mt-1">Fetching list...</small>
-					</div>
-					<div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-						<label class="form-label mb-0 small text-secondary">Page size:</label>
-						<div class="dropdown vanilla-page-size">
-							<button class="btn btn-light btn-sm dropdown-toggle" type="button" id="vanillaPageSizeBtn" data-bs-toggle="dropdown" aria-expanded="false">
-								<span class="vanilla-page-size-label">36</span>
-							</button>
-							<ul class="dropdown-menu shadow-sm border-0 rounded-3" aria-labelledby="vanillaPageSizeBtn" id="vanillaPageSizeMenu">
-								<li><button class="dropdown-item" type="button" data-size="36">36</button></li>
-								<li><button class="dropdown-item" type="button" data-size="100">100</button></li>
-								<li><button class="dropdown-item" type="button" data-size="200">200</button></li>
-								<li><button class="dropdown-item" type="button" data-size="500">500</button></li>
-								<li><button class="dropdown-item" type="button" data-size="all">Show all</button></li>
-							</ul>
-						</div>
-						<div class="ms-auto d-flex align-items-center gap-2">
-							<button class="btn btn-sm btn-outline-secondary" id="vanillaPrevPage">&lt;</button>
-							<span id="vanillaPageInfo" class="small text-secondary">Page 1/1</span>
-							<button class="btn btn-sm btn-outline-secondary" id="vanillaNextPage">&gt;</button>
-						</div>
-					</div>
-					<div id="vanillaGrid" class="vanilla-grid"></div>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-				</div>
+				<button type="button" class="icon-close" data-dialog-close="vanillaPickerModal" aria-label="Close texture picker">×</button>
+			</header>
+			<div class="vanilla-controls">
+				<label class="search-field">
+					<span class="visually-hidden">Search textures by name or path</span>
+					<input type="search" id="vanillaSearchInput" class="text-input" placeholder="Search by name or path" autocomplete="off">
+				</label>
+				<label class="select-field">
+					<span class="visually-hidden">Texture category</span>
+					<select id="vanillaCategorySelect" class="text-input">
+						<option value="all">All categories</option>
+					</select>
+				</label>
+				<label class="select-field select-field--compact">
+					<span class="visually-hidden">Textures per page</span>
+					<select id="vanillaPageSizeSelect" class="text-input">
+						<option value="36">36 per page</option>
+						<option value="100">100 per page</option>
+						<option value="200">200 per page</option>
+						<option value="500">500 per page</option>
+						<option value="all">Show all</option>
+					</select>
+				</label>
 			</div>
+			<p id="vanillaPickerStatus" class="picker-status" role="status" aria-live="polite">Fetching texture list</p>
+			<div class="picker-pagination">
+				<button type="button" class="button button--quiet" id="vanillaPrevPage" aria-label="Previous page">Previous</button>
+				<span id="vanillaPageInfo" class="page-information">Page 1 of 1</span>
+				<button type="button" class="button button--quiet" id="vanillaNextPage" aria-label="Next page">Next</button>
+			</div>
+			<div id="vanillaGrid" class="vanilla-grid"></div>
+			<footer class="dialog-footer dialog-footer--end">
+				<button type="button" class="button button--quiet" data-dialog-close="vanillaPickerModal">Close</button>
+			</footer>
 		</div>
-	</div>
+	</dialog>
 
-	<script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-	<script defer src="js/state.js?v=20261023-mobile-status"></script>
-	<script defer src="js/defaults.js?v=20260705g"></script>
-	<script defer src="js/utils.js?v=20261023-mobile-status"></script>
-	<script defer src="js/converter.js?v=20261023-mobile-status"></script>
-	<script defer src="js/glyph.js?v=20261023-mobile-status"></script>
-	<script defer src="js/main.js?v=20261023-mobile-status"></script>
+	<script defer src="js/state.js" vite-ignore></script>
+	<script defer src="js/defaults.js" vite-ignore></script>
+	<script defer src="js/utils.js" vite-ignore></script>
+	<script defer src="js/converter.js" vite-ignore></script>
+	<script defer src="js/glyph.js" vite-ignore></script>
+	<script defer src="js/main.js" vite-ignore></script>
+	<script type="module" src="./js/facet-ui.jsx"></script>
 </body>
-
 </html>
