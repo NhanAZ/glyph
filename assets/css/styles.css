@@ -518,17 +518,6 @@ ore-textfield.is-invalid .ore-textfield-control {
 	background-size: 12px 12px;
 }
 
-.atlas-loading {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-}
-
-.glyph-grid:not(.is-loading) + .atlas-loading {
-	display: none;
-}
-
 .workspace-footer {
 	min-height: 50.4px;
 	margin-top: 18px;

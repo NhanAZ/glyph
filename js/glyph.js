@@ -73,7 +73,6 @@ function updateGlyphCellsAtlas(atlasUrl) {
 function markGlyphOutputReady(glyphOutput) {
 	if (!glyphOutput) return;
 
-	glyphOutput.classList.remove('is-loading');
 	glyphOutput.removeAttribute('aria-busy');
 }
 
@@ -416,7 +415,6 @@ function processGlyph(img, hexValue, options = {}) {
 	const atlasVersion = glyphOutput.dataset.atlasVersion;
 	const isCurrent = options.isCurrent || (() => true);
 	glyphOutput.replaceChildren();
-	glyphOutput.classList.add('is-loading');
 	glyphOutput.setAttribute('aria-busy', 'true');
 
 	return new Promise((resolve) => {

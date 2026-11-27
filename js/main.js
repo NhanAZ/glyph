@@ -36,7 +36,6 @@ function cancelGlyphUpload() {
 		pendingPresetRequestId = null;
 		const glyphOutput = getElement('glyph-output');
 		if (glyphOutput) {
-			glyphOutput.classList.remove('is-loading');
 			glyphOutput.removeAttribute('aria-busy');
 		}
 	}
@@ -89,7 +88,6 @@ function loadPreset(assetKey, hex, cacheKey, labelText, options = {}) {
 	pendingPresetRequestId = uploadRequestId;
 	const glyphOutput = getElement('glyph-output');
 	if (glyphOutput) {
-		glyphOutput.classList.add('is-loading');
 		glyphOutput.setAttribute('aria-busy', 'true');
 	}
 	setUploadFeedback(`Loading ${labelText}...`, 'pending');
@@ -108,7 +106,6 @@ function loadPreset(assetKey, hex, cacheKey, labelText, options = {}) {
 		if (pendingPresetRequestId === uploadRequestId) {
 			pendingPresetRequestId = null;
 			if (!processed && glyphOutput) {
-				glyphOutput.classList.remove('is-loading');
 				glyphOutput.removeAttribute('aria-busy');
 			}
 		}
@@ -138,7 +135,6 @@ function loadPreset(assetKey, hex, cacheKey, labelText, options = {}) {
 		if (pendingPresetRequestId === uploadRequestId) {
 			pendingPresetRequestId = null;
 			if (glyphOutput) {
-				glyphOutput.classList.remove('is-loading');
 				glyphOutput.removeAttribute('aria-busy');
 			}
 		}

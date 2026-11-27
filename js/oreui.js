@@ -5,7 +5,6 @@ import "https://cdn.jsdelivr.net/npm/oreui-web@0.0.1/dropdown/+esm";
 import "https://cdn.jsdelivr.net/npm/oreui-web@0.0.1/icon-button/+esm";
 import "https://cdn.jsdelivr.net/npm/oreui-web@0.0.1/modal/+esm";
 import "https://cdn.jsdelivr.net/npm/oreui-web@0.0.1/scrollbar/+esm";
-import "https://cdn.jsdelivr.net/npm/oreui-web@0.0.1/spinner/+esm";
 import "https://cdn.jsdelivr.net/npm/oreui-web@0.0.1/textfield/+esm";
 import "https://cdn.jsdelivr.net/npm/oreui-web@0.0.1/toast/+esm";
 
