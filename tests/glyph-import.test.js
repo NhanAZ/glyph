@@ -59,7 +59,6 @@ function createApp(loadImage = async file => ({ file }), options = {}) {
 		processGlyph: (image, prefix, options) => {
 			processed.push({ image, prefix, options });
 			const output = element('glyph-output');
-			output.classList.remove('is-loading');
 			output.removeAttribute('aria-busy');
 			return true;
 		},
@@ -279,10 +278,9 @@ test('selecting a preset cancels a pending file; a pending file also supersedes 
 	const app = createApp();
 	await app.importFile({ name: 'photo.png' });
 	app.loadPreset();
-	assert.equal(app.element('glyph-output').classList.contains('is-loading'), true);
+	assert.equal(app.element('glyph-output').getAttribute('aria-busy'), 'true');
 	assert.equal(app.element('glyphPrefixDialog').open, false);
 	await app.importFile({ name: 'new.png' });
-	assert.equal(app.element('glyph-output').classList.contains('is-loading'), false);
 	assert.equal(app.element('glyph-output').getAttribute('aria-busy'), null);
 	app.images[0].onload();
 	assert.equal(app.processed.length, 0);
@@ -309,14 +307,12 @@ test('shows pending feedback while a preset image is loading', async () => {
 
 	assert.equal(app.element('uploadStatus').textContent, 'Loading glyph_E0.png...');
 	assert.equal(app.element('uploadStatus').classList.contains('is-pending'), true);
-	assert.equal(app.element('glyph-output').classList.contains('is-loading'), true);
 	assert.equal(app.element('glyph-output').getAttribute('aria-busy'), 'true');
 
 	await app.images[0].onload();
 
 	assert.equal(app.element('uploadStatus').textContent, '');
 	assert.equal(app.element('uploadStatus').classList.contains('is-pending'), false);
-	assert.equal(app.element('glyph-output').classList.contains('is-loading'), false);
 	assert.equal(app.element('glyph-output').getAttribute('aria-busy'), null);
 });
 
@@ -342,6 +338,5 @@ test('clears pending feedback when a preset image fails to load', () => {
 
 	assert.equal(app.element('uploadStatus').textContent, '');
 	assert.equal(app.element('uploadStatus').classList.contains('is-pending'), false);
-	assert.equal(app.element('glyph-output').classList.contains('is-loading'), false);
 	assert.equal(app.element('glyph-output').getAttribute('aria-busy'), null);
 });
