@@ -11,14 +11,22 @@
 	"categories": ["utilities", "productivity"],
 	"icons": [
 		{
-			"src": "android-chrome-192x192.png",
+			"src": "android-chrome-192x192.png?v=20261127-favicon",
 			"sizes": "192x192",
-			"type": "image/png"
+			"type": "image/png",
+			"purpose": "any"
 		},
 		{
-			"src": "android-chrome-512x512.png",
+			"src": "android-chrome-512x512.png?v=20261127-favicon",
 			"sizes": "512x512",
-			"type": "image/png"
+			"type": "image/png",
+			"purpose": "any"
+		},
+		{
+			"src": "android-chrome-512x512-maskable.png?v=20261127-favicon",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
 		}
 	],
 	"theme_color": "#060606",

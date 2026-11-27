@@ -11,8 +11,8 @@
 	<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 	<link rel="canonical" href="https://nhanaz.github.io/glyph/">
 	<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-	<link rel="preload" href="assets/fonts/minecraft-ten-latin.woff2" as="font" type="font/woff2" crossorigin>
-	<link rel="preload" href="assets/fonts/minecraftia-latin.woff2" as="font" type="font/woff2" crossorigin>
+	<link rel="preload" href="https://cdn.jsdelivr.net/npm/oreui-web@0.0.1/dist/assets/fonts/minecraft-regular.woff2" as="font" type="font/woff2" crossorigin>
+	<link rel="preload" href="https://cdn.jsdelivr.net/npm/oreui-web@0.0.1/dist/assets/fonts/minecraft-ten.woff2" as="font" type="font/woff2" crossorigin>
 
 	<meta property="og:type" content="website">
 	<meta property="og:locale" content="en_US">
@@ -63,310 +63,244 @@
 		}
 	}
 	</script>
-	<link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" crossorigin onload="this.onload=null;this.rel='stylesheet'">
-	<noscript><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></noscript>
-	<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
-	<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png">
-	<link rel="shortcut icon" href="assets/icons/favicon.ico">
-	<link rel="manifest" href="assets/icons/site.webmanifest?v=20260714a">
-	<meta name="theme-color" content="#060606">
-	<link href="assets/css/styles.css?v=20261023-mobile-status" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/oreui-web@0.0.1/dist/styles.css">
+	<link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png?v=20261127-favicon">
+	<link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png?v=20261127-favicon">
+	<link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png?v=20261127-favicon">
+	<link rel="shortcut icon" href="assets/icons/favicon.ico?v=20261127-favicon">
+	<link rel="manifest" href="assets/icons/site.webmanifest?v=20261127-favicon">
+	<meta name="theme-color" content="#151515">
+	<link href="assets/css/styles.css?v=20261127-divider-footer" rel="stylesheet">
 </head>
 
 <body>
-	<main class="app-container">
-		<header class="header-bar">
-			<div class="title-container">
-				<div class="title-kicker">Minecraft Bedrock</div>
-				<h1 class="title-text">Glyph Tools</h1>
-				<p class="subtitle-text">Textures to Glyph workspace</p>
-			</div>
-			<div class="header-actions">
-				<button class="icon-button text-icon-button glass-btn d-md-none nav-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#mobileNav" aria-controls="mobileNav" aria-expanded="false">Menu</button>
-				<button id="darkModeToggle" class="icon-button text-icon-button glass-btn" title="Toggle Dark Mode">Dark</button>
-			</div>
-		</header>
-
-		<div class="collapse d-md-none mobile-nav" id="mobileNav">
-			<nav class="app-card mobile-nav-card">
-				<a href="https://github.com/NhanAZ/glyph" target="_blank" rel="noopener noreferrer">
-					GitHub
-				</a>
-				<a href="https://wiki.bedrock.dev/text/custom-emojis" target="_blank" rel="noopener noreferrer">
-					Docs
-				</a>
-				<a href="https://discord.gg/j2X83ujT6c" target="_blank" rel="noopener noreferrer">
-					Discord
-				</a>
-			</nav>
-		</div>
-
-		<div class="tool-deck">
-			<section class="app-card tool-card">
-				<div class="panel-heading">
-					<h2>Glyph Generator</h2>
-					<span id="inputValidation" class="text-danger small d-none">Invalid hex</span>
-					<div id="glyphSuccessMsg" class="tool-status generator-status alert rounded-alert alert-success d-none" role="status"></div>
-					<div id="glyphErrorMsg" class="tool-status generator-status alert rounded-alert alert-danger d-none" role="alert"></div>
-				</div>
-
-				<div class="tool-grid">
-					<div class="field-block hex-field">
-						<label class="form-label detail-text" for="glyph-input">HEX CODE</label>
-						<input type="text" id="glyph-input" class="app-input text-uppercase font-monospace fw-bold" placeholder="E0" maxlength="4">
-						<div id="defaultImageHint" class="text-primary fw-medium d-none hint-link">
-							Load default <span id="hintHex">E0</span> image
+	<ore-scrollbar class="page-scrollbar" aria-label="Page content"><main class="workspace">
+		<div class="workspace-grid">
+			<aside class="tools-rail" aria-label="Atlas tools">
+				<ore-container class="tool-panel source-panel" variant="dark">
+					<section class="tool-section">
+						<div class="section-heading">
+							<h2>Atlas source</h2>
+							<span id="inputValidation" class="input-validation d-none">Invalid prefix</span>
 						</div>
-					</div>
+						<ore-textfield id="glyph-input" label="Code point prefix" value="E0" placeholder="E0" maxlength="4" inputmode="text" autocomplete="off" spellcheck="false"></ore-textfield>
+						<ore-button id="defaultImageHint" class="default-atlas-hint d-none" color="secondary" type="button">Load default <span id="hintHex">E0</span> atlas</ore-button>
+						<p id="glyphSuccessMsg" class="tool-status success-status d-none" role="status"></p>
+						<p id="glyphErrorMsg" class="tool-status error-status d-none" role="alert"></p>
+					</section>
 
-					<div class="field-block upload-field">
-						<label class="form-label detail-text" for="glyphUpload">CUSTOM GLYPH PNG</label>
+					<section class="tool-section">
+						<h3>Atlas image</h3>
 						<div class="upload-zone">
-							<input type="file" id="glyphUpload" accept="image/png,.png" class="file-input opacity-0 position-absolute w-100 h-100" aria-label="Upload custom glyph PNG" aria-describedby="uploadHelp">
-							<div class="upload-zone-label">
-								<img class="upload-zone-icon" src="assets/ui/import.png" width="20" height="20" alt="" aria-hidden="true">
-								<span id="uploadLabel" class="text-secondary upload-label-text">Tap or drop a PNG</span>
-							</div>
+							<input type="file" id="glyphUpload" accept="image/png,.png" hidden aria-label="Choose a glyph atlas PNG" aria-describedby="uploadHelp">
+							<p id="uploadLabel" class="upload-label-text">Drop a PNG atlas</p>
+							<ore-button id="chooseAtlas" color="secondary" type="button">Choose PNG</ore-button>
+							<p id="uploadHelp" class="upload-help">Square PNG, dimensions divisible by 16.</p>
+							<p id="uploadStatus" class="upload-status d-none" role="status" aria-live="polite"></p>
 						</div>
-						<small id="uploadHelp" class="upload-help d-block d-md-none">On your phone, try Files / My Files to keep the original filename.</small>
-					</div>
+					</section>
 
-					<div class="preset-actions">
-						<span class="form-label detail-text preset-label">PRESETS</span>
-						<button id="btnLoadTemplate" class="btn btn-sm btn-outline-secondary fw-medium pill-action">Grid Template</button>
-						<button id="btnLoadExample" class="btn btn-sm btn-outline-secondary fw-medium pill-action">E1 Example</button>
-						<button id="btnLoadEmpty" class="btn btn-sm btn-outline-secondary fw-medium pill-action">Empty Grid</button>
-					</div>
-				</div>
+					<section class="tool-section preset-section">
+						<h3>Start with</h3>
+						<div class="preset-actions">
+							<ore-button id="btnLoadTemplate" color="secondary" type="button">Grid template</ore-button>
+							<ore-button id="btnLoadExample" color="secondary" type="button">E1 example</ore-button>
+							<ore-button id="btnLoadEmpty" color="secondary" type="button">Empty grid</ore-button>
+						</div>
+					</section>
+				</ore-container>
 
-			</section>
-
-			<section class="app-card tool-card converter-card">
-				<div class="panel-heading">
-					<h2>Converter</h2>
-					<div id="errorMsg" class="tool-status converter-status alert rounded-alert alert-danger d-none" role="alert"></div>
-					<div id="successMsg" class="tool-status converter-status alert rounded-alert alert-success d-none" role="status"></div>
-				</div>
-
-				<div class="converter-grid">
-					<div class="field-block">
-						<label class="form-label detail-text" for="converterInput">Hex code or character</label>
-						<input type="text" id="converterInput" class="app-input" placeholder="e.g. 0xE016" autocomplete="off" spellcheck="false">
-					</div>
-
-					<div class="field-block">
-						<label id="converterResultLabel" class="form-label detail-text" for="converterOutput">Result</label>
-						<div class="output-wrapper position-relative">
-							<input type="text" id="converterOutput" class="app-input" placeholder="Your result appears here" readonly>
+				<ore-container class="tool-panel converter-panel" variant="dark">
+					<div class="converter-content">
+						<div class="section-heading">
+							<h2>Code point converter</h2>
+						</div>
+						<ore-textfield id="converterInput" label="Hex code or character" placeholder="0xE016" autocomplete="off" spellcheck="false"></ore-textfield>
+						<div class="output-wrapper">
+							<ore-textfield id="converterOutput" label="Result" placeholder="Your result appears here" readonly></ore-textfield>
 							<span id="converterOutputHint" class="output-visual d-none" aria-hidden="true"></span>
-							<button id="copyButton" class="icon-button position-absolute copy-button" type="button" title="Copy to clipboard" disabled>Copy</button>
+							<button id="copyButton" class="converter-copy-button" type="button" aria-label="Copy result" disabled>Copy</button>
 						</div>
+						<p id="errorMsg" class="tool-status error-status d-none" role="alert"></p>
+						<p id="successMsg" class="tool-status success-status d-none" role="status"></p>
 					</div>
-				</div>
+				</ore-container>
+			</aside>
 
+			<section class="atlas-section" aria-labelledby="atlasTitle">
+				<ore-container class="atlas-panel" variant="light">
+					<header class="atlas-header">
+						<div class="atlas-heading">
+							<h2 id="atlasTitle">Glyph atlas</h2>
+							<p id="atlasInfo" class="atlas-info">Loading atlas...</p>
+						</div>
+						<div class="atlas-actions">
+							<ore-button id="gridModeToggle" class="grid-toggle" color="secondary" type="button"><span class="grid-toggle-label">Adaptive grid</span></ore-button>
+							<ore-dropdown id="exportDropdown" value="atlas" variant="bordered" aria-label="Export options">
+								<ore-button class="ore-dropdown-trigger" color="primary" type="button"><span class="ore-dropdown-trigger-label">Export</span></ore-button>
+								<div class="ore-dropdown-menu">
+									<button class="ore-dropdown-item" type="button" id="btnDownloadAtlas" data-value="atlas" title="Download atlas PNG">Atlas PNG</button>
+									<button class="ore-dropdown-item" type="button" id="btnCopyAll" data-value="unicode" title="Copy the Unicode string">Copy Unicode</button>
+									<button class="ore-dropdown-item" type="button" id="btnCopyReference" data-value="reference" title="Copy the glyph reference map">Reference map</button>
+									<button class="ore-dropdown-item" type="button" id="btnDownloadJson" data-value="pack" title="Download the Java Edition bitmap font provider">Java font JSON</button>
+									<button class="ore-dropdown-item" type="button" id="btnDownloadFullJson" data-value="metadata" title="Download atlas metadata JSON">Metadata JSON</button>
+								</div>
+							</ore-dropdown>
+						</div>
+					</header>
+					<div class="atlas-body">
+						<div id="glyph-output" class="glyph-grid is-loading" aria-busy="true"></div>
+						<ore-spinner class="atlas-loading" aria-label="Loading atlas"></ore-spinner>
+					</div>
+				</ore-container>
 			</section>
 		</div>
 
-		<section class="app-card atlas-card">
-			<div class="atlas-header">
-				<div class="atlas-title-group">
-					<h2>Output</h2>
-					<span id="atlasInfo" class="atlas-info text-secondary small">Loading atlas...</span>
-					<button id="gridModeToggle" class="btn btn-outline-secondary btn-sm fw-medium grid-toggle d-lg-none" type="button">
-						<span class="grid-toggle-label">Adaptive grid</span>
-					</button>
-				</div>
-				<div class="dropdown">
-					<button class="btn btn-sm export-btn px-3 py-2 fw-medium dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-						Export
-					</button>
-					<ul class="dropdown-menu dropdown-menu-end mt-2" aria-labelledby="exportDropdown">
-						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadAtlas" title="Download Atlas PNG">Atlas PNG</button></li>
-						<li><hr class="dropdown-divider opacity-50"></li>
-						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnCopyAll" title="Copy All (Minecraft String)">Copy String</button></li>
-						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnCopyReference" title="Copy Reference (Text Map)">Reference</button></li>
-						<li><hr class="dropdown-divider opacity-50"></li>
-						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadJson" title="Download JSON (Pack)">JSON Pack</button></li>
-						<li><button class="dropdown-item py-2 px-3 fw-medium" id="btnDownloadFullJson" title="Download JSON (Metadata)">JSON Metadata</button></li>
-					</ul>
-				</div>
-			</div>
-			<div class="atlas-body">
-				<div id="glyph-output" class="glyph-grid is-loading" aria-busy="true"></div>
-			</div>
-		</section>
-
-		<footer class="footer-links">
-			<a href="https://github.com/NhanAZ/glyph" target="_blank" rel="noopener noreferrer">
-				GitHub
-			</a>
-			<a href="https://wiki.bedrock.dev/text/custom-emojis" target="_blank" rel="noopener noreferrer">
-				Docs
-			</a>
-			<a href="https://discord.gg/j2X83ujT6c" target="_blank" rel="noopener noreferrer">
-				Discord
-			</a>
+		<footer class="workspace-footer">
+			<ore-divider class="workspace-footer-divider"></ore-divider>
+			<nav aria-label="Project links">
+				<ore-button type="button" color="secondary" data-project-url="https://github.com/NhanAZ/glyph">GitHub</ore-button>
+				<ore-button type="button" color="secondary" data-project-url="https://discord.com/invite/j2X83ujT6c">Discord</ore-button>
+				<ore-button type="button" color="secondary" data-project-url="https://wiki.bedrock.dev/text/custom-emojis">Custom emoji guide</ore-button>
+			</nav>
 		</footer>
-	</main>
+	</main></ore-scrollbar>
 
-	<dialog id="glyphPrefixDialog" class="app-card glyph-prefix-dialog" aria-labelledby="uploadPrefixTitle" aria-describedby="uploadPrefixHelp">
-		<form id="glyphPrefixForm">
-			<div class="panel-heading">
-				<h2 id="uploadPrefixTitle">Choose atlas prefix</h2>
-			</div>
-			<p id="uploadPrefixFilename" class="upload-prefix-filename"></p>
-			<p id="uploadPrefixHelp">The filename has no valid atlas prefix. Enter a hex prefix from 0 to 10FF.</p>
-			<label class="form-label detail-text" for="uploadPrefix">ATLAS PREFIX</label>
-			<input type="text" id="uploadPrefix" class="app-input text-uppercase font-monospace fw-bold" placeholder="Example: E8" maxlength="4" required aria-describedby="uploadPrefixHelp" autocomplete="off" spellcheck="false">
-			<div class="upload-prefix-actions">
-				<button type="button" id="cancelGlyphImport" class="btn btn-sm btn-outline-danger">Cancel</button>
-				<button type="submit" id="confirmGlyphImport" class="btn btn-sm btn-outline-secondary" disabled>Import atlas</button>
-			</div>
-		</form>
-	</dialog>
-
-	<!-- Glyph Detail Modal -->
-	<div class="modal fade" id="glyphDetailModal" tabindex="-1" aria-hidden="true">
-		<div class="modal-dialog modal-dialog-centered modal-lg">
-			<div class="modal-content rounded-4 border-0 shadow-lg detail-modal">
-				<div class="modal-header detail-header">
-					<h5 class="modal-title">Glyph Details</h5>
-					<button type="button" class="btn btn-sm modal-close-btn" data-bs-dismiss="modal" aria-label="Close">X</button>
+	<ore-modal id="glyphPrefixDialog">
+		<dialog class="ore-modal-dialog">
+			<form id="glyphPrefixForm" class="ore-modal-content" novalidate>
+				<header class="ore-modal-header">
+					<h2 id="uploadPrefixTitle" class="ore-modal-title">Choose an atlas prefix</h2>
+					<ore-icon-button class="ore-modal-close ore-modal-header-button" color="secondary" type="button" aria-label="Close">
+						<ore-icon aria-hidden="true">
+							<svg viewBox="0 0 8 8">
+								<path fill="currentColor" fill-rule="evenodd" d="M.5.5h1v1h.966v1h-1v-1H.5zm7 1h-1v-1h1zm-2 1v-1h1v1zm-1 1h1v-1h-1zm0 1v-1h-1v-1h-1v1h1v1h-1v1h-1v1h-1v1h1v-1h1v-1h1v-1zm0 0h1v1h-1zm1.034 2H6.5v1h1v-1h-.966v-1h-1z"></path>
+							</svg>
+						</ore-icon>
+					</ore-icon-button>
+				</header>
+				<ore-container class="dialog-body" variant="dark">
+					<p id="uploadPrefixFilename" class="upload-prefix-filename"></p>
+					<ore-textfield id="uploadPrefix" label="Atlas prefix" placeholder="E8" maxlength="4" autocomplete="off" spellcheck="false"></ore-textfield>
+				</ore-container>
+				<div class="dialog-actions">
+					<ore-button id="cancelGlyphImport" class="ore-modal-close" color="secondary" type="button">Cancel</ore-button>
+					<ore-button id="confirmGlyphImport" color="primary" type="submit" disabled>Import atlas</ore-button>
 				</div>
-				<div class="modal-body detail-body">
-					<div class="row g-4 align-items-center">
-						<div class="col-md-5 detail-preview-col">
-							<div class="detail-preview p-3 text-center">
-								<button type="button" class="preview-download-btn" id="glyphDetailDownloadBtn" title="Download glyph">Download</button>
-								<img id="glyphDetailImage" alt="Glyph preview" class="img-fluid glyph-preview-img d-none" />
-							</div>
-						</div>
-						<div class="col-md-7">
-							<ul class="list-group list-group-flush detail-meta">
-								<li class="list-group-item detail-field" data-copy-target="glyphDetailCharText" data-label="character">
-									<span class="text-secondary">Character</span>
-									<div class="detail-value">
-										<span id="glyphDetailCharText" class="fw-bold"></span>
-										<span class="detail-copy-text">Copy</span>
-									</div>
-								</li>
-								<li class="list-group-item detail-field" data-copy-target="glyphDetailHex" data-label="hex">
-									<span class="text-secondary">Hex</span>
-									<div class="detail-value">
-										<span id="glyphDetailHex" class="fw-bold"></span>
-										<span class="detail-copy-text">Copy</span>
-									</div>
-								</li>
-								<li class="list-group-item detail-field" data-copy-target="glyphDetailDec" data-label="decimal">
-									<span class="text-secondary">Decimal</span>
-									<div class="detail-value">
-										<span id="glyphDetailDec" class="fw-bold"></span>
-										<span class="detail-copy-text">Copy</span>
-									</div>
-								</li>
-								<li class="list-group-item detail-field" data-copy-target="glyphDetailPos" data-label="position">
-									<span class="text-secondary">Position</span>
-									<div class="detail-value">
-										<span id="glyphDetailPos" class="fw-bold"></span>
-										<span class="detail-copy-text">Copy</span>
-									</div>
-								</li>
-								<li class="list-group-item detail-field" data-copy-target="glyphDetailDim" data-label="dimensions">
-									<span class="text-secondary">Dimensions</span>
-									<div class="detail-value">
-										<span id="glyphDetailDim" class="fw-bold"></span>
-										<span class="detail-copy-text">Copy</span>
-									</div>
-								</li>
-								<li class="list-group-item detail-field" data-copy-target="glyphDetailUnicode" data-label="unicode escape">
-									<span class="text-secondary">Unicode Esc.</span>
-									<div class="detail-value">
-										<span id="glyphDetailUnicode" class="fw-bold"></span>
-										<span class="detail-copy-text">Copy</span>
-									</div>
-								</li>
-							</ul>
+			</form>
+		</dialog>
+	</ore-modal>
 
-							<div id="glyphDetailNotice" class="detail-notice" role="status" aria-live="polite"></div>
-							<small id="vanillaStatus" class="text-secondary d-block mt-3"></small>
+	<ore-modal id="glyphDetailModal">
+		<dialog class="ore-modal-dialog detail-dialog">
+			<form class="ore-modal-content">
+				<header class="ore-modal-header">
+					<h2 class="ore-modal-title">Glyph details</h2>
+					<ore-icon-button class="ore-modal-close ore-modal-header-button" color="secondary" type="button" aria-label="Close">
+						<ore-icon aria-hidden="true">
+							<svg viewBox="0 0 8 8">
+								<path fill="currentColor" fill-rule="evenodd" d="M.5.5h1v1h.966v1h-1v-1H.5zm7 1h-1v-1h1zm-2 1v-1h1v1zm-1 1h1v-1h-1zm0 1v-1h-1v-1h-1v1h1v1h-1v1h-1v1h-1v1h1v-1h1v-1h1v-1zm0 0h1v1h-1zm1.034 2H6.5v1h1v-1h-.966v-1h-1z"></path>
+							</svg>
+						</ore-icon>
+					</ore-icon-button>
+				</header>
+				<ore-container class="dialog-body detail-body" variant="dark">
+					<div class="detail-layout">
+						<div class="detail-preview">
+							<img id="glyphDetailImage" alt="Selected glyph" class="glyph-preview-img d-none">
+						</div>
+						<dl class="detail-meta">
+							<button type="button" class="detail-field" data-copy-target="glyphDetailCharText" data-label="character"><span>Character</span><span class="detail-value"><span id="glyphDetailCharText"></span><span class="detail-copy-text">Copy</span></span></button>
+							<button type="button" class="detail-field" data-copy-target="glyphDetailHex" data-label="hex"><span>Hex</span><span class="detail-value"><span id="glyphDetailHex"></span><span class="detail-copy-text">Copy</span></span></button>
+							<button type="button" class="detail-field" data-copy-target="glyphDetailDec" data-label="decimal"><span>Decimal</span><span class="detail-value"><span id="glyphDetailDec"></span><span class="detail-copy-text">Copy</span></span></button>
+							<button type="button" class="detail-field" data-copy-target="glyphDetailPos" data-label="position"><span>Position</span><span class="detail-value"><span id="glyphDetailPos"></span><span class="detail-copy-text">Copy</span></span></button>
+							<button type="button" class="detail-field" data-copy-target="glyphDetailDim" data-label="dimensions"><span>Dimensions</span><span class="detail-value"><span id="glyphDetailDim"></span><span class="detail-copy-text">Copy</span></span></button>
+							<button type="button" class="detail-field" data-copy-target="glyphDetailUnicode" data-label="Unicode escape"><span>Unicode escape</span><span class="detail-value"><span id="glyphDetailUnicode"></span><span class="detail-copy-text">Copy</span></span></button>
+						</dl>
+					</div>
+					<p id="glyphDetailNotice" class="detail-notice" role="status" aria-live="polite"></p>
+					<p id="vanillaStatus" class="vanilla-status d-none"></p>
+				</ore-container>
+				<footer class="dialog-actions detail-actions">
+					<input type="file" id="glyphDetailReplaceInput" accept="image/png,.png" hidden aria-label="Choose a replacement glyph PNG">
+					<ore-button id="glyphDetailDownloadBtn" color="secondary" type="button" disabled>Download glyph</ore-button>
+					<ore-button id="actionUploadPng" color="secondary" type="button">Upload PNG</ore-button>
+					<ore-button id="actionVanillaPicker" color="secondary" type="button">Choose Vanilla texture</ore-button>
+					<ore-button id="glyphDetailClearBtn" color="destructive" type="button">Clear glyph</ore-button>
+				</footer>
+			</form>
+		</dialog>
+	</ore-modal>
+
+	<ore-modal id="vanillaPickerModal">
+		<dialog class="ore-modal-dialog texture-dialog">
+			<form class="ore-modal-content">
+				<header class="ore-modal-header">
+					<h2 class="ore-modal-title">Vanilla textures</h2>
+					<ore-icon-button class="ore-modal-close ore-modal-header-button" color="secondary" type="button" aria-label="Close">
+						<ore-icon aria-hidden="true">
+							<svg viewBox="0 0 8 8">
+								<path fill="currentColor" fill-rule="evenodd" d="M.5.5h1v1h.966v1h-1v-1H.5zm7 1h-1v-1h1zm-2 1v-1h1v1zm-1 1h1v-1h-1zm0 1v-1h-1v-1h-1v1h1v1h-1v1h-1v1h-1v1h1v-1h1v-1h1v-1zm0 0h1v1h-1zm1.034 2H6.5v1h1v-1h-.966v-1h-1z"></path>
+							</svg>
+						</ore-icon>
+					</ore-icon-button>
+				</header>
+				<ore-container class="dialog-body texture-body" variant="dark">
+					<div class="texture-filters">
+						<ore-textfield id="vanillaSearchInput" label="Search textures" placeholder="Name or path" autocomplete="off" spellcheck="false"></ore-textfield>
+						<div class="texture-category-field">
+							<span class="field-label">Category</span>
+							<ore-dropdown id="vanillaCategorySelect" value="all" variant="bordered" aria-label="Texture category">
+								<ore-button class="ore-dropdown-trigger" color="secondary" type="button"><span class="ore-dropdown-trigger-label">All categories</span></ore-button>
+								<div class="ore-dropdown-menu">
+									<button class="ore-dropdown-item" type="button" data-value="all">All categories</button>
+								</div>
+							</ore-dropdown>
 						</div>
 					</div>
-				</div>
-				<div class="modal-footer d-flex justify-content-between flex-wrap gap-2 detail-footer">
-					<div class="detail-actions">
-						<input type="file" id="glyphDetailReplaceInput" accept="image/png,.png" class="d-none">
-						<button type="button" class="btn btn-primary" id="actionUploadPng">
-							Upload PNG
-						</button>
-						<button type="button" class="btn btn-primary" id="actionVanillaPicker">
-							Pick from Vanilla
-						</button>
-						<button type="button" class="btn btn-outline-danger" id="glyphDetailClearBtn">
-							Clear to transparent
-						</button>
+					<p id="vanillaPickerStatus" class="picker-status" role="status" aria-live="polite">Loading textures...</p>
+					<div class="texture-toolbar">
+						<div class="page-size-control">
+							<span class="field-label">Results per page</span>
+							<ore-dropdown id="vanillaPageSizeDropdown" value="36" variant="bordered" aria-label="Results per page">
+								<ore-button class="ore-dropdown-trigger" id="vanillaPageSizeBtn" color="secondary" type="button"><span class="ore-dropdown-trigger-label vanilla-page-size-label">36</span></ore-button>
+								<div class="ore-dropdown-menu" id="vanillaPageSizeMenu">
+									<button class="ore-dropdown-item" type="button" data-size="36" data-value="36">36</button>
+									<button class="ore-dropdown-item" type="button" data-size="100" data-value="100">100</button>
+									<button class="ore-dropdown-item" type="button" data-size="200" data-value="200">200</button>
+										<button class="ore-dropdown-item" type="button" data-size="300" data-value="300">300</button>
+									<button class="ore-dropdown-item" type="button" data-size="500" data-value="500">500</button>
+									<button class="ore-dropdown-item" type="button" data-size="all" data-value="all">Show all</button>
+								</div>
+							</ore-dropdown>
+						</div>
+						<nav class="page-navigation" aria-label="Texture pages">
+							<ore-icon-button id="vanillaPrevPage" color="secondary" type="button" aria-label="Previous page">
+								<ore-icon aria-hidden="true">
+									<svg viewBox="0 0 8 8">
+										<path fill="currentColor" fill-rule="evenodd" d="M5 2h1V1H5zM2 5h1V4H2zm3-3H4v1h1-1v.003H3v1h1-1V6h1v-.997 1h.034V7H5v1h1V2z" transform="translate(0 -.5)"></path>
+									</svg>
+								</ore-icon>
+							</ore-icon-button>
+							<span id="vanillaPageInfo" class="page-info">Page 1 of 1</span>
+							<ore-icon-button id="vanillaNextPage" color="secondary" type="button" aria-label="Next page">
+								<ore-icon aria-hidden="true">
+									<svg viewBox="0 0 8 8">
+										<path fill="currentColor" fill-rule="evenodd" d="M3 7H2v1h1zm3-3H5v1h1zM3 7h1V6H3h1v-.003h1v-1H4h1V3H4v.997-1h-.034V2H3V1H2v6z" transform="translate(0 -.5)"></path>
+									</svg>
+								</ore-icon>
+							</ore-icon-button>
+						</nav>
 					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+					<ore-scrollbar class="vanilla-grid-scroll" aria-label="Vanilla texture results">
+						<div id="vanillaGrid" class="vanilla-grid"></div>
+					</ore-scrollbar>
+				</ore-container>
+			</form>
+		</dialog>
+	</ore-modal>
 
-	<!-- Vanilla Picker Modal -->
-	<div class="modal fade" id="vanillaPickerModal" tabindex="-1" aria-hidden="true">
-		<div class="modal-dialog modal-dialog-centered modal-xl">
-			<div class="modal-content rounded-4 border-0 shadow-lg">
-				<div class="modal-header">
-					<h5 class="modal-title">Select Vanilla Texture</h5>
-					<button type="button" class="btn btn-sm modal-close-btn" data-bs-dismiss="modal" aria-label="Close">X</button>
-				</div>
-				<div class="modal-body">
-					<div class="row g-2 mb-3 align-items-center">
-						<div class="col-md-8">
-							<input type="text" id="vanillaSearchInput" class="form-control" placeholder="Search textures (type name or path)...">
-						</div>
-						<div class="col-md-4">
-							<select id="vanillaCategorySelect" class="form-select">
-								<option value="all">All categories</option>
-							</select>
-						</div>
-						<small id="vanillaPickerStatus" class="text-secondary ms-2 mt-1">Fetching list...</small>
-					</div>
-					<div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
-						<label class="form-label mb-0 small text-secondary">Page size:</label>
-						<div class="dropdown vanilla-page-size">
-							<button class="btn btn-light btn-sm dropdown-toggle" type="button" id="vanillaPageSizeBtn" data-bs-toggle="dropdown" aria-expanded="false">
-								<span class="vanilla-page-size-label">36</span>
-							</button>
-							<ul class="dropdown-menu shadow-sm border-0 rounded-3" aria-labelledby="vanillaPageSizeBtn" id="vanillaPageSizeMenu">
-								<li><button class="dropdown-item" type="button" data-size="36">36</button></li>
-								<li><button class="dropdown-item" type="button" data-size="100">100</button></li>
-								<li><button class="dropdown-item" type="button" data-size="200">200</button></li>
-								<li><button class="dropdown-item" type="button" data-size="500">500</button></li>
-								<li><button class="dropdown-item" type="button" data-size="all">Show all</button></li>
-							</ul>
-						</div>
-						<div class="ms-auto d-flex align-items-center gap-2">
-							<button class="btn btn-sm btn-outline-secondary" id="vanillaPrevPage">&lt;</button>
-							<span id="vanillaPageInfo" class="small text-secondary">Page 1/1</span>
-							<button class="btn btn-sm btn-outline-secondary" id="vanillaNextPage">&gt;</button>
-						</div>
-					</div>
-					<div id="vanillaGrid" class="vanilla-grid"></div>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-	<script defer src="js/state.js?v=20261023-mobile-status"></script>
-	<script defer src="js/defaults.js?v=20260705g"></script>
-	<script defer src="js/utils.js?v=20261023-mobile-status"></script>
-	<script defer src="js/converter.js?v=20261023-mobile-status"></script>
-	<script defer src="js/glyph.js?v=20261023-mobile-status"></script>
-	<script defer src="js/main.js?v=20261023-mobile-status"></script>
+	<ore-toast id="actionToast" position="top-center" duration="1500" aria-label="Glyph atlas status"></ore-toast>
+	<script type="module" src="js/oreui.js?v=20261127-divider-footer"></script>
 </body>
-
 </html>

@@ -162,13 +162,18 @@ function updateConverterOutputHint(value) {
 	const hint = getElement('converterOutputHint');
 	const wrapper = output ? output.closest('.output-wrapper') : null;
 	const visualHint = getOutputVisualHint(value);
+	const privateUseValue = Boolean(value && isPrivateUseCodePoint(value.codePointAt(0)));
+	const input = output ? output.querySelector('.ore-textfield-input') : null;
+	const displayHint = privateUseValue ? '' : visualHint;
+
+	if (input) input.classList.toggle('private-use-placeholder', privateUseValue);
 
 	if (hint) {
-		hint.textContent = value && isPrivateUseCodePoint(value.codePointAt(0)) ? '\u25A1' : visualHint;
-		hint.classList.toggle('private-use-placeholder', Boolean(value && isPrivateUseCodePoint(value.codePointAt(0))));
-		hint.classList.toggle('d-none', !visualHint);
+		hint.textContent = displayHint;
+		hint.classList.remove('private-use-placeholder');
+		hint.classList.toggle('d-none', !displayHint);
 	}
-	if (wrapper) wrapper.classList.toggle('has-output-hint', Boolean(visualHint));
+	if (wrapper) wrapper.classList.toggle('has-output-hint', Boolean(displayHint));
 	if (output) output.title = visualHint ? `${visualHint} - copy uses the actual character.` : '';
 }
 
@@ -224,8 +229,8 @@ function convert() {
 	errorMsg.classList.add('d-none');
 	successMsg.classList.add('d-none');
 	setConverterOutput('');
-	const resultLabel = getElement('converterResultLabel');
-	if (resultLabel) resultLabel.textContent = 'Result';
+	const resultLabel = getElement('converterOutput');
+	if (resultLabel) resultLabel.label = 'Result';
 
 	if (!input) {
 		updateCopyButtonState();
@@ -240,10 +245,10 @@ function convert() {
 
 	if (isExplicitHex || (input.length > 1 && /^[0-9A-Fa-f]+$/.test(input))) {
 		convertHexToEmoji(input);
-		if (resultLabel && output.value) resultLabel.textContent = 'Character';
+		if (resultLabel && output.value) resultLabel.label = 'Character';
 	} else if (Array.from(input).length === 1) {
 		convertEmojiToHex(input);
-		if (resultLabel) resultLabel.textContent = 'Hex code';
+		if (resultLabel) resultLabel.label = 'Hex code';
 	} else {
 		errorMsg.textContent = 'Enter a hex value or one symbol/emoji.';
 		errorMsg.classList.remove('d-none');
@@ -261,26 +266,39 @@ function copyOutput() {
 	if (!output || !copyButton || output.value === '') return;
 
 	const version = conversionVersion;
-	copyText(output.value).then(() => {
+	const value = output.value;
+	clearCopyFeedbackTimer();
+	if (errorMsg) errorMsg.classList.add('d-none');
+	if (successMsg) successMsg.classList.add('d-none');
+	setButtonContent(copyButton, 'Copying');
+	copyButton.disabled = true;
+
+	return copyText(value).then(() => {
 		if (version !== conversionVersion) return;
 		clearCopyFeedbackTimer();
 		if (errorMsg) errorMsg.classList.add('d-none');
-		if (successMsg) successMsg.classList.add('d-none');
+		if (successMsg) {
+			successMsg.textContent = 'Copied result to clipboard.';
+			successMsg.classList.remove('d-none');
+		}
 		setButtonContent(copyButton, 'Copied');
 		copyButton.disabled = true;
 
 		copyFeedbackTimer = setTimeout(() => {
 			setButtonContent(copyButton, 'Copy');
-			copyButton.disabled = false;
+			updateCopyButtonState();
+			if (successMsg) successMsg.classList.add('d-none');
 			copyFeedbackTimer = null;
 		}, 2000);
 	}).catch(() => {
 		if (version !== conversionVersion) return;
 		clearCopyFeedbackTimer();
 		if (successMsg) successMsg.classList.add('d-none');
+		setButtonContent(copyButton, 'Copy');
 		if (errorMsg) {
 			errorMsg.textContent = 'Unable to access the clipboard.';
 			errorMsg.classList.remove('d-none');
 		}
+		updateCopyButtonState();
 	});
 }

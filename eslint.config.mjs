@@ -22,7 +22,6 @@ const sharedAppGlobals = {
 	getGlyphPrefixFromFileName: 'readonly',
 	glyphCache: 'readonly',
 	initializeGlyph: 'readonly',
-	isDarkMode: 'writable',
 	isValidGlyphPrefix: 'readonly',
 	listen: 'readonly',
 	loadPngFile: 'readonly',
@@ -30,7 +29,6 @@ const sharedAppGlobals = {
 	replaceAtlasTile: 'readonly',
 	setButtonContent: 'readonly',
 	showToast: 'readonly',
-	toggleDarkMode: 'readonly',
 	updateCopyButtonState: 'readonly',
 	updateGlyphCellsAtlas: 'readonly'
 };
@@ -51,6 +49,12 @@ export default [
 			'no-empty': ['error', { allowEmptyCatch: true }],
 			'no-redeclare': 'off',
 			'no-unused-vars': ['error', { vars: 'local', args: 'after-used', argsIgnorePattern: '^_' }],
+		}
+	},
+	{
+		files: ['js/oreui.js'],
+		languageOptions: {
+			sourceType: 'module'
 		}
 	},
 	{

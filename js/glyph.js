@@ -7,12 +7,15 @@ function createGlyphCell({
 	height = '',
 	useAtlas = false
 }) {
-	const cell = document.createElement('div');
+	const cell = document.createElement('button');
+	cell.type = 'button';
 	cell.dataset.hex = `0x${hexCode}`;
 	cell.dataset.char = char;
 	cell.dataset.position = `(${col};${row})`;
 	cell.dataset.width = String(width);
 	cell.dataset.height = String(height);
+	cell.setAttribute('aria-label', `Glyph ${hexCode}, row ${row}, column ${col}`);
+	cell.title = hexCode;
 
 	if (useAtlas) {
 		setCellAtlasBackground(cell, col, row);
@@ -74,6 +77,34 @@ function markGlyphOutputReady(glyphOutput) {
 	glyphOutput.removeAttribute('aria-busy');
 }
 
+function cacheGlyphSnapshot(cacheKey, glyphOutput, entry) {
+	if (!cacheKey || !glyphOutput) return;
+
+	const sourceCells = Array.from(glyphOutput.children);
+	const cells = [];
+	let index = 0;
+
+	const cloneChunk = () => {
+		const chunkEnd = Math.min(index + 32, sourceCells.length);
+		while (index < chunkEnd) {
+			cells.push(sourceCells[index++].cloneNode(true));
+		}
+
+		if (index < sourceCells.length) {
+			window.requestAnimationFrame(cloneChunk);
+			return;
+		}
+
+		glyphCache.set(cacheKey, { ...entry, cells });
+		if (glyphCache.size > GLYPH_CACHE_LIMIT) {
+			const oldestKey = glyphCache.keys().next().value;
+			glyphCache.delete(oldestKey);
+		}
+	};
+
+	window.requestAnimationFrame(cloneChunk);
+}
+
 function isTransparentGlyphTile(imageData) {
 	for (let index = 3; index < imageData.data.length; index += 4) {
 		if (imageData.data[index] !== 0) return false;
@@ -84,7 +115,7 @@ function isTransparentGlyphTile(imageData) {
 function markTransparentCellsFromAtlas(img, glyphOutput, unicodeSize, atlasWidth, atlasHeight, sourceCanvas = null) {
 	if (!img || !glyphOutput || unicodeSize < 1 || atlasWidth < 1 || atlasHeight < 1) return;
 
-	const cells = Array.from(glyphOutput.querySelectorAll('div[data-sprite-col][data-sprite-row]'));
+	const cells = Array.from(glyphOutput.querySelectorAll('button[data-sprite-col][data-sprite-row]'));
 	if (!cells.length) return;
 
 	const atlasVersion = glyphOutput.dataset.atlasVersion || '0';
@@ -349,7 +380,7 @@ function processGlyph(img, hexValue, options = {}) {
 	const label = options.label || `glyph_${normalizedHex}.png`;
 
 	if (cacheKey && glyphCache.has(cacheKey)) {
-		return applyCachedGlyph(glyphCache.get(cacheKey));
+		return Promise.resolve(applyCachedGlyph(glyphCache.get(cacheKey)));
 	}
 
 	const unicodeSize = Math.floor(Math.min(imageWidth, imageHeight) / GRID);
@@ -378,55 +409,70 @@ function processGlyph(img, hexValue, options = {}) {
 		}
 	}
 
-	const fragment = document.createDocumentFragment();
 	const startChar = Number.parseInt(`${normalizedHex}00`, 16);
-
-	for (let i = 0; i < GRID * GRID; i++) {
-		const row = Math.floor(i / GRID) + 1;
-		const col = (i % GRID) + 1;
-		const charCode = startChar + i;
-		const char = String.fromCodePoint(charCode);
-		const hexCode = charCode.toString(16).toUpperCase().padStart(4, '0');
-
-		fragment.appendChild(createGlyphCell({
-			char,
-			hexCode,
-			col,
-			row,
-			width: unicodeSize,
-			height: unicodeSize,
-			useAtlas: true
-		}));
-	}
-
 	currentAtlasDataUrl = atlasUrl;
-	glyphOutput.replaceChildren(fragment);
-	markGlyphOutputReady(glyphOutput);
-	setGlyphOutputAtlas(glyphOutput, currentAtlasDataUrl);
-	markTransparentCellsFromAtlas(img, glyphOutput, unicodeSize, atlasWidth, atlasHeight, atlasCanvas);
-
 	currentAtlasLabel = label;
-	setAtlasInfo(imageWidth, imageHeight, label);
+	setGlyphOutputAtlas(glyphOutput, currentAtlasDataUrl);
+	const atlasVersion = glyphOutput.dataset.atlasVersion;
+	const isCurrent = options.isCurrent || (() => true);
+	glyphOutput.replaceChildren();
+	glyphOutput.classList.add('is-loading');
+	glyphOutput.setAttribute('aria-busy', 'true');
 
-	if (cacheKey) {
-		glyphCache.set(cacheKey, {
-			cells: Array.from(glyphOutput.children, cell => cell.cloneNode(true)),
-			unicodeSize,
-			width: imageWidth,
-			height: imageHeight,
-			atlasWidth,
-			atlasHeight,
-			label,
-			atlasDataUrl: currentAtlasDataUrl
-		});
+	return new Promise((resolve) => {
+		let index = 0;
 
-		if (glyphCache.size > GLYPH_CACHE_LIMIT) {
-			const oldestKey = glyphCache.keys().next().value;
-			glyphCache.delete(oldestKey);
-		}
-	}
+		const renderChunk = () => {
+			if (!isCurrent() || glyphOutput.dataset.atlasVersion !== atlasVersion) {
+				resolve(false);
+				return;
+			}
 
-	return true;
+			const fragment = document.createDocumentFragment();
+			const chunkEnd = Math.min(index + 24, GRID * GRID);
+			while (index < chunkEnd) {
+				const row = Math.floor(index / GRID) + 1;
+				const col = (index % GRID) + 1;
+				const charCode = startChar + index;
+				const char = String.fromCodePoint(charCode);
+				const hexCode = charCode.toString(16).toUpperCase().padStart(4, '0');
+
+				fragment.appendChild(createGlyphCell({
+					char,
+					hexCode,
+					col,
+					row,
+					width: unicodeSize,
+					height: unicodeSize,
+					useAtlas: true
+				}));
+				index++;
+			}
+			glyphOutput.appendChild(fragment);
+
+			if (index < GRID * GRID) {
+				window.requestAnimationFrame(renderChunk);
+				return;
+			}
+
+			markGlyphOutputReady(glyphOutput);
+			markTransparentCellsFromAtlas(img, glyphOutput, unicodeSize, atlasWidth, atlasHeight, atlasCanvas);
+			setAtlasInfo(imageWidth, imageHeight, label);
+
+			cacheGlyphSnapshot(cacheKey, glyphOutput, {
+				unicodeSize,
+				width: imageWidth,
+				height: imageHeight,
+				atlasWidth,
+				atlasHeight,
+				label,
+				atlasDataUrl: currentAtlasDataUrl
+			});
+			resolve(true);
+		};
+
+		window.requestAnimationFrame(renderChunk);
+	});
 }
 
 function editAtlasTile(cell, newImage = null, isCurrent = () => true) {
