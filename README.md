@@ -6,7 +6,7 @@ The app runs in your browser. Atlas changes stay in the current page until expor
 
 **[Open Glyph Tools](https://nhanaz.github.io/glyph/)**
 
-![Glyph Tools workspace](docs/glyph-tools-preview.png)
+![Glyph Tools workspace](docs/glyph-tools-preview-oreui.png)
 
 ## Build an atlas
 
