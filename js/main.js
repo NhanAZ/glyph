@@ -6,7 +6,21 @@ if (document.readyState === 'loading') {
 
 let glyphInputRequestId = 0;
 let glyphUploadRequestId = 0;
+let pendingPresetRequestId = null;
 let pendingGlyphUpload = null;
+const uploadPrefixValidationMessage = 'Enter a hexadecimal prefix from 0 to 10FF.';
+
+function setUploadFeedback(message, variant = '') {
+	const status = getElement('uploadStatus');
+	if (!status) return;
+
+	status.textContent = message;
+	status.classList.toggle('d-none', !message);
+	for (const name of ['is-pending', 'is-success', 'is-error']) {
+		status.classList.remove(name);
+	}
+	if (message && variant) status.classList.add(`is-${variant}`);
+}
 
 function isPrivateUseCharacter(codePoint) {
 	return Number.isInteger(codePoint) && (
@@ -18,17 +32,29 @@ function isPrivateUseCharacter(codePoint) {
 
 function cancelGlyphUpload() {
 	glyphUploadRequestId++;
-	if (!pendingGlyphUpload) return;
+	if (pendingPresetRequestId !== null) {
+		pendingPresetRequestId = null;
+		const glyphOutput = getElement('glyph-output');
+		if (glyphOutput) {
+			glyphOutput.classList.remove('is-loading');
+			glyphOutput.removeAttribute('aria-busy');
+		}
+	}
+	if (!pendingGlyphUpload) {
+		setUploadFeedback('');
+		return;
+	}
 
 	if (pendingGlyphUpload.input) pendingGlyphUpload.input.value = '';
 	pendingGlyphUpload = null;
 	const dialog = getElement('glyphPrefixDialog');
-	if (dialog && dialog.open) dialog.close();
+	if (dialog && dialog.open) dialog.close('close');
 	const label = getElement('uploadLabel');
 	if (label) {
-		label.textContent = 'Tap or drop a PNG';
-		label.className = 'text-secondary upload-label-text';
+		label.textContent = 'Drop a PNG atlas here';
+		label.className = 'upload-label-text';
 	}
+	setUploadFeedback('');
 }
 
 function updateGlyphInputState(prefix) {
@@ -36,6 +62,7 @@ function updateGlyphInputState(prefix) {
 	if (input) {
 		input.value = prefix;
 		input.classList.remove('is-invalid');
+		input.error = '';
 	}
 	for (const id of ['glyphErrorMsg', 'inputValidation']) {
 		const message = getElement(id);
@@ -59,10 +86,34 @@ function loadPreset(assetKey, hex, cacheKey, labelText, options = {}) {
 
 	const image = new Image();
 	image.crossOrigin = 'anonymous';
-	image.onload = () => {
-		if (uploadRequestId !== glyphUploadRequestId || !isCurrent()) return;
+	pendingPresetRequestId = uploadRequestId;
+	const glyphOutput = getElement('glyph-output');
+	if (glyphOutput) {
+		glyphOutput.classList.add('is-loading');
+		glyphOutput.setAttribute('aria-busy', 'true');
+	}
+	setUploadFeedback(`Loading ${labelText}...`, 'pending');
+	image.onload = async () => {
+		const isPresetCurrent = () => uploadRequestId === glyphUploadRequestId && isCurrent();
+		if (!isPresetCurrent()) return;
+		setUploadFeedback('');
 
-		if (!processGlyph(image, hex, { cacheKey, label: labelText, atlasUrl: source })) {
+		const processed = await processGlyph(image, hex, {
+			cacheKey,
+			label: labelText,
+			atlasUrl: source,
+			isCurrent: isPresetCurrent
+		});
+		if (!isPresetCurrent()) return;
+		if (pendingPresetRequestId === uploadRequestId) {
+			pendingPresetRequestId = null;
+			if (!processed && glyphOutput) {
+				glyphOutput.classList.remove('is-loading');
+				glyphOutput.removeAttribute('aria-busy');
+			}
+		}
+
+		if (!processed) {
 			if (showErrorToast) showToast('Unable to process the preset image.', 'error');
 			if (onError) onError();
 			return;
@@ -77,13 +128,21 @@ function loadPreset(assetKey, hex, cacheKey, labelText, options = {}) {
 		if (updateUploadLabel) {
 			const uploadLabel = getElement('uploadLabel');
 			if (uploadLabel) {
-				uploadLabel.textContent = `Loaded: ${labelText}`;
-				uploadLabel.className = 'text-primary fw-bold upload-label-text';
+				uploadLabel.textContent = `Loaded ${labelText}`;
+				uploadLabel.className = 'upload-label-text is-loaded';
 			}
 		}
 	};
 	image.onerror = () => {
 		if (uploadRequestId !== glyphUploadRequestId || !isCurrent()) return;
+		if (pendingPresetRequestId === uploadRequestId) {
+			pendingPresetRequestId = null;
+			if (glyphOutput) {
+				glyphOutput.classList.remove('is-loading');
+				glyphOutput.removeAttribute('aria-busy');
+			}
+		}
+		setUploadFeedback('');
 		if (showErrorToast) showToast('Unable to load the preset image.', 'error');
 		if (onError) onError();
 	};
@@ -108,11 +167,20 @@ listen(glyphInputElement, 'input', function () {
 	if (glyphUpload) glyphUpload.value = '';
 	const label = getElement('uploadLabel');
 	if (label) {
-		label.textContent = 'Tap or drop a PNG';
-		label.className = 'text-secondary upload-label-text';
+		label.textContent = 'Drop a PNG atlas here';
+		label.className = 'upload-label-text';
 	}
 
-	if (glyphInput === '') glyphInput = 'E0';
+	if (glyphInput === '') {
+		glyphSuccessMsg.textContent = '';
+		glyphSuccessMsg.classList.add('d-none');
+		glyphErrorMsg.classList.add('d-none');
+		if (validationMsg) validationMsg.classList.add('d-none');
+		this.classList.remove('is-invalid');
+		this.error = '';
+		if (hintMsg) hintMsg.classList.add('d-none');
+		return;
+	}
 
 	if (isValidGlyphPrefix(glyphInput)) {
 		const isDefaultAtlas = glyphInput === 'E0' || glyphInput === 'E1';
@@ -139,6 +207,7 @@ listen(glyphInputElement, 'input', function () {
 		glyphErrorMsg.classList.add('d-none');
 		if (validationMsg) validationMsg.classList.add('d-none');
 		this.classList.remove('is-invalid');
+		this.error = '';
 
 		if (hintMsg) hintMsg.classList.add('d-none');
 	} else {
@@ -147,12 +216,12 @@ listen(glyphInputElement, 'input', function () {
 		glyphSuccessMsg.classList.add('d-none');
 		if (validationMsg) validationMsg.classList.remove('d-none');
 		this.classList.add('is-invalid');
+		this.error = 'Enter a hexadecimal prefix from 0 to 10FF.';
 		if (hintMsg) hintMsg.classList.add('d-none');
 	}
 });
 
 listen(getElement('copyButton'), 'click', copyOutput);
-listen(getElement('converterOutput'), 'click', copyOutput);
 
 const converterInputElement = getElement('converterInput');
 listen(converterInputElement, 'input', function () {
@@ -160,47 +229,52 @@ listen(converterInputElement, 'input', function () {
 		Array.from(this.value).length === 1 && isPrivateUseCharacter(this.value.codePointAt(0)));
 	convert();
 });
-listen(getElement('darkModeToggle'), 'click', toggleDarkMode);
-
-async function importGlyphFile(file, input = null, confirmedPrefix = null) {
+async function importGlyphFile(file, input = null, confirmedPrefix = null, validatedImage = null) {
 	if (!file) return;
 
 	cancelGlyphUpload();
+	setUploadFeedback(`Checking ${file.name}...`, 'pending');
 	const requestId = glyphUploadRequestId;
 	glyphInputRequestId++;
 	const hexValue = getGlyphPrefixFromFileName(file.name)
 		|| getGlyphPrefix(confirmedPrefix, null);
 
 	const label = getElement('uploadLabel');
-	if (!hexValue) {
-		pendingGlyphUpload = { file, input };
-		if (label) {
-			label.textContent = file.name;
-			label.className = 'text-primary fw-bold upload-label-text';
-		}
-		const filename = getElement('uploadPrefixFilename');
-		if (filename) filename.textContent = file.name;
-		const prefixInput = getElement('uploadPrefix');
-		if (prefixInput) {
-			prefixInput.value = '';
-		}
-		const confirmButton = getElement('confirmGlyphImport');
-		if (confirmButton) confirmButton.disabled = true;
-		const dialog = getElement('glyphPrefixDialog');
-		if (dialog && !dialog.open) dialog.showModal();
-		if (prefixInput) prefixInput.focus();
-		return;
-	}
-
 	try {
-		const image = await loadPngFile(file, {
+		const image = validatedImage || await loadPngFile(file, {
 			minWidth: GRID,
 			minHeight: GRID,
 			requireSquare: true,
 			dimensionMultiple: GRID
 		});
 		if (requestId !== glyphUploadRequestId) return;
-		if (!processGlyph(image, hexValue, { label: file.name })) {
+		if (!hexValue) {
+			pendingGlyphUpload = { file, input, image };
+			if (label) {
+				label.textContent = file.name;
+				label.className = 'upload-label-text is-pending';
+			}
+			setUploadFeedback('Enter a hexadecimal atlas prefix to continue.', 'pending');
+			const filename = getElement('uploadPrefixFilename');
+			if (filename) filename.textContent = file.name;
+			const prefixInput = getElement('uploadPrefix');
+			if (prefixInput) {
+				prefixInput.value = '';
+				prefixInput.error = '';
+			}
+			const confirmButton = getElement('confirmGlyphImport');
+			if (confirmButton) confirmButton.disabled = true;
+			const dialog = getElement('glyphPrefixDialog');
+			if (dialog && !dialog.open) dialog.show();
+			if (prefixInput) prefixInput.focus();
+			return;
+		}
+		const processed = await processGlyph(image, hexValue, {
+			label: file.name,
+			isCurrent: () => requestId === glyphUploadRequestId
+		});
+		if (requestId !== glyphUploadRequestId) return;
+		if (!processed) {
 			throw new Error('The atlas could not be processed.');
 		}
 
@@ -208,8 +282,12 @@ async function importGlyphFile(file, input = null, confirmedPrefix = null) {
 		if (input) input.value = '';
 		if (label) {
 			label.textContent = file.name;
-			label.className = 'text-primary fw-bold upload-label-text';
+			label.className = 'upload-label-text is-loaded';
 		}
+		const width = image.naturalWidth || image.width;
+		const height = image.naturalHeight || image.height;
+		const dimensions = width && height ? ` (${width} x ${height}px)` : '';
+		setUploadFeedback(`Loaded ${file.name}${dimensions}.`, 'success');
 
 		const hintMsg = getElement('defaultImageHint');
 		if (hintMsg) hintMsg.classList.add('d-none');
@@ -217,10 +295,13 @@ async function importGlyphFile(file, input = null, confirmedPrefix = null) {
 		if (requestId !== glyphUploadRequestId) return;
 		if (input) input.value = '';
 		if (label) {
-			label.textContent = 'Tap or drop a PNG';
-			label.className = 'text-secondary upload-label-text';
+			label.textContent = 'Drop a PNG atlas here';
+			label.className = 'upload-label-text';
 		}
-		alert(error instanceof Error ? error.message : 'Unable to load the PNG atlas.');
+		const message = error && typeof error.message === 'string'
+			? error.message
+			: 'Unable to load the PNG atlas.';
+		setUploadFeedback(message, 'error');
 	}
 }
 
@@ -228,24 +309,34 @@ listen(getElement('glyphUpload'), 'change', async function () {
 	await importGlyphFile(this.files && this.files[0], this);
 });
 
+listen(getElement('chooseAtlas'), 'click', () => getElement('glyphUpload')?.click());
+
 listen(getElement('uploadPrefix'), 'input', function () {
+	const prefix = getGlyphPrefix(this.value, null);
 	const confirmButton = getElement('confirmGlyphImport');
-	if (confirmButton) confirmButton.disabled = !getGlyphPrefix(this.value, null);
+	if (confirmButton) confirmButton.disabled = !prefix;
+	this.error = this.value && !prefix ? uploadPrefixValidationMessage : '';
 });
 
 listen(getElement('glyphPrefixForm'), 'submit', async event => {
 	event.preventDefault();
 	const prefixInput = getElement('uploadPrefix');
 	const prefix = getGlyphPrefix(prefixInput ? prefixInput.value : '', null);
-	if (!pendingGlyphUpload || !prefix) return;
-	const { file, input } = pendingGlyphUpload;
-	await importGlyphFile(file, input, prefix);
+	if (!pendingGlyphUpload) return;
+	if (!prefix) {
+		if (prefixInput) {
+			prefixInput.error = uploadPrefixValidationMessage;
+			prefixInput.focus();
+		}
+		return;
+	}
+	const { file, input, image } = pendingGlyphUpload;
+	await importGlyphFile(file, input, prefix, image);
 });
 
 listen(getElement('cancelGlyphImport'), 'click', cancelGlyphUpload);
-listen(getElement('glyphPrefixDialog'), 'cancel', event => {
-	event.preventDefault();
-	cancelGlyphUpload();
+listen(getElement('glyphPrefixDialog'), 'modal-close', () => {
+	if (pendingGlyphUpload) cancelGlyphUpload();
 });
 
 const glyphUploadZone = document.querySelector('.upload-zone');
@@ -285,7 +376,7 @@ if (glyphUploadZone) {
 	});
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initializeInterface() {
 	const glyphGrid = getElement('glyph-output');
 	const gridModeToggle = getElement('gridModeToggle');
 	const gridToggleLabel = gridModeToggle ? gridModeToggle.querySelector('.grid-toggle-label') : null;
@@ -296,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (mode === 'fixed') {
 			glyphGrid.style.setProperty('--glyph-columns', 16);
 			glyphGrid.style.setProperty('--glyph-rows', 16);
-			if (gridToggleLabel) gridToggleLabel.textContent = '16x16 view';
+			if (gridToggleLabel) gridToggleLabel.textContent = '16 by 16 view';
 		} else {
 			glyphGrid.style.removeProperty('--glyph-columns');
 			glyphGrid.style.removeProperty('--glyph-rows');
@@ -315,9 +406,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	// Glyph detail dialog.
-	const modalApi = window.bootstrap && window.bootstrap.Modal;
 	const detailModalEl = getElement('glyphDetailModal');
-	const detailModal = detailModalEl && modalApi ? new modalApi(detailModalEl) : null;
+	const detailModal = detailModalEl;
 	const detailImg = getElement('glyphDetailImage');
 	const detailHex = getElement('glyphDetailHex');
 	const detailDec = getElement('glyphDetailDec');
@@ -336,9 +426,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	const vanillaPickerStatus = getElement('vanillaPickerStatus');
 	const vanillaGrid = getElement('vanillaGrid');
 	const vanillaPickerModalEl = getElement('vanillaPickerModal');
-	const vanillaPickerModal = vanillaPickerModalEl && modalApi ? new modalApi(vanillaPickerModalEl) : null;
+	const vanillaPickerModal = vanillaPickerModalEl;
 	const vanillaSearchInput = getElement('vanillaSearchInput');
 	const vanillaCategorySelect = getElement('vanillaCategorySelect');
+	const vanillaPageSizeDropdown = getElement('vanillaPageSizeDropdown');
 	const vanillaPageSizeBtn = getElement('vanillaPageSizeBtn');
 	const vanillaPageSizeMenu = getElement('vanillaPageSizeMenu');
 	const vanillaPrevPage = getElement('vanillaPrevPage');
@@ -350,25 +441,35 @@ document.addEventListener('DOMContentLoaded', () => {
 	let vanillaFiltered = [];
 	let vanillaPage = 1;
 	let vanillaPageSizeValue = '36';
+	let vanillaCategoryValue = 'all';
 	let vanillaRenderId = 0;
 	let currentDetailCell = null;
 	let detailRequestId = 0;
 	let detailNoticeTimer = null;
 	const vanillaCacheTtl = 24 * 60 * 60 * 1000;
 
-	listen(detailModalEl, 'hidden.bs.modal', () => {
+	function clearDetailNotice() {
+		if (detailNoticeTimer) clearTimeout(detailNoticeTimer);
+		detailNoticeTimer = null;
+		if (!detailNotice) return;
+		detailNotice.textContent = '';
+		detailNotice.classList.remove('visible', 'error');
+	}
+
+	listen(detailModalEl, 'modal-close', () => {
+		clearDetailNotice();
 		currentDetailCell = null;
 		detailRequestId++;
 	});
 
 	function showDetailNotice(message, variant = 'success') {
+		clearDetailNotice();
 		if (!detailNotice) return;
-		if (detailNoticeTimer) clearTimeout(detailNoticeTimer);
 		detailNotice.textContent = message;
 		detailNotice.classList.toggle('error', variant === 'error');
 		detailNotice.classList.add('visible');
 		detailNoticeTimer = setTimeout(() => {
-			detailNotice.classList.remove('visible', 'error');
+			clearDetailNotice();
 		}, 1500);
 	}
 
@@ -381,6 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	async function showGlyphDetail(cell) {
 		if (!cell || !detailModal) return;
+		clearDetailNotice();
 		currentDetailCell = cell;
 		const requestId = ++detailRequestId;
 		if (detailImg) detailImg.classList.remove('d-none');
@@ -515,7 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	if (glyphGrid) {
 		glyphGrid.addEventListener('click', (e) => {
 			const cell = e.target instanceof Element
-				? e.target.closest('#glyph-output div[data-hex]')
+				? e.target.closest('#glyph-output button[data-hex]')
 				: null;
 			if (cell) {
 				e.preventDefault();
@@ -565,7 +667,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	function getGlyphCells() {
-		return glyphGrid ? Array.from(glyphGrid.querySelectorAll('div[data-char]')) : [];
+		return glyphGrid ? Array.from(glyphGrid.querySelectorAll('button[data-char]')) : [];
 	}
 
 	function getCurrentGlyphPrefix() {
@@ -805,19 +907,28 @@ document.addEventListener('DOMContentLoaded', () => {
 	function populateCategories() {
 		if (!vanillaCategorySelect) return;
 		const cats = ['all', ...vanillaCategories];
-		vanillaCategorySelect.replaceChildren();
+		const menu = vanillaCategorySelect.querySelector('.ore-dropdown-menu');
+		if (!menu) return;
+		const selected = vanillaCategoryValue;
+		menu.replaceChildren();
 		cats.forEach(c => {
-			const opt = document.createElement('option');
-			opt.value = c;
-			opt.textContent = c === 'all' ? 'All categories' : c;
-			vanillaCategorySelect.appendChild(opt);
+			const item = document.createElement('button');
+			item.className = 'ore-dropdown-item';
+			item.type = 'button';
+			item.dataset.value = c;
+			item.setAttribute('role', 'menuitemradio');
+			item.tabIndex = -1;
+			item.textContent = c === 'all' ? 'All categories' : c;
+			menu.appendChild(item);
 		});
+		vanillaCategoryValue = cats.includes(selected) ? selected : 'all';
+		vanillaCategorySelect.value = vanillaCategoryValue;
 	}
 
 	function renderVanillaGrid(filterText = '') {
 		if (!vanillaGrid) return;
 		const needle = (filterText || '').toLowerCase();
-		const selectedCat = vanillaCategorySelect ? vanillaCategorySelect.value : 'all';
+		const selectedCat = vanillaCategoryValue;
 		vanillaFiltered = (vanillaPaths || []).filter(p => {
 			const matchText = needle ? p.toLowerCase().includes(needle) : true;
 			const matchCat = selectedCat === 'all' ? true : p.startsWith(selectedCat + '/');
@@ -837,7 +948,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		vanillaGrid.replaceChildren();
 		if (vanillaPickerStatus) vanillaPickerStatus.textContent = 'Rendering...';
-		if (vanillaPageInfo) vanillaPageInfo.textContent = `Page ${vanillaPage}/${totalPages}`;
+		if (vanillaPageInfo) vanillaPageInfo.textContent = `Page ${vanillaPage} of ${totalPages}`;
 		if (vanillaPrevPage) vanillaPrevPage.disabled = vanillaPage <= 1;
 		if (vanillaNextPage) vanillaNextPage.disabled = vanillaPage >= totalPages;
 
@@ -851,11 +962,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			let count = 0;
 			while (i < pageItems.length && count < chunkSize) {
 				const path = pageItems[i++];
-				const card = document.createElement('div');
+				const card = document.createElement('button');
 				card.className = 'vanilla-tile';
+				card.type = 'button';
 				card.dataset.path = path;
-				card.tabIndex = 0;
-				card.setAttribute('role', 'button');
 				const img = document.createElement('img');
 				img.loading = 'lazy';
 				img.crossOrigin = 'anonymous';
@@ -876,7 +986,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					previewImg.onload = function () {
 						if (requestId !== detailRequestId || !cell || !cell.isConnected) return;
 						replaceDetailGlyph(previewImg, cell, requestId);
-						if (vanillaPickerModal) vanillaPickerModal.hide();
+						if (vanillaPickerModal) vanillaPickerModal.close();
 					};
 					previewImg.onerror = function () {
 						if (requestId !== detailRequestId) return;
@@ -885,12 +995,6 @@ document.addEventListener('DOMContentLoaded', () => {
 					previewImg.src = previewSrc;
 				};
 				card.addEventListener('click', selectTexture);
-				card.addEventListener('keydown', event => {
-					if (event.key === 'Enter' || event.key === ' ') {
-						event.preventDefault();
-						selectTexture();
-					}
-				});
 				fragment.appendChild(card);
 				count++;
 			}
@@ -951,24 +1055,21 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	if (vanillaCategorySelect) {
-		vanillaCategorySelect.addEventListener('change', () => {
+		vanillaCategorySelect.addEventListener('change', event => {
+			vanillaCategoryValue = event.detail.value || 'all';
+			vanillaCategorySelect.value = vanillaCategoryValue;
 			const val = vanillaSearchInput ? vanillaSearchInput.value : '';
 			vanillaPage = 1;
 			renderVanillaGrid(val);
 		});
 	}
 
-	if (vanillaPageSizeMenu && vanillaPageSizeBtn) {
-		vanillaPageSizeMenu.querySelectorAll('[data-size]').forEach(item => {
-			item.addEventListener('click', (e) => {
-				const val = e.currentTarget.getAttribute('data-size') || '36';
-				vanillaPageSizeValue = val;
-				const labelEl = vanillaPageSizeBtn.querySelector('.vanilla-page-size-label');
-				if (labelEl) labelEl.textContent = val === 'all' ? 'Show all' : val;
-				vanillaPage = 1;
-				const searchVal = vanillaSearchInput ? vanillaSearchInput.value : '';
-				renderVanillaGrid(searchVal);
-			});
+	if (vanillaPageSizeMenu && vanillaPageSizeBtn && vanillaPageSizeDropdown) {
+		vanillaPageSizeDropdown.addEventListener('change', event => {
+			vanillaPageSizeValue = event.detail.value || '36';
+			vanillaPage = 1;
+			const searchVal = vanillaSearchInput ? vanillaSearchInput.value : '';
+			renderVanillaGrid(searchVal);
 		});
 	}
 
@@ -1014,4 +1115,21 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		};
 	}
-});
+
+	const projectLinks = document.querySelector('.workspace-footer nav');
+	if (projectLinks) {
+		projectLinks.addEventListener('click', event => {
+			const button = event.target instanceof Element
+				? event.target.closest('ore-button[data-project-url]')
+				: null;
+			const url = button?.getAttribute('data-project-url');
+			if (url) window.open(url, '_blank', 'noopener,noreferrer');
+		});
+	}
+}
+
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', initializeInterface, { once: true });
+} else {
+	initializeInterface();
+}

@@ -3,13 +3,8 @@ let toastTimer = null;
 const noSelectControlSelector = [
 	'button',
 	'[role="button"]',
-	'.btn',
-	'.dropdown-item',
 	'.detail-field',
-	'.vanilla-tile',
-	'.footer-links a',
-	'.mobile-nav-card a',
-	'.hint-link'
+	'.vanilla-tile'
 ].join(',');
 
 if (typeof document !== 'undefined' && typeof Element !== 'undefined') {
@@ -63,58 +58,28 @@ function updateCopyButtonState() {
 	}
 }
 
-function toggleDarkMode() {
-	isDarkMode = !isDarkMode;
-	document.body.classList.toggle('dark-mode', isDarkMode);
-
-	const darkModeToggle = getElement('darkModeToggle');
-	setButtonContent(darkModeToggle, isDarkMode ? 'Light' : 'Dark');
-}
-
 function setButtonContent(button, label = '') {
 	if (!button) return;
 	button.textContent = label;
 }
 
 function showToast(message, variant = 'success', duration = 1500) {
-	let toastLayer = document.querySelector('.toast-layer');
-	if (!toastLayer) {
-		toastLayer = document.createElement('div');
-		toastLayer.className = 'toast-layer';
-	}
-	document.body.appendChild(toastLayer);
-
-	let toast = toastLayer.querySelector('.action-toast');
-	if (!toast) {
-		toast = document.createElement('div');
-		toast.className = 'action-toast';
-		toastLayer.appendChild(toast);
-	}
-
+	const toast = getElement('actionToast');
+	if (!toast) return;
 	toast.textContent = String(message);
-	toast.classList.toggle('success', variant === 'success');
-	toast.classList.add('visible');
-	Object.assign(toastLayer.style, {
-		position: 'fixed',
-		top: '0',
-		left: '0',
-		right: '0',
-		height: '0',
-		zIndex: '2147483647',
-		overflow: 'visible',
-		pointerEvents: 'none'
-	});
-	Object.assign(toast.style, {
-		position: 'absolute',
-		top: '12px',
-		left: '50%',
-		zIndex: '1'
-	});
-
+	toast.variant = variant === 'error' ? 'warning' : 'primary';
+	toast.duration = duration;
 	if (toastTimer) clearTimeout(toastTimer);
-	toastTimer = setTimeout(() => {
-		toast.classList.remove('visible', 'success');
-	}, duration);
+	toastTimer = null;
+	if (toast.open) {
+		toast.close();
+		toastTimer = setTimeout(() => {
+			toastTimer = null;
+			toast.show();
+		}, 0);
+	} else {
+		toast.show();
+	}
 }
 
 function isValidGlyphPrefix(value) {
